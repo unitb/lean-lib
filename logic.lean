@@ -81,6 +81,15 @@ end
 lemma not_and_iff_not_or_not {p q : Prop} : ¬ (p ∧ q) ↔ ¬ p ∨ ¬ q :=
 ⟨not_and_of_not_or_not,not_or_not_of_not_and⟩
 
+lemma not_not_iff_self {p : Prop} : ¬ ¬ p ↔ p :=
+begin
+  split ,
+  { intro hnnp,
+    cases classical.em p with h h,
+    apply h, cases hnnp h },
+  exact not_not_intro
+end
+
 
 -- lemma or_iff_or_imp_not (p q : Prop) : p ∨ q ↔ p ∨ (¬ p ∧ q) :=
 -- sorry

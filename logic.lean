@@ -90,6 +90,28 @@ begin
   exact not_not_intro
 end
 
+lemma not_forall_iff_exists_not {t : Type u} (P : t → Prop)
+: ¬ (∀ x, P x) ↔ (∃ x, ¬ P x) :=
+begin
+  split,
+  { intro h, apply classical.by_contradiction, intros h',
+    apply h, intro i,
+    note h'' := forall_not_of_not_exists h' i,
+    rw not_not_iff_self at h'',
+    apply h'' },
+  { intros h₀ h₁,
+    cases h₀ with i h₀,
+    apply h₀, apply h₁ },
+end
 
--- lemma or_iff_or_imp_not (p q : Prop) : p ∨ q ↔ p ∨ (¬ p ∧ q) :=
--- sorry
+lemma not_exists_iff_forall_not {t : Type u} (P : t → Prop)
+: ¬ (∃ x, P x) ↔ (∀ x, ¬ P x) :=
+begin
+  split,
+  { intros h x h',
+    apply h,
+    existsi x, apply h' },
+  { intros h₀ h₁,
+    cases h₁ with i h₁,
+    apply h₀, apply h₁ },
+end

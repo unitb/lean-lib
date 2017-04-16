@@ -115,3 +115,38 @@ begin
     cases h₁ with i h₁,
     apply h₀, apply h₁ },
 end
+
+lemma forall_or {t : Type u} (P Q R : t → Prop)
+: (∀ x, P x ∨ Q x → R x) ↔ (∀ x, P x → R x) ∧ (∀ x, Q x → R x) :=
+begin
+  split ; intro h,
+  split,
+  all_goals { intros x h' },
+  any_goals { cases h with h₀ h₁, cases h' with h₂ h₂ },
+  { apply h, left, apply h' },
+  { apply h, right, apply h'  },
+  { apply h₀, apply h₂ },
+  { apply h₁, apply h₂ },
+end
+
+lemma exists_option {t : Type u} (P : option t → Prop)
+: (∃ x : option t, P x) ↔ P none ∨ ∃ x', P (some x') :=
+begin
+  split ; intro h,
+  { cases h with x h,
+    cases x with x,
+    { left, assumption },
+    { right, exact ⟨_,h⟩ } },
+  { cases h with h h
+    ; try { cases h with h h }
+    ; exact ⟨_,h⟩ }
+end
+
+lemma exists_true (P : true → Prop)
+: (∃ x : true, P x) ↔ P trivial :=
+begin
+  split ; intro h,
+  { cases h with x h,
+    cases x, apply h },
+  { exact ⟨_,h⟩ }
+end

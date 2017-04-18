@@ -1,10 +1,21 @@
 
-universe variable u
+universe variables u u'
 
 lemma forall_imp_forall {α : Sort u} {p q : α → Prop}
    (h : ∀ a, (p a → q a))
    (p : ∀ a, p a) : ∀ a, q a :=
   take a, h _ (p a)
+
+lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
+   {p : α → Prop}
+   {q : β → Prop}
+   (f : α → β)
+   (h : ∀ a, (p a → q (f a)))
+   (P : ∃ a, p a) : ∃ a, q a :=
+begin
+  cases P with a P,
+  exact ⟨_,h _ P⟩
+end
 
 lemma imp_mono {p p' q q' : Prop}
    (hp : p' → p)

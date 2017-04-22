@@ -1,12 +1,11 @@
 
 import data.stream
+import util.logic
 import util.data.finite
 import util.data.stream
 
 open nat
 open stream
-
-def curry {α β γ} (f : α × β → γ) (x : α) (y : β) : γ := f (x,y)
 
 def rounds : ℕ → ℕ → stream ℕ := curry $ coinduct rounds.f
 

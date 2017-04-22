@@ -1,5 +1,8 @@
 
-universe variables u u'
+universe variables u u' u₀ u₁ u₂
+
+def curry {α : Type u₀} {β : Type u₁} {γ : Type u₂} (f : α × β → γ) (x : α) (y : β) : γ :=
+f (x,y)
 
 lemma forall_imp_forall {α : Sort u} {p q : α → Prop}
    (h : ∀ a, (p a → q a))

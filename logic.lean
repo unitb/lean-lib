@@ -9,6 +9,17 @@ lemma forall_imp_forall {α : Sort u} {p q : α → Prop}
    (p : ∀ a, p a) : ∀ a, q a :=
   take a, h _ (p a)
 
+lemma forall_imp_forall' {α : Sort u} {β : Sort u'}
+   {p : α → Prop}
+   {q : β → Prop}
+   (f : β → α)
+   (h : ∀ a, (p (f a) → q a))
+   (P : ∀ a, p a) : ∀ a, q a :=
+begin
+  intro a,
+  apply h, apply P
+end
+
 lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
    {p : α → Prop}
    {q : β → Prop}
@@ -19,6 +30,25 @@ begin
   cases P with a P,
   exact ⟨_,h _ P⟩
 end
+
+lemma exists_imp_iff_forall_imp {α : Sort u}
+  (p : α → Prop) (q : Prop)
+: (∃ x, p x) → q ↔ (∀ x, p x → q) :=
+sorry
+
+lemma exists_swap {α : Sort u} {β : Sort u'}
+  (P : α → β → Prop)
+: (∃ x y, P x y) ↔ (∃ y x, P x y) :=
+sorry
+
+lemma and_exists {α : Sort u}
+   (P : Prop)
+   (Q : α → Prop)
+: P ∧ (∃ x, Q x) ↔ (∃ x, P ∧ Q x) :=
+sorry
+
+lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
+by refl
 
 lemma imp_mono {p p' q q' : Prop}
    (hp : p' → p)
@@ -103,6 +133,9 @@ begin
     apply h, cases hnnp h },
   exact not_not_intro
 end
+
+lemma assume_neg {p : Prop} : (¬ p → p) → p :=
+sorry
 
 lemma not_forall_iff_exists_not {t : Type u} (P : t → Prop)
 : ¬ (∀ x, P x) ↔ (∃ x, ¬ P x) :=

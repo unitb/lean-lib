@@ -34,18 +34,47 @@ end
 lemma exists_imp_iff_forall_imp {α : Sort u}
   (p : α → Prop) (q : Prop)
 : (∃ x, p x) → q ↔ (∀ x, p x → q) :=
-sorry
+begin
+  split ; intros H,
+  { intros x H',
+    apply H _,
+    exact ⟨_, H'⟩ },
+  { intros H',
+    cases H' with x H',
+    apply H _ H', },
+end
 
 lemma exists_swap {α : Sort u} {β : Sort u'}
   (P : α → β → Prop)
 : (∃ x y, P x y) ↔ (∃ y x, P x y) :=
-sorry
+begin
+  split
+  ; intros H
+  ; cases H with x H
+  ; cases H with y H
+  ; exact ⟨_,_,H⟩
+end
+
+lemma forall_swap {α : Sort u} {β : Sort u'}
+  (P : α → β → Prop)
+: (∀ x y, P x y) ↔ (∀ y x, P x y) :=
+begin
+  split
+  ; intros H x y
+  ; apply H
+end
 
 lemma and_exists {α : Sort u}
    (P : Prop)
    (Q : α → Prop)
 : P ∧ (∃ x, Q x) ↔ (∃ x, P ∧ Q x) :=
-sorry
+begin
+  split
+  ; intros H
+  ; cases H with x H
+  ; cases H with y H
+  ; exact ⟨y,x,H⟩
+end
 
 lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
 by refl
@@ -135,7 +164,12 @@ begin
 end
 
 lemma assume_neg {p : Prop} : (¬ p → p) → p :=
-sorry
+begin
+  intro h,
+  cases classical.em p with h' h',
+  { apply h' },
+  { apply h h' },
+end
 
 lemma not_forall_iff_exists_not {t : Type u} (P : t → Prop)
 : ¬ (∀ x, P x) ↔ (∃ x, ¬ P x) :=

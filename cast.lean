@@ -45,3 +45,19 @@ lemma option_cast'_cast : ∀ {α β : Type u} (P₀ P₁ : α = β) (x : option
   option.cast' (option.cast x P₁) P₀ = x
  | α ._ rfl rfl (some x) := rfl
  | α ._ rfl rfl none := rfl
+
+lemma option_cast_injective {α β : Type u} (P : α = β) : function.injective (λ x, option.cast x P) :=
+begin
+  apply function.injective_of_has_left_inverse,
+  unfold function.has_left_inverse function.left_inverse,
+  existsi (λ x, option.cast' x P),
+  intro, simp [option_cast'_cast],
+end
+
+lemma option_cast'_injective {α β : Type u} (P : α = β) : function.injective (λ x, option.cast' x P) :=
+begin
+  apply function.injective_of_has_left_inverse,
+  unfold function.has_left_inverse function.left_inverse,
+  existsi (λ x, option.cast x P),
+  intro, simp [option_cast_cast],
+end

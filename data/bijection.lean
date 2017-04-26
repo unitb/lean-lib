@@ -231,9 +231,11 @@ def bij.rev (x : bijection α β) : bijection β α :=
       { rw [-x^.inverse,-h], }
     end }
 
-infixr ∘ := bij.comp
-
 end bijection
+
+namespace bijection
+
+local infixr ∘ := bij.comp
 
 section pre
 
@@ -637,7 +639,7 @@ instance : finite unit :=
           { split ; intro h₂ ; refl },
         end } }
 
-instance (n : ℕ) : finite (fin n) :=
+instance finite_fin (n : ℕ) : finite (fin n) :=
   { count := n
   , to_nat := bij.id }
 
@@ -741,7 +743,7 @@ end
 def prod.sum : ℕ × ℕ → ℕ
   | (x,y) := x+y
 
-lemma prod_f_sum_le_self (n) : (bij.prod.f n)^.sum ≤ n :=
+lemma prod_f_sum_le_self (n) : prod.sum (bij.prod.f n) ≤ n :=
 begin
   induction n with n,
   { unfold bij.prod.f, refl },
@@ -759,7 +761,7 @@ end
 
 lemma prod_f_snd_le_self (n) : (bij.prod.f n)^.snd ≤ n :=
 begin
-  assert h : (bij.prod.f n)^.snd ≤ (bij.prod.f n)^.sum,
+  assert h : (bij.prod.f n)^.snd ≤ prod.sum (bij.prod.f n),
   { cases bij.prod.f n,
     simp [prod.sum],
     apply le_add_left },
@@ -769,11 +771,11 @@ begin
 end
 
 
-def bijection.concat.f : list ℕ → ℕ
+def concat.f : list ℕ → ℕ
   | list.nil := 0
-  | (x :: xs) := succ (bij.prod.g (x,bijection.concat.f xs))
+  | (x :: xs) := succ (bij.prod.g (x,concat.f xs))
 
-def bijection.concat.g : ℕ → list ℕ :=
+def concat.g : ℕ → list ℕ :=
   well_founded.fix nat.lt_wf $
     λ n,
      match n with
@@ -825,32 +827,32 @@ def bijection.concat.g : ℕ → list ℕ :=
 
 -- end strong_rec
 
-lemma bijection.concat.g_zero
-: bijection.concat.g 0 = [] :=
+lemma concat.g_zero
+: concat.g 0 = [] :=
 begin
-  unfold bijection.concat.g ,
+  unfold concat.g ,
   rw well_founded.fix_eq,
   refl
 end
 
-lemma bijection.concat.g_succ (n : ℕ)
-: bijection.concat.g (succ n) = (bij.prod.f n)^.fst :: bijection.concat.g (bij.prod.f n)^.snd :=
+lemma concat.g_succ (n : ℕ)
+: concat.g (succ n) = (bij.prod.f n)^.fst :: concat.g (bij.prod.f n)^.snd :=
 begin
-  unfold bijection.concat.g ,
+  unfold concat.g ,
   rw well_founded.fix_eq,
   refl
 end
 
-def bijection.concat : bijection (list ℕ) ℕ :=
-bijection.mk bijection.concat.f bijection.concat.g
+def concat : bijection (list ℕ) ℕ :=
+bijection.mk concat.f concat.g
 begin
   intro x,
   induction x,
-  { unfold bijection.concat.f, apply bijection.concat.g_zero },
-  { unfold bijection.concat.f,
+  { unfold concat.f, apply concat.g_zero },
+  { unfold concat.f,
     -- bij.prod.g_succ
     assert h : ∀ x, bij.prod.f (bij.prod.g x) = x, { apply bij.prod^.f_inv },
-    rw bijection.concat.g_succ,
+    rw concat.g_succ,
     apply congr, apply congr_arg,
     { rw h },
     { rw h, unfold prod.snd, apply ih_1 },  }
@@ -861,8 +863,8 @@ begin
   clear x,
   intros x IH,
   cases x with x,
-  { rw bijection.concat.g_zero, unfold bijection.concat.f, refl },
-  { rw bijection.concat.g_succ, unfold bijection.concat.f,
+  { rw concat.g_zero, unfold concat.f, refl },
+  { rw concat.g_succ, unfold concat.f,
     rw IH,
     assert h' : ∀ x, bij.prod.g (bij.prod.f x) = x, { apply bij.prod^.g_inv },
     destruct bij.prod.f x,
@@ -873,11 +875,11 @@ begin
     apply prod_f_snd_le_self }
 end
 
-def bijection.fconcat.f (n : ℕ) : list (fin n) → ℕ
+def fconcat.f (n : ℕ) : list (fin n) → ℕ
   | [] := 0
-  | (x :: xs) := succ (bij.prod.pre.f _ (x,bijection.fconcat.f xs))
+  | (x :: xs) := succ (bij.prod.pre.f _ (x,fconcat.f xs))
 
-def bijection.fconcat.g (n : ℕ)  : ℕ → list (fin (succ n)) :=
+def fconcat.g (n : ℕ)  : ℕ → list (fin (succ n)) :=
   well_founded.fix lt_wf $
       λ x,
        match x with
@@ -899,7 +901,7 @@ section sect
 open bijection
 open bij
 
-lemma bijection.fconcat.g_zero (n : ℕ)
+lemma fconcat.g_zero (n : ℕ)
 : fconcat.g n 0 = [] :=
 begin
   unfold fconcat.g,
@@ -907,8 +909,8 @@ begin
   refl
 end
 
-lemma bijection.fconcat.g_succ (n x : ℕ)
-: fconcat.g _ (succ x) = (prod.pre.g _ x)^.fst :: fconcat.g n (prod.pre.g n x)^.snd :=
+lemma fconcat.g_succ (n x : ℕ)
+: fconcat.g _ (succ x) = (bij.prod.pre.g _ x)^.fst :: fconcat.g n (bij.prod.pre.g n x)^.snd :=
 begin
   unfold fconcat.g,
   rw well_founded.fix_eq,
@@ -917,19 +919,19 @@ end
 
 end sect
 
-def bijection.fconcat (n : ℕ) : bijection (list (fin (succ n))) ℕ :=
-bijection.mk (bijection.fconcat.f _) (bijection.fconcat.g n)
+def fconcat (n : ℕ) : bijection (list (fin (succ n))) ℕ :=
+bijection.mk (fconcat.f _) (fconcat.g n)
 (begin
   intro x,
   induction x with x xs ih,
-  { rw [ bijection.fconcat.f.equations._eqn_1
-       , bijection.fconcat.g.equations._eqn_1
+  { rw [ fconcat.f.equations._eqn_1
+       , fconcat.g.equations._eqn_1
        , well_founded.fix_eq ],
     refl },
-  { unfold bijection.fconcat.f,
+  { unfold fconcat.f,
     note h := (bij.prod.pre n)^.f_inv,
     unfold bij.prod.pre bijection.mk bijection.f bijection.g at h,
-    rw bijection.fconcat.g_succ,
+    rw fconcat.g_succ,
     apply congr, apply congr_arg,
     { cases x with x Px, cases x with x,
       rw h, rw h, },
@@ -941,10 +943,10 @@ end)
   clear x,
   intros x ih,
   cases x with x,
-  { rw bijection.fconcat.g_zero,
+  { rw fconcat.g_zero,
     refl },
-  { rw bijection.fconcat.g_succ,
-    unfold bijection.fconcat.f,
+  { rw fconcat.g_succ,
+    unfold fconcat.f,
     apply congr_arg,
     unfold bij.prod.pre.g prod.snd,
     rw ih, unfold prod.fst bij.prod.pre.f,
@@ -1054,7 +1056,7 @@ instance inf_fin_inf_sum [infinite α] [finite β] : infinite (α ⊕ β) :=
 instance fin_inf_inf_sum [finite α] [infinite β] : infinite (α ⊕ β) :=
   { to_nat := bij.sum.pre _ ∘ (finite.to_nat α + infinite.to_nat β) }
 
-instance [finite α] [finite β] : finite (α ⊕ β) :=
+instance finite_sum [finite α] [finite β] : finite (α ⊕ β) :=
   { count := _
   , to_nat := bij.sum.append _ _ ∘ (finite.to_nat α + finite.to_nat β)
   }
@@ -1068,22 +1070,24 @@ instance inf_fin_inf_prod [infinite α] [pos_finite β] : infinite (α × β) :=
 instance fin_inf_inf_prod [pos_finite α] [infinite β] : infinite (α × β) :=
   { to_nat := bij.prod.pre _ ∘ (pos_finite.to_nat α * infinite.to_nat β) }
 
-instance [finite α] [finite β] : finite (α × β) :=
+instance finite_prod [finite α] [finite β] : finite (α × β) :=
   { count := nat.mul (finite.count α) (finite.count β)
   , to_nat := bij.prod.append _ _ ∘ (finite.to_nat α * finite.to_nat β)
   }
 
-instance [finite α] : pos_finite (option α) :=
+instance pos_finite_option [finite α] : pos_finite (option α) :=
  { pred_count := finite.count α
  , to_nat := bij.option.fin ∘ bijection.fmap (finite.to_nat α) }
 
-instance [infinite α] : infinite (option α) :=
+instance infinite_option [infinite α] : infinite (option α) :=
  { to_nat := bij.option ∘ bijection.fmap (infinite.to_nat α) }
 
 instance inf_list_of_fin [pos_finite α] : infinite (list α) :=
- { to_nat := bijection.fconcat _ ∘ bijection.map (pos_finite.to_nat α) }
+ { to_nat := fconcat _ ∘ bijection.map (pos_finite.to_nat α) }
 
 instance inf_list_of_inf  [infinite α] : infinite (list α) :=
- { to_nat := bijection.concat ∘ bijection.map (infinite.to_nat α) }
+ { to_nat := concat ∘ bijection.map (infinite.to_nat α) }
 
 end
+
+end bijection

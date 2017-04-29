@@ -1,7 +1,13 @@
 
 open nat
 
-lemma fin.zero_def (n : ℕ) : (0 : fin (succ n)).val = 0 := sorry
+lemma fin.zero_def (n : ℕ)
+: (0 : fin (succ n)).val = 0 :=
+begin
+  unfold zero has_zero.zero fin.of_nat fin.val,
+  apply mod_eq_of_lt,
+  apply zero_lt_succ
+end
 
 def fin.pred {n} : fin n → fin n
   | ⟨i,P⟩ := ⟨pred i,lt_of_le_of_lt (pred_le _) P⟩
@@ -11,10 +17,24 @@ def fin.succ {n} : fin n → fin n
                                 else ⟨i,P⟩
 
 lemma fin.val_succ_le_nat_succ {n : ℕ} (x : fin n)
-: x.succ.val ≤ succ (x.val) := sorry
+: x.succ.val ≤ succ (x.val) :=
+begin
+  cases n with n
+  ; cases x with x Pn
+  ; unfold fin.succ fin.val,
+  { cases not_lt_zero _ Pn },
+  cases decidable.em (succ x < succ n) with h h,
+  { rw dif_pos h },
+  { rw dif_neg h,
+    apply le_succ },
+end
 
 lemma fin.pred_def {n : ℕ} (x : fin n)
-: (x.pred).val = pred x.val := sorry
+: (x.pred).val = pred x.val :=
+begin
+  cases x with x Px,
+  refl
+end
 
 lemma fin.succ_def  {n : ℕ} (x : fin n)
   (h : succ x.val < n)
@@ -28,9 +48,17 @@ end
 
 def fin.max {n} : fin (succ n) := ⟨n,lt_succ_self _⟩
 
-lemma fin.pred_succ {n} (x : fin (succ n))
-  (h : x.val < n)
-: x.succ.pred = x := sorry
+lemma fin.max_def {n}
+: (@fin.max n).val = n := rfl
+
+lemma fin.pred_succ {n} (x : fin n)
+  (h : succ x.val < n)
+: x.succ.pred = x :=
+begin
+  apply fin.eq_of_veq,
+  rw [fin.pred_def,fin.succ_def,pred_succ],
+  apply h,
+end
 
 lemma fin.succ_pred {n} (x : fin (succ n))
   (h : 0 < x)
@@ -47,7 +75,22 @@ end
 
 lemma fin.succ_le_self {n} (x : fin (succ n))
   (h : x < fin.max)
-: ¬ x.succ ≤ x := sorry
+: ¬ x.succ ≤ x :=
+begin
+  rw [fin.le_def,fin.succ_def],
+  apply not_succ_le_self,
+  apply succ_lt_succ,
+  rw [fin.lt_def,fin.max_def] at h,
+  apply h
+end
 
 lemma fin.le_succ_self {n} (x : fin (succ n))
-: x ≤ x.succ := sorry
+: x ≤ x.succ :=
+begin
+  cases x with x Px,
+  unfold fin.succ,
+  cases decidable.em (succ x < succ n) with h h,
+  { rw [dif_pos h,fin.le_def],
+    apply le_succ },
+  { rw [dif_neg h,fin.le_def], },
+end

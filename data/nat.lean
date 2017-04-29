@@ -113,15 +113,30 @@ end
 theorem lt_of_pred_lt {m n : ℕ}
   (h : m < pred n)
 : m < n :=
-sorry
+begin
+  cases n with n
+  ; unfold pred at h,
+  { apply h },
+  { apply nat.le_trans h (le_succ _), },
+end
 
 theorem lt_pred_of_lt {m n : ℕ}
   (h : m < n)
 : pred m < n :=
-sorry
+begin
+  cases m with m,
+  { apply h },
+  { apply nat.lt_trans _ h,
+    apply lt_succ_self }
+end
 
 theorem succ_pred_le_self (x : ℕ)
 : x ≤ succ (pred x) :=
-sorry
+begin
+  cases x with x,
+  { apply zero_le },
+  { apply succ_le_succ,
+    refl },
+end
 
 end nat

@@ -110,4 +110,18 @@ begin
     apply le_of_not_gt h },
 end
 
+theorem lt_of_pred_lt {m n : ℕ}
+  (h : m < pred n)
+: m < n :=
+sorry
+
+theorem lt_pred_of_lt {m n : ℕ}
+  (h : m < n)
+: pred m < n :=
+sorry
+
+theorem succ_pred_le_self (x : ℕ)
+: x ≤ succ (pred x) :=
+sorry
+
 end nat

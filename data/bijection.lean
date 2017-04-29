@@ -175,6 +175,9 @@ begin
   apply bijection.g_inv
 end
 
+def bijection.id : bijection α α :=
+    bijection.mk id id (λ _, by simp) (λ _, by simp)
+
 class finite (α : Type (u₀)) : Type (u₀) :=
   (count : ℕ)
   (to_nat : bijection α (fin count))
@@ -190,9 +193,6 @@ instance finite_of_pos_finite [pos_finite α] : finite α :=
 { count := nat.succ (pos_finite.pred_count α)
 , to_nat := pos_finite.to_nat α }
 
-def bij.id : bijection α α :=
-    bijection.mk id id (λ _, by simp) (λ _, by simp)
-
 def bij.comp (x : bijection β γ) (y : bijection α β) : bijection α γ :=
    { f := x^.f ∘ y^.f
    , g := y^.g ∘ x^.g
@@ -202,6 +202,12 @@ def bij.comp (x : bijection β γ) (y : bijection α β) : bijection α γ :=
          unfold function.comp,
          rw [x^.inverse,y^.inverse]
        end }
+
+lemma comp_f  (x : bijection β γ) (y : bijection α β)
+: (bij.comp x y).f = x.f ∘ y.f := rfl
+
+lemma comp_g  (x : bijection β γ) (y : bijection α β)
+: (bij.comp x y).g = y.g ∘ x.g := rfl
 
 def sum.swap : α ⊕ β → β ⊕ α
   | (sum.inl x) := sum.inr x
@@ -235,7 +241,46 @@ end bijection
 
 namespace bijection
 
-local infixr ∘ := bij.comp
+protected lemma eq {α β} (b₀ b₁ : bijection α β)
+  (Hf : ∀ x, b₀.f x = b₁.f x)
+  (Hg : ∀ x, b₀.g x = b₁.g x)
+: b₀ = b₁ :=
+begin
+  cases b₀, cases b₁,
+  unfold bijection.f bijection.g at Hf Hg,
+  assertv Hf' : f = f_1 := funext Hf,
+  assertv Hg' : g = g_1 := funext Hg,
+  subst f_1, subst g_1
+end
+
+infixr ∘ := bij.comp
+
+lemma bijection.left_id {α β} (x : bijection α β) : id ∘ x = x :=
+begin
+  cases x, unfold id bij.comp,
+  assertv Hf : function.comp id.f f = f := function.left_id _,
+  assertv Hg : function.comp g id.g = g := function.right_id _,
+  simp [Hf,Hg],
+end
+
+lemma bijection.right_id {α β} (x : bijection α β) : x ∘ id = x :=
+begin
+  cases x, unfold id bij.comp,
+  assertv Hf : function.comp f id.f = f := function.left_id _,
+  assertv Hg : function.comp id.g g = g := function.left_id _,
+  simp [Hf,Hg],
+end
+
+@[simp]
+lemma bijection.comp_assoc {α β γ φ} (z : bijection α β) (y : bijection β γ) (x : bijection γ φ)
+: (x ∘ y) ∘ z = x ∘ (y ∘ z) :=
+begin
+  cases x with Xf Xg Xinv,
+  cases y with Yf Yg Yinv,
+  cases z with Zf Zg Zinv,
+  unfold bij.comp bijection.f bijection.g,
+  simp
+end
 
 section pre
 
@@ -641,10 +686,10 @@ instance : finite unit :=
 
 instance finite_fin (n : ℕ) : finite (fin n) :=
   { count := n
-  , to_nat := bij.id }
+  , to_nat := bijection.id }
 
 instance : infinite ℕ :=
-  { to_nat := bij.id }
+  { to_nat := bijection.id }
 
 section bijection_add
 

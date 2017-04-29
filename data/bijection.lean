@@ -189,6 +189,17 @@ class pos_finite (α : Type (u₀)) : Type (u₀) :=
 class infinite (α : Type u₀) : Type u₀ :=
   (to_nat : bijection α ℕ)
 
+instance pos_of_finite {α} [finite α] [_ne : nonempty α] : pos_finite α :=
+  { pred_count := nat.pred (finite.count α)
+  , to_nat :=
+    begin
+      rw nat.succ_pred_eq_of_pos,
+      apply finite.to_nat,
+      cases _ne with x,
+      note H := ((finite.to_nat α).f x).is_lt,
+      apply lt_of_le_of_lt (nat.zero_le _) H,
+    end }
+
 instance finite_of_pos_finite [pos_finite α] : finite α :=
 { count := nat.succ (pos_finite.pred_count α)
 , to_nat := pos_finite.to_nat α }
@@ -226,7 +237,7 @@ def bij.prod.swap : bijection (α × β) (β × α) :=
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
 
-def bij.rev (x : bijection α β) : bijection β α :=
+def rev (x : bijection α β) : bijection β α :=
   { f := x^.g
   , g := x^.f
   , inverse :=

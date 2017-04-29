@@ -139,4 +139,18 @@ begin
     refl },
 end
 
+noncomputable def minimum {α} [nonempty α] [has_le α] (s : set α) : α :=
+classical.epsilon ({ x ∈ s | ∀ y, y ∈ s → x ≤ y } : set α)
+
+lemma minimum_mem {α} [nonempty α] [has_le α] (s : set α) (h : s ≠ ∅)
+: minimum s ∈ s := sorry
+
+lemma minimum_le {α} [nonempty α] [has_le α] (s : set α) (x : α) (h : x ∈ s)
+: minimum s ≤ x := sorry
+
+lemma minimum_unique {α} [nonempty α] [has_le α] (s : set α) (x : α)
+  (h₀ : x ∈ s)
+  (h₁ : ∀ y, y ∈ s → x ≤ y)
+: minimum s = x := sorry
+
 end nat

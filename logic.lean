@@ -1,9 +1,6 @@
 
 universe variables u u' u₀ u₁ u₂
 
-def curry {α : Type u₀} {β : Type u₁} {γ : Type u₂} (f : α × β → γ) (x : α) (y : β) : γ :=
-f (x,y)
-
 lemma forall_imp_forall {α : Sort u} {p q : α → Prop}
    (h : ∀ a, (p a → q a))
    (p : ∀ a, p a) : ∀ a, q a :=
@@ -231,3 +228,7 @@ begin
     cases x, apply h },
   { exact ⟨_,h⟩ }
 end
+
+lemma or_iff_not_imp (p q : Prop)
+: p ∨ q ↔ ¬ p → q :=
+sorry

@@ -4,7 +4,7 @@ import util.logic
 import util.data.finite
 import util.data.stream
 
-open nat
+open nat function
 open stream
 
 def rounds : ℕ → ℕ → stream ℕ := curry $ coinduct rounds.f

@@ -1,6 +1,9 @@
 
 open nat
 
+instance {n : ℕ} : inhabited (fin (succ n)) :=
+inhabited.mk ⟨n,lt_succ_self _⟩
+
 lemma fin.zero_def (n : ℕ)
 : (0 : fin (succ n)).val = 0 :=
 begin

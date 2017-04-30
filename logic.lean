@@ -229,6 +229,15 @@ begin
   { exact ⟨_,h⟩ }
 end
 
+lemma true_imp (p : Prop)
+: true → p ↔ p :=
+by { split ; intro h ; intros ; apply h ; trivial }
+
+
 lemma or_iff_not_imp (p q : Prop)
 : p ∨ q ↔ ¬ p → q :=
-sorry
+begin
+  cases classical.em p with hp hnp,
+  { rw [eq_true_intro hp,true_or,not_true,false_implies_iff], },
+  { rw [eq_false_intro hnp,false_or,not_false_iff,true_imp], }
+end

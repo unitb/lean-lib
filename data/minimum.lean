@@ -1,4 +1,7 @@
 
+
+import data.set
+
 import util.data.finite
 import util.data.fin
 
@@ -6,12 +9,22 @@ open nat
 
 lemma min_eq_or_min_eq {α} [decidable_linear_order α] (x y : α)
 : min x y = x ∨ min x y = y :=
-sorry
+begin
+  apply or.imp min_eq_left min_eq_right,
+  apply le_total
+end
 
 lemma exists_mem_of_ne_empty {α} (s : set α)
   (h : s ≠ ∅)
 : ∃ x, x ∈ s :=
-sorry
+begin
+  apply classical.by_contradiction,
+  intro h',
+  note h'' := forall_not_of_not_exists h',
+  apply h,
+  apply set.eq_empty_of_forall_not_mem,
+  apply h''
+end
 
 
 def decidable.minimum_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α)

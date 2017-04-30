@@ -2,7 +2,12 @@
 open nat
 
 lemma fin.veq_def {n} (x y : fin n)
-: (x = y) = (x.val = y.val) := sorry
+: x = y ↔ x.val = y.val :=
+begin
+  split,
+  apply fin.veq_of_eq,
+  apply fin.eq_of_veq,
+end
 
 instance {n : ℕ} : inhabited (fin (succ n)) :=
 inhabited.mk ⟨n,lt_succ_self _⟩
@@ -113,4 +118,14 @@ begin
   { rw [dif_pos h,fin.le_def],
     apply le_succ },
   { rw [dif_neg h,fin.le_def], },
+end
+
+lemma fin.eq_zero_of_val_le_zero {n} (x : fin (succ n))
+  (h : x.val ≤ 0)
+: x = 0 :=
+begin
+  apply fin.eq_of_veq,
+  rw fin.zero_def,
+  apply le_antisymm h,
+  apply zero_le
 end

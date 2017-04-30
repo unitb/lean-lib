@@ -1,7 +1,6 @@
 
 import data.stream
 import util.logic
-import util.data.finite
 import util.data.stream
 
 open nat function

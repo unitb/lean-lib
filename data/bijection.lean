@@ -1,4 +1,6 @@
 
+import util.data.fin
+
 universe variables u₀ u₁ u₂
 
 -- section order
@@ -13,7 +15,7 @@ namespace fin
 
 open nat
 
-lemma val_of_nat {m n : ℕ} (h : n < succ m)
+lemma val_of_nat {m n : ℕ} (h : n < nat.succ m)
 : (@of_nat m n).val = n :=
 begin
   unfold of_nat fin.val,
@@ -188,6 +190,9 @@ class pos_finite (α : Type (u₀)) : Type (u₀) :=
 
 class infinite (α : Type u₀) : Type u₀ :=
   (to_nat : bijection α ℕ)
+
+instance inhabited_of_pos_finite [pos_finite α] : inhabited α :=
+{ default := ((pos_finite.to_nat α).g fin.max) }
 
 instance pos_of_finite {α} [finite α] [_ne : nonempty α] : pos_finite α :=
   { pred_count := nat.pred (finite.count α)

@@ -194,16 +194,6 @@ class infinite (α : Type u₀) : Type u₀ :=
 instance inhabited_of_pos_finite [pos_finite α] : inhabited α :=
 { default := ((pos_finite.to_nat α).g fin.max) }
 
-instance pos_of_finite {α} [finite α] [_ne : nonempty α] : pos_finite α :=
-  { pred_count := nat.pred (finite.count α)
-  , to_nat :=
-    begin
-      rw nat.succ_pred_eq_of_pos,
-      apply finite.to_nat,
-      cases _ne with x,
-      note H := ((finite.to_nat α).f x).is_lt,
-      apply lt_of_le_of_lt (nat.zero_le _) H,
-    end }
 
 instance finite_of_pos_finite [pos_finite α] : finite α :=
 { count := nat.succ (pos_finite.pred_count α)
@@ -702,6 +692,10 @@ instance : finite unit :=
 
 instance finite_fin (n : ℕ) : finite (fin n) :=
   { count := n
+  , to_nat := bijection.id }
+
+instance pos_finite_fin (n : ℕ) : pos_finite (fin (succ n)) :=
+  { pred_count := n
   , to_nat := bijection.id }
 
 instance : infinite ℕ :=

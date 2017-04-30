@@ -13,14 +13,6 @@ lemma exists_mem_of_ne_empty {α} (s : set α)
 : ∃ x, x ∈ s :=
 sorry
 
-lemma classical.epsilon_spec_entails {α} (p q : α → Prop)
-  (Hex : ∃ x, q x)
-  (Hall : ∀ x, q x → p x)
-: p (@classical.epsilon α (nonempty_of_exists Hex) q) :=
-begin
-  apply Hall,
-  apply classical.epsilon_spec,
-end
 
 def decidable.minimum_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α)
   [decidable_pred (λ y, y ∈ s)]
@@ -31,7 +23,7 @@ def decidable.minimum_aux {α} [pos_finite α] [decidable_linear_order α] (s : 
      then decidable.minimum_aux (min x y) n (le_of_succ_le P)
      else decidable.minimum_aux x n $ le_of_succ_le P
 
-noncomputable def decidable.minimum {α} [pos_finite α] [decidable_linear_order α] (s : set α) : α :=
+noncomputable def minimum {α} [pos_finite α] [decidable_linear_order α] (s : set α) : α :=
 have inst : decidable_pred (λ y, y ∈ s), from (λ _, classical.prop_decidable _),
 @decidable.minimum_aux _ _ _ _ inst (classical.epsilon s) (finite.count α)
 (by { unfold finite.count, apply lt_succ_self })
@@ -60,7 +52,7 @@ begin
 end
 
 lemma minimum_mem {α} [pos_finite α] [decidable_linear_order α] (s : set α) (h : s ≠ ∅)
-: decidable.minimum s ∈ s :=
+: minimum s ∈ s :=
 begin
   apply minimum_mem_aux,
   apply classical.epsilon_spec (exists_mem_of_ne_empty _ h),
@@ -125,9 +117,9 @@ begin
 end
 
 lemma minimum_le {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x : α) (h : x ∈ s)
-: decidable.minimum s ≤ x :=
+: minimum s ≤ x :=
 begin
-  unfold decidable.minimum,
+  unfold minimum,
   apply minimum_le_aux,
   { apply @classical.epsilon_spec _ s ⟨_,h⟩ },
   { apply h },
@@ -191,7 +183,7 @@ end
 lemma minimum_unique {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x : α)
   (h₀ : x ∈ s)
   (h₁ : ∀ y, y ∈ s → x ≤ y)
-: decidable.minimum s = x :=
+: minimum s = x :=
 begin
   apply minimum_unique_aux,
   { apply h₀ },

@@ -241,3 +241,14 @@ begin
   { rw [eq_true_intro hp,true_or,not_true,false_implies_iff], },
   { rw [eq_false_intro hnp,false_or,not_false_iff,true_imp], }
 end
+
+lemma exists_one_point_right {α : Type u} (y : α) (p : α → Prop)
+  (h : ∀ x, p x → x = y)
+: (∃ x, p x) ↔ p y :=
+begin
+  split ; intro h,
+  { cases h with x h',
+    rw [-h _ h'],
+    apply h' },
+  { exact ⟨_,h⟩ }
+end

@@ -1050,7 +1050,7 @@ lemma bij.option.fin.g_zero (n : ℕ)
 : bij.option.fin.g (0 : fin $ succ n) = none :=
 begin
   unfold zero has_zero.zero fin.of_nat,
-  generalize (@of_nat._proof_1 n 0) X,
+  generalize (@fin.of_nat._proof_1 n 0) X,
   note Y := @zero_mod (succ n),
   revert Y,
   generalize (0 % succ n) k,

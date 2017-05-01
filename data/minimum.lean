@@ -16,7 +16,7 @@ end
 
 lemma exists_mem_of_ne_empty {α} (s : set α)
   (h : s ≠ ∅)
-: ∃ x, x ∈ s :=
+: ∃ x : α, x ∈ s :=
 begin
   apply classical.by_contradiction,
   intro h',
@@ -28,7 +28,7 @@ end
 
 
 def decidable.minimum_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α)
-  [decidable_pred (λ y, y ∈ s)]
+  [decidable_pred (λ y : α, y ∈ s)]
 : α → ∀ i : ℕ, i ≤ finite.count α → α
   | x 0 P := x
   | x (succ n) P := let y := (pos_finite.to_nat α).g ⟨n, P⟩ in
@@ -37,12 +37,12 @@ def decidable.minimum_aux {α} [pos_finite α] [decidable_linear_order α] (s : 
      else decidable.minimum_aux x n $ le_of_succ_le P
 
 noncomputable def minimum {α} [pos_finite α] [decidable_linear_order α] (s : set α) : α :=
-have inst : decidable_pred (λ y, y ∈ s), from (λ _, classical.prop_decidable _),
+have inst : decidable_pred (λ y : α, y ∈ s), from (λ _, classical.prop_decidable _),
 @decidable.minimum_aux _ _ _ _ inst (classical.epsilon s) (finite.count α)
 (by { unfold finite.count, apply lt_succ_self })
 
 lemma minimum_mem_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α) (y : α)
-   [decidable_pred (λ x, x ∈ s)]
+   [decidable_pred (λ x : α, x ∈ s)]
   (i : ℕ)
   (h : y ∈ s)
   (P : i ≤ finite.count α)
@@ -72,7 +72,7 @@ begin
 end
 
 lemma minimum_le_min_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x : α)
-  [decidable_pred (λ x, x ∈ s)]
+  [decidable_pred (λ x : α, x ∈ s)]
   (i : ℕ)
   (P : i ≤ finite.count α)
 : decidable.minimum_aux s x i P ≤ x :=
@@ -93,7 +93,7 @@ begin
 end
 
 lemma minimum_le_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x y : α)
-   [decidable_pred (λ x, x ∈ s)]
+   [decidable_pred (λ x : α, x ∈ s)]
   (i : ℕ)
   (hy : y ∈ s)
   (hx : x ∈ s)
@@ -142,7 +142,7 @@ end
 lemma minimum_aux_min {α}
   [pos_finite α] [decidable_linear_order α]
   (s : set α) (x y : α)
-  [decidable_pred (λ x, x ∈ s)]
+  [decidable_pred (λ x : α, x ∈ s)]
   (i : ℕ)
   (P : i ≤ finite.count α)
 : decidable.minimum_aux s (min x y) i P = min (decidable.minimum_aux s x i P) y :=
@@ -159,7 +159,7 @@ begin
 end
 
 lemma minimum_unique_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x y : α)
-  [decidable_pred (λ x, x ∈ s)]
+  [decidable_pred (λ x : α, x ∈ s)]
   (i : ℕ)
   (P : i ≤ finite.count α)
   (h₀ : x ∈ s)

@@ -20,7 +20,18 @@ end
 lemma exists_or  {α : Type u}
    {p q : α → Prop}
 : (∃ i, p i ∨ q i) ↔ (∃ i, p i) ∨ (∃ i, q i) :=
-sorry
+begin
+  split ; intro h,
+  { cases h with i h,
+    apply or.imp _ _ h
+    ; apply exists.intro },
+  { cases h with h h
+    ; revert h
+    ; apply exists_imp_exists
+    ; intro,
+    { apply or.intro_left },
+    { apply or.intro_right }, },
+end
 
 lemma exists_imp_exists'' {α : Sort u} {β : Sort u'}
    {p : α → Prop}
@@ -308,8 +319,21 @@ end
 
 lemma or_of_ite {c t f : Prop} [decidable c]
   (h : ite c t f)
-: (c ∧ t) ∨ (¬ c ∧ f) := sorry
+: (c ∧ t) ∨ (¬ c ∧ f) :=
+begin
+  cases decidable.em c with hc hnc,
+  { left,
+    rw [if_pos hc] at h,
+    exact ⟨hc,h⟩ },
+  { right,
+    rw [if_neg hnc] at h,
+    exact ⟨hnc,h⟩ },
+end
 
 lemma or_of_ite' {c t f : Prop} [decidable c]
   (h : ite c t f)
-: t ∨ f := sorry
+: t ∨ f :=
+begin
+  apply or.imp _ _ (or_of_ite h)
+  ; apply and.right
+end

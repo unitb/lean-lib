@@ -17,15 +17,21 @@ begin
   apply h, apply P
 end
 
+lemma exists_or  {α : Type u}
+   {p q : α → Prop}
+: (∃ i, p i ∨ q i) ↔ (∃ i, p i) ∨ (∃ i, q i) :=
+sorry
+
 lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
    {p : α → Prop}
    {q : β → Prop}
-   (f : α → β)
-   (h : ∀ a, (p a → q (f a)))
+   (f : ∀ x: α, p x → β)
+   (h : ∀ a (h : p a), q (f a h))
    (P : ∃ a, p a) : ∃ a, q a :=
 begin
   cases P with a P,
-  exact ⟨_,h _ P⟩
+  existsi f a P,
+  apply h _ P,
 end
 
 lemma exists_imp_iff_forall_imp {α : Sort u}
@@ -252,3 +258,46 @@ begin
     apply h' },
   { exact ⟨_,h⟩ }
 end
+
+lemma exists_variable_change' {α : Type u} {β : Type u'}
+  (p : α → Prop) (q : β → Prop)
+  (f : ∀ x : α, p x → β) (g : ∀ x : β, q x → α)
+  (Hf : ∀ x (h: p x), q (f x h))
+  (Hg : ∀ x (h: q x), p (g x h))
+: (∃ i, p i) ↔ (∃ j, q j) :=
+begin
+  split,
+  { apply exists_imp_exists' f Hf, },
+  { apply exists_imp_exists' g Hg, },
+end
+
+lemma exists_variable_change {α : Type u} {β : Type u'}
+  (p : α → Prop) (q : β → Prop)
+  (f : α → β) (g : β → α)
+  (Hf : ∀ x, p x → q (f x))
+  (Hg : ∀ x, q x → p (g x))
+: (∃ i, p i) ↔ (∃ j, q j) :=
+begin
+  apply exists_variable_change' p q (λ x (h : p x), f x)  (λ x (h : q x), g x),
+  apply Hf,
+  apply Hg,
+end
+
+lemma exists_range_subtype {α : Type u}
+  (p : α → Prop) (q : α → Prop)
+: (∃ i, p i ∧ q i) ↔ (∃ j : subtype p, q j) :=
+begin
+  pose f := λ (x : α) (h : p x ∧ q x), subtype.mk x h.left,
+  pose g := λ (x : subtype p) (h : q x), x.val,
+  apply exists_variable_change' _ _ f g,
+  { intros x h, apply h.right },
+  { intros x h, exact ⟨x.property, h⟩  },
+end
+
+lemma or_of_ite {c t f : Prop} [decidable c]
+  (h : ite c t f)
+: (c ∧ t) ∨ (¬ c ∧ f) := sorry
+
+lemma or_of_ite' {c t f : Prop} [decidable c]
+  (h : ite c t f)
+: t ∨ f := sorry

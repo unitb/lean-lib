@@ -509,7 +509,7 @@ lemma rotate_right_g_eq {n : ℕ} (k : fin n)
 : (rotate_right k).g = rotate_right_g k :=
 by refl
 
-lemma rotate_right_eq {n : ℕ} (k : fin (succ n))
+lemma rotate_right_f_k {n : ℕ} (k : fin (succ n))
 : (rotate_right k).f k = fin.max :=
 begin
   simp,
@@ -518,7 +518,14 @@ begin
   refl
 end
 
-lemma rotate_right_lt_shifted {n : ℕ} (k i : fin n)
+lemma rotate_right_g_max {n : ℕ} (k : fin (succ n))
+: (rotate_right k).g fin.max = k :=
+begin
+  symmetry,
+  rw [-bijection.inverse,rotate_right_f_k],
+end
+
+lemma rotate_right_f_lt_shifted {n : ℕ} (k i : fin n)
   (h : k < i)
 : (rotate_right k).f i = i.pred :=
 begin
@@ -533,7 +540,15 @@ begin
     rw [-lt_def], apply h }
 end
 
-lemma rotate_right_gt_eq_self {n : ℕ} (k i : fin n)
+lemma rotate_right_g_lt_shifted {n : ℕ} (k i : fin n)
+  (h : k < i)
+: (rotate_right k).g i.pred = i :=
+begin
+  symmetry,
+  rw [-bijection.inverse,rotate_right_f_lt_shifted _ _ h],
+end
+
+lemma rotate_right_f_gt_eq_self {n : ℕ} (k i : fin n)
   (h : k > i)
 : (rotate_right k).f i = i :=
 begin
@@ -549,6 +564,15 @@ begin
     unfold gt,
     rw [-lt_def],
     apply h }
+end
+
+lemma rotate_right_g_gt_eq_self {n : ℕ} (k i : fin n)
+  (h : k > i)
+: (rotate_right k).g i = i :=
+begin
+  symmetry,
+  rw -bijection.inverse,
+  apply rotate_right_f_gt_eq_self _ _ h,
 end
 
 end perm

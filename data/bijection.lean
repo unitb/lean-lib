@@ -243,6 +243,14 @@ def rev (x : bijection α β) : bijection β α :=
       { rw [-x^.inverse,-h], }
     end }
 
+@[simp]
+lemma rev_f  (x : bijection α β)
+: (rev x).f = x.g := rfl
+
+@[simp]
+lemma rev_g  (x : bijection α β)
+: (rev x).g = x.f := rfl
+
 end bijection
 
 namespace bijection

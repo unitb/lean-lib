@@ -22,7 +22,7 @@ lemma exists_or  {α : Type u}
 : (∃ i, p i ∨ q i) ↔ (∃ i, p i) ∨ (∃ i, q i) :=
 sorry
 
-lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
+lemma exists_imp_exists'' {α : Sort u} {β : Sort u'}
    {p : α → Prop}
    {q : β → Prop}
    (f : ∀ x: α, p x → β)
@@ -31,6 +31,18 @@ lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
 begin
   cases P with a P,
   existsi f a P,
+  apply h _ P,
+end
+
+lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
+   {p : α → Prop}
+   {q : β → Prop}
+   (f : α → β)
+   (h : ∀ a, p a → q (f a))
+   (P : ∃ a, p a) : ∃ a, q a :=
+begin
+  cases P with a P,
+  existsi f a,
   apply h _ P,
 end
 
@@ -267,8 +279,8 @@ lemma exists_variable_change' {α : Type u} {β : Type u'}
 : (∃ i, p i) ↔ (∃ j, q j) :=
 begin
   split,
-  { apply exists_imp_exists' f Hf, },
-  { apply exists_imp_exists' g Hg, },
+  { apply exists_imp_exists'' f Hf, },
+  { apply exists_imp_exists'' g Hg, },
 end
 
 lemma exists_variable_change {α : Type u} {β : Type u'}

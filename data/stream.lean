@@ -68,4 +68,15 @@ end
 
 end s
 
+universe variables u₀ u₁
+
+variables {α : Type u₀}
+variables {β : Type u₁}
+
+def zip' (x : stream α) (y : stream β) : stream (α × β) :=
+λ i, (x i, y i)
+
+lemma fst_comp_zip' (x : stream α) (y : stream β)
+: prod.fst ∘ zip' x y = x := rfl
+
 end stream

@@ -87,7 +87,13 @@ lemma snd_zip' (x : stream α) (y : stream β) (i : ℕ)
 
 lemma length_approx (i : ℕ) (s : stream α)
 : list.length (approx i s) = i :=
-sorry
+begin
+  revert s,
+  induction i with i IH
+  ; intro s,
+  { refl },
+  { simp [approx_succ,IH], }
+end
 
 lemma approx_succ_eq_append (i : ℕ) (s : stream α)
 : approx (succ i) s = approx i s ++ [s i] :=

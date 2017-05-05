@@ -79,4 +79,29 @@ def zip' (x : stream α) (y : stream β) : stream (α × β) :=
 lemma fst_comp_zip' (x : stream α) (y : stream β)
 : prod.fst ∘ zip' x y = x := rfl
 
+lemma fst_zip' (x : stream α) (y : stream β) (i : ℕ)
+: prod.fst (zip' x y i) = x i := rfl
+
+lemma snd_zip' (x : stream α) (y : stream β) (i : ℕ)
+: prod.snd (zip' x y i) = y i := rfl
+
+lemma length_approx (i : ℕ) (s : stream α)
+: list.length (approx i s) = i :=
+sorry
+
+lemma approx_succ_eq_append (i : ℕ) (s : stream α)
+: approx (succ i) s = approx i s ++ [s i] :=
+begin
+  revert s,
+  induction i with i IH
+  ; intros s,
+  { refl },
+  { assert H : tail s i = s (succ i), { refl },
+    rw [approx_succ,IH,approx_succ,list.cons_append,H], }
+end
+
+lemma approx_succ_eq_concat (i : ℕ) (s : stream α)
+: approx (succ i) s = list.concat (approx i s) (s i) :=
+by rw [list.concat_eq_append,approx_succ_eq_append]
+
 end stream

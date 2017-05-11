@@ -122,6 +122,10 @@ lemma imp_imp_imp_right' {p q r : Prop} (h : r → p → q)
    (h' : r → p) : (r → q) :=
 take h'', h h'' (h' h'')
 
+lemma or_not_and (p q : Prop)
+: p ∨ (¬ p ∧ q) ↔ p ∨ q :=
+sorry
+
 variables {a b c : Prop}
 
 lemma distrib_left_or : (a ∧ b) ∨ c ↔ (a ∨ c) ∧ (b ∨ c) :=
@@ -187,6 +191,16 @@ begin
     cases classical.em p with h h,
     apply h, cases hnnp h },
   exact not_not_intro
+end
+
+lemma and_shunting (p q r : Prop)
+: (p ∧ q → r) ↔ (p → q → r) :=
+begin
+  split ; intro h,
+  { intros hp hq,
+    apply h ⟨hp,hq⟩ },
+  { intro h', cases h' with hp hq,
+    apply h hp hq }
 end
 
 lemma assume_neg {p : Prop} : (¬ p → p) → p :=
@@ -262,6 +276,13 @@ lemma true_imp (p : Prop)
 : true → p ↔ p :=
 by { split ; intro h ; intros ; apply h ; trivial }
 
+lemma distrib_left_and (p q r : Prop)
+: p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) :=
+begin
+  cases classical.em p with h h,
+  { simp [eq_true_intro h] },
+  { simp [eq_false_intro h] },
+end
 
 lemma or_iff_not_imp (p q : Prop)
 : p ∨ q ↔ ¬ p → q :=
@@ -271,7 +292,7 @@ begin
   { rw [eq_false_intro hnp,false_or,not_false_iff,true_imp], }
 end
 
-lemma exists_one_point_right {α : Type u} (y : α) (p : α → Prop)
+lemma exists_one_point_right {α : Type u} (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)
 : (∃ x, p x) ↔ p y :=
 begin

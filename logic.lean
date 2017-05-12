@@ -105,6 +105,14 @@ end
 lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
 by refl
 
+lemma and.imp_left {p p' q : Prop}
+  (hp : p → p')
+: p ∧ q → p' ∧ q := and.imp hp id
+
+lemma and.imp_right {p q q' : Prop}
+  (hp : q → q')
+: p ∧ q → p ∧ q' := and.imp id hp
+
 lemma imp_mono {p p' q q' : Prop}
    (hp : p' → p)
    (hq : q  → q')
@@ -143,6 +151,10 @@ begin
     apply or.inr ha,
     apply or.inr ha, }
 end
+
+lemma distrib_right_or
+: c ∨ (a ∧ b) ↔ (c ∨ a) ∧ (c ∨ b) :=
+by { rw [or_comm,distrib_left_or], simp }
 
 lemma not_or_of_not_and_not {p q : Prop} : ¬ (p ∨ q) → ¬ p ∧ ¬ q :=
 begin

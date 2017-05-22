@@ -1,7 +1,23 @@
 
 import util.data.functor
 
-universe variables u v u'
+universe variables u v w u' v' w'
+
+class applicative_pair (f : Type u → Type v) (g : Type u' → Type v') extends functor_pair f g :=
+ (f_appl : applicative f)
+ (g_appl : applicative g)
+ (map_pure_comm : ∀ {α β}
+            (hp : α → β)
+            (x : α),
+    map hp (pure x) = pure (hp x))
+ (map_seq_comm : ∀ {α β : Type u} {α' β' : Type u'}
+            (h : β → β')
+            (hx : (α → β) → (α' → β'))
+            (hy : α → α')
+            (x : f (α → β))
+            (y : f α),
+    (∀ F y, hx F (hy y) = h (F y)) →
+    map h (x <*> y) = map hx x <*> map hy y)
 
 section lemmas
 
@@ -96,16 +112,31 @@ instance applicative_identity : applicative identity :=
 lemma identity.seq_mk {α β : Type v}  (f : α → β) (x : α)
 : identity.mk f <*> identity.mk x = identity.mk (f x) := rfl
 
+instance : applicative_pair identity identity :=
+{ (by apply_instance : functor_pair identity identity) with
+  f_appl := by apply_instance
+, g_appl := by apply_instance
+, map_pure_comm :=
+  by { intros, refl }
+, map_seq_comm :=
+  begin
+    intros α β α' β',
+    intros h hx hy x y H,
+    cases x with x,
+    cases y with y,
+    unfold applicative.seq identity.seq functor_pair.map identity.map,
+    rw H,
+  end }
 
 /- compose applicative instance -/
 
 namespace compose
 
-variables {f : Type u → Type u'} {g : Type v → Type u}
+open function
 
 section applicative
 
-open function
+variables {f : Type u → Type u'} {g : Type v → Type u}
 
 variables [applicative f] [applicative g]
 variables {α β γ : Type v}
@@ -177,12 +208,12 @@ begin
   apply applicative.pure_seq_eq_map
 end
 
-
 end applicative
 
 end compose
 
-instance {f : Type u → Type u'} {g : Type v → Type u}
+instance applicative_compose
+  {f : Type u → Type u'} {g : Type v → Type u}
   [applicative f] [applicative g]
 : applicative (compose f g) :=
 { map := @compose.map f g _ _
@@ -194,6 +225,50 @@ instance {f : Type u → Type u'} {g : Type v → Type u}
 , map_pure := @compose.map_pure f g _ _
 , seq_pure := @compose.seq_pure f g _ _
 , seq_assoc := @compose.seq_assoc f g _ _ }
+
+namespace compose
+
+section applicative_pair
+
+parameters {f :  Type v  → Type w}  {g  : Type u  → Type v}
+parameters {f' : Type v' → Type w'} {g' : Type u' → Type v'}
+parameters [applicative_pair f f'] [applicative_pair g g']
+parameters {α β : Type u} {α' β' : Type u'}
+
+instance applicative_f : applicative f := applicative_pair.f_appl f f'
+instance applicative_g : applicative g := applicative_pair.f_appl g g'
+instance applicative_f' : applicative f' := applicative_pair.g_appl f f'
+instance applicative_g' : applicative g' := applicative_pair.g_appl g g'
+
+lemma map_pure_comm (hp : α → β') (x : α)
+: functor_pair.map (compose f' g') hp (pure x : compose f g α) = pure (hp x) :=
+sorry
+
+lemma map_seq_comm (h : β → β') (hx : (α → β) → α' → β') (hy : α → α')
+                   (x : compose f g (α → β)) (y : compose f g α)
+                   (H : ∀ (F : α → β) (y : α), hx F (hy y) = h (F y))
+:   functor_pair.map (compose f' g') h (x <*> y)
+  = functor_pair.map (compose f' g') hx x <*> functor_pair.map (compose f' g') hy y  :=
+sorry
+
+end applicative_pair
+
+end compose
+
+instance
+  {f :  Type v  → Type w}  {g  : Type u  → Type v}
+  {f' : Type v' → Type w'} {g' : Type u' → Type v'}
+  [applicative_pair f f'] [applicative_pair g g']
+: applicative_pair (compose f g) (compose f' g') :=
+{ (by apply_instance : functor_pair (compose f g) (compose f' g')) with
+  f_appl := by { apply applicative_compose,
+                 apply applicative_pair.f_appl f f',
+                 apply applicative_pair.f_appl g g', }
+, g_appl := by { apply applicative_compose,
+                 apply applicative_pair.g_appl f f',
+                 apply applicative_pair.g_appl g g', }
+, map_pure_comm := @compose.map_pure_comm f g f' g' _ _
+, map_seq_comm := @compose.map_seq_comm f g f' g' _ _ }
 
 lemma compose.seq_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}

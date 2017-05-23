@@ -188,9 +188,6 @@ instance : traversable list :=
 
 class foldable (f : Type u → Type v) : Type (max (u+1) (u'+1) v) :=
 (foldr : Π {α : Type u} {r : Type u'}, (α → r → r) → f α → r → r)
-(has : Π {α : Type u}, f α → α → Prop)
-(map : Π {α : Type u} [functor f] (x : f α), f (subtype $ has x))
-(has_def : Π {α : Type u} [functor f] (t : f α), subtype.val <$> map t = t)
 
 def foldr' {f : Type u → Type v} [i : foldable f] {r : Type u'} {α : Type u} (g : α → r → r)
 : f α → r → r :=

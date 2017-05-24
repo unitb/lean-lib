@@ -19,9 +19,9 @@ class traversable (t : Type u → Type u) : Type (u+1) :=
                [applicative f] [applicative f']
                {α β γ : Type u}
                (g : α → f β) (h : β → f' γ) (x : t α),
-        traverse (compose.mk ∘ fmap h ∘ g) x = compose.mk (traverse h <$> traverse g x))
+        traverse (compose.mk ∘ has_map.map h ∘ g) x = compose.mk (traverse h <$> traverse g x))
 (fmap_eq_traverse_id : Π {α β : Type u} (f : α → β),
-        traverse (identity.mk ∘ f) = identity.mk ∘ functor.map f)
+        traverse (identity.mk ∘ f) = identity.mk ∘ has_map.map f)
 
 namespace identity
 
@@ -39,14 +39,14 @@ lemma traverse_mk (g : α → f β) (x : α)
 rfl
 
 lemma traverse_mk' (g : α → f β)
-: traverse g ∘ mk = fmap mk ∘ g :=
+: traverse g ∘ mk = has_map.map mk ∘ g :=
 rfl
 
 lemma id_traverse : traverse (identity.mk : α → identity α) = identity.mk :=
 by { apply funext, intro x, cases x, unfold traverse, refl }
 
 lemma traverse_comp (g : α → f β) (h : β → f' γ) : ∀ (x : identity α),
-        traverse (compose.mk ∘ functor.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
+        traverse (compose.mk ∘ has_map.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
   | ⟨ x ⟩ :=
 begin
   unfold traverse comp,
@@ -56,7 +56,7 @@ begin
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)
-: traverse (identity.mk ∘ f) = identity.mk ∘ functor.map f :=
+: traverse (identity.mk ∘ f) = identity.mk ∘ has_map.map f :=
 by { apply funext, intro x, cases x, refl }
 
 end identity
@@ -85,14 +85,14 @@ lemma traverse_mk (g : α → f β) (x : α)
 rfl
 
 lemma traverse_mk' (g : α → f β)
-: traverse g ∘ some = fmap some ∘ g :=
+: traverse g ∘ some = has_map.map some ∘ g :=
 rfl
 
 lemma id_traverse : traverse (identity.mk : α → identity α) = identity.mk :=
 by { apply funext, intro x, cases x ; unfold traverse ; refl }
 
 lemma traverse_comp (g : α → f β) (h : β → f' γ) : ∀ (x : option α),
-        traverse (compose.mk ∘ functor.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
+        traverse (compose.mk ∘ has_map.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
   | none :=
 begin
   unfold traverse, rw applicative.map_pure,
@@ -108,7 +108,7 @@ begin
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)
-: traverse (identity.mk ∘ f) = identity.mk ∘ functor.map f :=
+: traverse (identity.mk ∘ f) = identity.mk ∘ has_map.map f :=
 by { apply funext, intro x, cases x ; refl }
 
 end option
@@ -151,7 +151,7 @@ begin
 end
 
 lemma traverse_comp (g : α → f β) (h : β → f' γ) : ∀ (x : list α),
-        traverse (compose.mk ∘ functor.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
+        traverse (compose.mk ∘ has_map.map h ∘ g) x = compose.mk (traverse h <$> traverse g x)
   | [] :=
 begin
   unfold traverse, rw applicative.map_pure,
@@ -167,12 +167,12 @@ begin
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)
-: traverse (identity.mk ∘ f) = identity.mk ∘ functor.map f :=
+: traverse (identity.mk ∘ f) = identity.mk ∘ has_map.map f :=
 begin
   apply funext,
   intro x,
   induction x with x xs ih
-  ; unfold traverse functor.map,
+  ; unfold traverse has_map.map,
   { refl },
   { rw ih, refl }
 end
@@ -204,7 +204,7 @@ def to_set' {f : Type u → Type v} [i : foldable f] {α : Type u} {r : Type u'}
   [has_insert α r]
   [has_emptyc r]
 : f α → r :=
-@foldr f i _ _ insert emptyc
+@foldr f i _ _ insert ∅
 
 def to_set {f : Type u → Type v} [i : foldable f] {α : Type u}
 : f α → set α :=
@@ -213,9 +213,9 @@ def to_set {f : Type u → Type v} [i : foldable f] {α : Type u}
 def fold_map {f : Type u → Type v} [i : foldable f] {m : Type u'} [monoid m] {α : Type u}
   (g : α → m)
 : f α → m :=
-@foldr f i _ _ (mul ∘ g) 1
+@foldr f i _ _ (has_mul.mul ∘ g) 1
 
 def fold_map_add {f : Type u → Type v} [i : foldable f] {m : Type u'} [add_monoid m] {α : Type u}
   (g : α → m)
 : f α → m :=
-@foldr f i _ _ (add ∘ g) 0
+@foldr f i _ _ (has_add.add ∘ g) 0

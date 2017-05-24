@@ -229,7 +229,7 @@ bijection.right_id x
 --   { unfold rotate_left',
 --     simp [comp_f],
 --     unfold function.comp,
---     assertv h' : succ i.val ≤ succ k := h,
+--     note h' : succ i.val ≤ succ k := h,
 --     cases lt_or_eq_of_le h' with h' h',
 --     { rw [swap_neq,IH _ (lt_of_succ_lt_succ h')],
 --       rw [not_or_iff_not_and_not],
@@ -269,7 +269,7 @@ bijection.right_id x
 --   { unfold rotate_left',
 --     simp [comp_f],
 --     unfold function.comp,
---     assertv h' : succ i.val ≤ succ k := h,
+--     note h' : succ i.val ≤ succ k := h,
 --     cases lt_or_eq_of_le h' with h' h',
 --     { rw [swap_neq,IH _ (lt_of_succ_lt_succ h')],
 --       rw [not_or_iff_not_and_not],
@@ -342,7 +342,7 @@ bijection.right_id x
 def rotate_right_f : ∀ {n} (k i : fin n), fin n
   | 0 k i := i
   | (succ n) k i := if k.val = i.val then ⟨n,lt_succ_self _⟩
-                    else if k.val < i.val then i.pred
+                    else if k.val < i.val then i.pred'
                     else i
 
 def rotate_right_g : ∀ {n} (k i : fin n), fin n
@@ -393,7 +393,7 @@ begin
       cases lt_or_gt_of_ne Heq with Hlt Hgt,
       { rw [if_pos Hlt],
         unfold rotate_right_g,
-        assertv Hx_pos' : 0 < x.val :=
+        note Hx_pos' : 0 < x.val :=
            lt_of_le_of_lt (zero_le _) Hlt,
         assert Hx_pos : 0 < x,
         { rw [lt_def,zero_def],
@@ -527,7 +527,7 @@ end
 
 lemma rotate_right_f_lt_shifted {n : ℕ} (k i : fin n)
   (h : k < i)
-: (rotate_right k).f i = i.pred :=
+: (rotate_right k).f i = i.pred' :=
 begin
   cases n with n
   ; simp
@@ -542,7 +542,7 @@ end
 
 lemma rotate_right_g_lt_shifted {n : ℕ} (k i : fin n)
   (h : k < i)
-: (rotate_right k).g i.pred = i :=
+: (rotate_right k).g i.pred' = i :=
 begin
   symmetry,
   rw [-bijection.inverse,rotate_right_f_lt_shifted _ _ h],

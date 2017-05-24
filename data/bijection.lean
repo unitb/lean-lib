@@ -26,13 +26,6 @@ end fin
 
 namespace nat
 
-protected lemma mul_div_cancel {x : ℕ} (y : ℕ) (h : x > 0) : x * y / x = y :=
-begin
-  induction y with y,
-  { simp [div_eq_of_lt h] },
-  { rw [mul_succ,div_eq_sub_div h,nat.add_sub_cancel,ih_1],
-    apply le_add_left }
-end
 
 protected lemma mul_mod_cancel {x : ℕ} (y : ℕ) (h : x > 0)
 : x * y % x = 0 :=
@@ -47,18 +40,7 @@ protected lemma mul_add_modulo_cancel
   (x y k : ℕ)
   (h : k < x)
 : (x * y + k) % x = k :=
-begin
-  assert h₀ : x > 0,
-  { apply lt_of_le_of_lt (zero_le _) h },
-  simp,
-  induction y with y,
-  { simp [mod_eq_of_lt h] },
-  { rw [mul_succ,mod_eq_sub_mod h₀],
-    { simp [nat.add_sub_cancel_left],
-      apply eq.trans _ ih_1,
-      simp },
-    { simp, apply le_add_right } }
-end
+by simp [mod_eq_of_lt h]
 
 lemma div_lt_of_lt_mul (x) { m n : ℕ} (h : x < m * n) : x / n < m :=
 begin
@@ -272,8 +254,8 @@ protected lemma eq {α β} (b₀ b₁ : bijection α β)
 begin
   cases b₀, cases b₁,
   unfold bijection.f bijection.g at Hf Hg,
-  assertv Hf' : f = f_1 := funext Hf,
-  assertv Hg' : g = g_1 := funext Hg,
+  note Hf' : f = f_1 := funext Hf,
+  note Hg' : g = g_1 := funext Hg,
   subst f_1, subst g_1
 end
 
@@ -282,16 +264,16 @@ infixr ∘ := bij.comp
 lemma bijection.left_id {α β} (x : bijection α β) : id ∘ x = x :=
 begin
   cases x, unfold id bij.comp,
-  assertv Hf : function.comp id.f f = f := function.left_id _,
-  assertv Hg : function.comp g id.g = g := function.right_id _,
+  note Hf : function.comp id.f f = f := function.left_id _,
+  note Hg : function.comp g id.g = g := function.right_id _,
   simp [Hf,Hg],
 end
 
 lemma bijection.right_id {α β} (x : bijection α β) : x ∘ id = x :=
 begin
   cases x, unfold id bij.comp,
-  assertv Hf : function.comp f id.f = f := function.left_id _,
-  assertv Hg : function.comp id.g g = g := function.left_id _,
+  note Hf : function.comp f id.f = f := function.left_id _,
+  note Hg : function.comp id.g g = g := function.left_id _,
   simp [Hf,Hg],
 end
 
@@ -539,7 +521,7 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
           assert h : ¬ 2 * x % 2 = 1,
           { rw nat.mul_mod_cancel, contradiction, apply h' },
           unfold bij.even_odd.g bij.even_odd.f,
-          rw [if_neg h], rw [nat.mul_div_cancel _ h'] },
+          rw [if_neg h], rw [nat.mul_div_cancel_left _ h'] },
         { unfold bij.even_odd.g bij.even_odd.f,
           note h' := nat.le_refl 2,
           rw [if_pos,nat.mul_add_div_cancel _ _ _ h'],
@@ -575,7 +557,7 @@ def bij.prod.succ : ℕ × ℕ → ℕ × ℕ
   | (n,succ m) := (succ n,m)
 
 def diag : ℕ × ℕ → ℕ × ℕ → Prop
-:= inv_image (prod.lex lt lt) (λ x, (x^.fst+x^.snd, x^.fst))
+:= inv_image (prod.lex nat.lt nat.lt) (λ x, (x^.fst+x^.snd, x^.fst))
 --  | (x₀,x₁) (y₀,y₁) := prod.lex lt lt (x₀+y₀,x₀) (x₁+y₁,x₁)
 
 def diag_wf : well_founded diag
@@ -678,7 +660,7 @@ begin
     { rw [bij.prod.g_zero_succ,bij.prod.f_succ,IH],
       refl,
       unfold diag inv_image prod.fst prod.snd,
-      apply prod.lex.left, simp [lt_succ_self] }, },
+      apply prod.lex.left, simp, apply lt_succ_self }, },
   { rw [bij.prod.g_succ,bij.prod.f_succ,IH], refl,
     unfold diag inv_image prod.fst prod.snd,
     simp [succ_add,add_succ],
@@ -798,18 +780,18 @@ begin
   intro x, rw [list.map_map,bijection.g_inv',list.map_id]
 end
 
-def option.fmap (f : α → β) : option α → option β
+def option.map (f : α → β) : option α → option β
   | none := none
   | (some x) := some $ f x
 
 def bijection.fmap (b : bijection α β) : bijection (option α) (option β) :=
-bijection.mk (option.fmap b^.f) (option.fmap b^.g)
+bijection.mk (option.map b^.f) (option.map b^.g)
 begin
-  intro x, cases x ; unfold option.fmap, refl,
+  intro x, cases x ; unfold option.map, refl,
   rw b^.f_inv
 end
 begin
-  intro x, cases x ; unfold option.fmap, refl,
+  intro x, cases x ; unfold option.map, refl,
   rw b^.g_inv
 end
 

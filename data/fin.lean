@@ -41,7 +41,7 @@ by { apply fin.eq_of_veq, rw fin.zero_def }
 def fin.next {n : ℕ} : fin n → fin (succ n)
   | ⟨i,P⟩ := ⟨succ i, succ_lt_succ P⟩
 
-def fin.pred {n} : fin n → fin n
+def fin.pred' {n} : fin n → fin n
   | ⟨i,P⟩ := ⟨pred i,lt_of_le_of_lt (pred_le _) P⟩
 
 def fin.succ {n} : fin n → fin n
@@ -62,7 +62,7 @@ begin
 end
 
 lemma fin.pred_def {n : ℕ} (x : fin n)
-: (x.pred).val = pred x.val :=
+: x.pred'.val = pred x.val :=
 begin
   cases x with x Px,
   refl
@@ -85,7 +85,7 @@ lemma fin.max_def {n}
 
 lemma fin.pred_succ {n} (x : fin n)
   (h : succ x.val < n)
-: x.succ.pred = x :=
+: x.succ.pred' = x :=
 begin
   apply fin.eq_of_veq,
   rw [fin.pred_def,fin.succ_def,pred_succ],
@@ -94,7 +94,7 @@ end
 
 lemma fin.succ_pred {n} (x : fin (succ n))
   (h : 0 < x)
-: x.pred.succ = x :=
+: x.pred'.succ = x :=
 begin
   apply fin.eq_of_veq,
   assert h' : 0 < x.val,

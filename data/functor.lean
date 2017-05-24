@@ -10,7 +10,7 @@ class functor_pair (f : Type u → Type v) (g : Type u' → Type v') :=
             (hp' : β' → γ) (h' : α → β')
             (x : f α),
     h ∘ hp = hp' ∘ h' →
-    functor.map h (map hp x) = map hp' (functor.map h' x))
+    has_map.map h (map hp x) = map hp' (has_map.map h' x))
 
 section thms
 
@@ -18,11 +18,11 @@ variables {F : Type u → Type v}
 variables {α β γ : Type u}
 variables [functor F]
 
-lemma functor.id_map' : fmap id = (id : F α → F α) :=
+lemma functor.id_map' : has_map.map id = (id : F α → F α) :=
 by { apply funext, apply functor.id_map }
 
 lemma functor.map_comp' (f : α → β) (g : β → γ)
-: fmap (g ∘ f) = (fmap g ∘ fmap f : F α → F γ) :=
+: has_map.map (g ∘ f) = (has_map.map g ∘ has_map.map f : F α → F γ) :=
 by { apply funext, intro, apply functor.map_comp }
 
 end thms
@@ -65,7 +65,7 @@ instance : functor_pair identity identity :=
   begin
     intros α β β' γ,
     intros h hp hp' h' x,
-    intros H, unfold functor.map,
+    intros H, unfold has_map.map,
     rw [-identity.map_comp,-identity.map_comp,H],
   end }
 
@@ -87,7 +87,7 @@ variables [functor f] [functor g]
 variables {α β γ : Type v}
 
 def map (h : α → β) : compose f g α → compose f g β
-  | ⟨ x ⟩ := ⟨ fmap h <$> x ⟩
+  | ⟨ x ⟩ := ⟨ has_map.map h <$> x ⟩
 
 local infix ` <$> ` := map
 
@@ -138,12 +138,12 @@ instance compose_functor_pair
   begin
     intros α β β' γ,
     intros h hp hp' h' x H,
-    unfold functor.map,
+    unfold has_map.map,
     cases x with x,
     unfold compose.map_pair compose.map,
     apply congr_arg,
     rw [functor_pair.map_fmap_comm],
-    apply funext, intro i, unfold comp fmap,
+    apply funext, intro i, unfold comp has_map.map,
     rw [functor_pair.map_fmap_comm],
     apply H,
   end }
@@ -152,4 +152,4 @@ lemma compose.fmap_mk {α β : Type u'}
   {f : Type u → Type v} {g : Type u' → Type u}
   [functor f] [functor g]
   (h : α → β) (x : f (g α))
-: h <$> compose.mk x = compose.mk (fmap h <$> x) := rfl
+: h <$> compose.mk x = compose.mk (has_map.map h <$> x) := rfl

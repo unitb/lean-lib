@@ -34,6 +34,13 @@ begin
   apply zero_lt_succ
 end
 
+lemma fin.zero_def' (n : ℕ)
+: (0 : fin (succ n)) = ⟨0, zero_lt_succ _ ⟩ :=
+by { apply fin.eq_of_veq, rw fin.zero_def }
+
+def fin.next {n : ℕ} : fin n → fin (succ n)
+  | ⟨i,P⟩ := ⟨succ i, succ_lt_succ P⟩
+
 def fin.pred {n} : fin n → fin n
   | ⟨i,P⟩ := ⟨pred i,lt_of_le_of_lt (pred_le _) P⟩
 

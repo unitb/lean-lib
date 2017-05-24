@@ -241,8 +241,14 @@ instance applicative_f' : applicative f' := applicative_pair.g_appl f f'
 instance applicative_g' : applicative g' := applicative_pair.g_appl g g'
 
 lemma map_pure_comm (hp : α → β') (x : α)
-: functor_pair.map (compose f' g') hp (pure x : compose f g α) = pure (hp x) :=
-sorry
+:   functor_pair.map (compose f' g') hp (compose.pure x : compose f g α)
+  = compose.pure (hp x) :=
+begin
+  unfold compose.pure comp functor_pair.map map_pair,
+  apply congr_arg,
+  rw applicative_pair.map_pure_comm,
+  rw applicative_pair.map_pure_comm,
+end
 
 lemma map_seq_comm (h : β → β') (hx : (α → β) → α' → β') (hy : α → α')
                    (x : compose f g (α → β)) (y : compose f g α)

@@ -370,3 +370,29 @@ begin
   apply or.imp _ _ (or_of_ite h)
   ; apply and.right
 end
+
+def rtc {α : Type u} (r : α → α → Prop) (x y : α) := x = y ∨ tc r x y
+
+@[refl]
+def rtc_refl {α : Type u} {r : α → α → Prop} {x : α}
+: rtc r x x :=
+begin
+  unfold rtc,
+  left, refl
+end
+
+@[trans]
+def rtc_trans {α : Type u} {r : α → α → Prop} {x : α} (y : α) {z : α}
+  (h₀ : rtc r x y)
+  (h₁ : rtc r y z)
+: rtc r x z :=
+begin
+  unfold rtc at h₀,
+  cases h₀ with h₀ h₀,
+  { subst y, apply h₁ },
+  unfold rtc at h₁,
+  cases h₁ with h₁ h₁,
+  { subst z, apply or.intro_right _ h₀ },
+  { apply or.intro_right,
+    apply tc.trans _ _ _ h₀ h₁, }
+end

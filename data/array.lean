@@ -36,7 +36,7 @@ begin
     unfold push push_aux rev_iterate rev_iterate_aux,
     simp,
     unfold read data push_aux,
-    rw fin.zero_def' },
+    rw fin.zero_def', refl },
   { rw [-push_head_pop xs,IH],
     unfold function.comp,
     rw push_head_pop xs,

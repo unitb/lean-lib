@@ -14,7 +14,7 @@ begin
   apply le_total
 end
 
-lemma exists_mem_of_ne_empty {α} (s : set α)
+lemma exists_mem_of_ne_empty {α} {s : set α}
   (h : s ≠ ∅)
 : ∃ x : α, x ∈ s :=
 begin
@@ -68,7 +68,7 @@ lemma minimum_mem {α} [pos_finite α] [decidable_linear_order α] (s : set α) 
 : minimum s ∈ s :=
 begin
   apply minimum_mem_aux,
-  apply classical.epsilon_spec (exists_mem_of_ne_empty _ h),
+  apply classical.epsilon_spec (exists_mem_of_ne_empty h),
 end
 
 lemma minimum_le_min_aux {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x : α)
@@ -129,7 +129,7 @@ begin
       apply min_le_right } },
 end
 
-lemma minimum_le {α} [pos_finite α] [decidable_linear_order α] (s : set α) (x : α) (h : x ∈ s)
+lemma minimum_le {α} [pos_finite α] [decidable_linear_order α] {s : set α} {x : α} (h : x ∈ s)
 : minimum s ≤ x :=
 begin
   unfold minimum,

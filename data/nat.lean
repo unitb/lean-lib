@@ -141,4 +141,9 @@ begin
     refl },
 end
 
+lemma pred_lt_self_of_pos : ∀ {v : ℕ},
+  0 < v → pred v < v
+| 0 p := absurd p (not_lt_zero _)
+| (succ n) _ := lt_succ_self _
+
 end nat

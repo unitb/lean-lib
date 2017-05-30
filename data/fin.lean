@@ -136,3 +136,6 @@ begin
   apply le_antisymm h,
   apply zero_le
 end
+
+lemma fin.val_injective {n} : function.injective (@fin.val n)
+ | ⟨x,_⟩ ⟨.(x),_⟩ rfl := rfl

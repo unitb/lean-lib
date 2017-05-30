@@ -1,9 +1,6 @@
 
-
 import data.set
 
-import util.data.finite
-import util.data.fin
 import util.data.order
 
 open nat

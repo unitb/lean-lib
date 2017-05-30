@@ -1,5 +1,8 @@
 
-import util.data.minimum.basic
+import util.data.fin
+import util.data.minimum.nat
+import util.data.set
+import util.logic
 
 open nat
 
@@ -11,202 +14,82 @@ parameter (n : ℕ)
 @[reducible]
 def t := fin n.succ
 parameter {n}
+variables (s : set t)
+variables [decidable_pred (λ y : ℕ, y ∈ val <$> s)]
+variables [decidable (val <$> s = ∅)]
 
-def minimum_aux (s : set t)
-  [decidable_pred (λ y : t, y ∈ s)]
-: t → ∀ i : ℕ, i ≤ n.succ → t
-  | x 0 P := x
-  | x (nat.succ k) P := let y : t := ⟨k, P⟩ in
-     if y ∈ s
-     then minimum_aux (min x y) k (le_of_succ_le P)
-     else minimum_aux x k $ le_of_succ_le P
-
-protected noncomputable def minimum (s : set t) : t :=
-have inst : decidable_pred (λ y : t, y ∈ s), from (λ _, classical.prop_decidable _),
-@fin.minimum_aux _ inst (classical.epsilon s) n.succ
-(by refl)  -- (by { unfold finite.count, apply lt_succ_self })
-
-lemma minimum_mem_aux (s : set t) (y : t)
-   [decidable_pred (λ x : t, x ∈ s)]
-  (i : ℕ)
-  (h : y ∈ s)
-  (P : i ≤ n.succ)
-: minimum_aux s y i P ∈ s :=
+lemma lt_of_mem_fin_set {k : ℕ}
+  (h : k ∈ val <$> s)
+: k < n.succ :=
 begin
-  revert y,
-  induction i with i IH
-  ; unfold minimum_aux
-  ; intros y h,
-  { apply h },
-  simp,
-  cases decidable.em (({val := i, is_lt := P} : t n) ∈ s) with h' h',
-  { rw if_pos h',
-    apply IH,
-    cases min_eq_or_min_eq y ({val := i, is_lt := P}) with h₀ h₀
-    ; rw h₀
-    ; assumption  },
-  { rw if_neg h',
-    apply IH _ _ h, },
+  unfold has_map.map set.image at h,
+  rw [mem_set_of] at h,
+  cases h with i h, cases h with h₀ h₁,
+  rw -h₁, apply i.is_lt
 end
 
-lemma minimum_mem (s : set t) (h : s ≠ ∅)
+lemma nat_minimum_bounded
+: nat.minimum (val <$> s) < n.succ :=
+begin
+  cases decidable.em (val <$> s = ∅) with h h,
+  { unfold nat.minimum,
+    rw dif_pos h, apply zero_lt_succ },
+  { note h' := nat.minimum_mem (val <$> s) h,
+    apply lt_of_mem_fin_set _ h', },
+end
+
+protected def minimum : t :=
+let r := nat.minimum (fin.val <$> s) in
+have hr : r < nat.succ n, from nat_minimum_bounded _,
+⟨r,hr⟩
+
+lemma minimum_mem
+  (h : s ≠ ∅)
 : fin.minimum s ∈ s :=
 begin
-  apply minimum_mem_aux,
-  apply classical.epsilon_spec (exists_mem_of_ne_empty h),
+  unfold fin.minimum,
+  simp, apply set.mem_of_mem_fmap fin.val_injective,
+  unfold fin.val,
+  apply nat.minimum_mem,
+  simp [@set.fmap_eq_empty_iff_eq_empty _ _ s val,h],
 end
 
-lemma minimum_le_min_aux (s : set t) (x : t)
-  [decidable_pred (λ x : t, x ∈ s)]
-  (i : ℕ)
-  (P : i ≤ n.succ)
-: minimum_aux s x i P ≤ x :=
-begin
-  revert x,
-  induction i with i IH
-  ; intro x
-  ; unfold minimum_aux,
-  { refl },
-  { simp,
-    cases decidable.em (({val := i, is_lt := P} : t n) ∈ s) with h h,
-    { rw if_pos h,
-      transitivity,
-      apply IH,
-      apply min_le_left, },
-    { rw if_neg h,
-      apply IH } },
-end
-
-lemma minimum_le_aux (s : set t) (x y : t)
-   [decidable_pred (λ x : t, x ∈ s)]
-  (i : ℕ)
-  (hy : y ∈ s)
-  (hx : x ∈ s)
-  (Hxy : x.val < i)
-  (P : i ≤ n.succ)
-: minimum_aux s y i P ≤ x :=
-begin
-  revert y,
-  induction i with i IH ; intros y hy,
-  { cases not_lt_zero _ Hxy, },
-  { cases lt_or_eq_of_le (succ_le_of_lt Hxy) with h' h',
-    { unfold fin.minimum_aux, simp,
-      cases decidable.em (({val := i, is_lt := P} : t n) ∈ s) with h₇ h₇,
-      { rw if_pos h₇,
-        apply IH,
-        apply lt_of_succ_lt_succ h' ,
-        cases min_eq_or_min_eq y {val := i, is_lt := P} with h'' h''
-        ; rw h''
-        ; assumption },
-      { rw if_neg h₇,
-        apply IH _ _ _ hy,
-        apply lt_of_succ_lt_succ h', } },
-    { assert h'' : ({ val := i, is_lt := P} : t n) = x,
-      { symmetry,
-        injection h' with h',
-        apply fin.eq_of_veq, apply h' },
-      rw -h'' at hx,
-      unfold minimum_aux, simp,
-      rw if_pos hx,
-      rw h'',
-      transitivity,
-      apply minimum_le_min_aux,
-      apply min_le_right } },
-end
-
-protected lemma minimum_le {s : set t} {x : t}
+protected lemma minimum_le {x : t}
   (h : x ∈ s)
 : fin.minimum s ≤ x :=
 begin
   unfold minimum,
-  apply minimum_le_aux,
-  { apply @classical.epsilon_spec _ s ⟨_,h⟩ },
-  { apply h },
-  { apply fin.is_lt },
+  simp [le_def],
+  apply nat.minimum_le,
+  apply set.mem_fmap_of_mem h,
 end
 
-lemma minimum_aux_min
-  (s : set t) (x y : t)
-  [decidable_pred (λ x : t, x ∈ s)]
-  (i : ℕ)
-  (P : i ≤ n.succ)
-: minimum_aux s (min x y) i P = min (minimum_aux s x i P) y :=
-begin
-  revert x,
-  induction i with i IH
-  ; intro x
-  ; unfold minimum_aux,
-  { refl },
-  { simp,
-    cases decidable.em (({val := i, is_lt := P} : t n) ∈ s) with Hmem Hmem,
-    { rw [if_pos Hmem,if_pos Hmem,min_assoc,min_comm y,-min_assoc,IH], },
-    { rw [if_neg Hmem,if_neg Hmem,IH], }, }
-end
-
-lemma minimum_unique_aux (s : set t) (x y : t)
-  [decidable_pred (λ x : t, x ∈ s)]
-  (i : ℕ)
-  (P : i ≤ n.succ)
-  (h₀ : s ≠ ∅)
-  (h₁ : ∀ y, y ∈ s → x ≤ y)
-  (h₂ : x.val < i)
-  (h₃ : y ∈ s)
-: x ≤ minimum_aux s y i P :=
-begin
-  induction i with i IH
-  ; unfold minimum_aux,
-  { cases not_lt_zero _ h₂, },
-  { simp,
-    cases nat.eq_or_lt_of_le h₂ with Heq Hlt,
-      -- case Heq : nat.succ (x.val) = nat.succ i
-    { injection Heq with Heq', clear Heq,
-      assert Hx_g : ({val := i, is_lt := P} : t n) = x,
-      { symmetry,
-        apply fin.eq_of_veq,
-        apply Heq' },
-      cases decidable.em (x ∈ s) with Hmem Hmem,
-      { rw [Hx_g,if_pos Hmem],
-        rw [minimum_aux_min],
-        rw min_eq_right,
-        apply h₁,
-        apply minimum_mem_aux,
-        apply h₃ },
-      { rw [Hx_g,if_neg Hmem],
-        apply h₁, apply minimum_mem_aux _ _ _ h₃, } },
-      -- case Hlt : nat.succ (x.val) < nat.succ i
-    { rw [minimum_aux_min],
-      { assert Hx_lt_mini : x ≤ (minimum_aux s y i (minimum_aux._main._proof_2 i P)),
-        { apply IH,
-          apply lt_of_succ_lt_succ Hlt, },
-        cases decidable.em (({val := i, is_lt := P} : t n) ∈ s) with Hmem Hmem,
-        { rw if_pos Hmem,
-          apply le_min Hx_lt_mini,
-          { rw le_def,
-            apply le_of_lt,
-            apply lt_of_succ_lt_succ Hlt, }, },
-        { rw if_neg Hmem, apply Hx_lt_mini } } } },
-end
-
-protected lemma le_minimum_of_forall_le (s : set t) (x : t)
+protected lemma le_minimum_of_forall_le (x : t)
   (h₀ : s ≠ ∅)
   (h₁ : ∀ y, y ∈ s → x ≤ y)
 : x ≤ fin.minimum s :=
 begin
-  apply minimum_unique_aux,
-  { apply h₀ },
-  { apply h₁ },
-  { apply fin.is_lt },
-  { apply @classical.epsilon_spec _ s,
-    apply exists_mem_of_ne_empty h₀ }
+  unfold minimum,
+  simp [le_def],
+  apply nat.le_minimum_of_forall_le,
+  { simp [set.fmap_eq_empty_iff_eq_empty,h₀], },
+  { intros y h,
+    note hy := lt_of_mem_fin_set _ h,
+    change x.val ≤ fin.val ⟨y,hy⟩,
+    rw -le_def,
+    apply h₁,
+    apply set.mem_of_mem_fmap val_injective, apply h, },
 end
 
 end
 
 end fin
 
+local attribute [instance] classical.prop_decidable
+
 noncomputable instance {n} : has_minimum (fin $ succ n) :=
 { (_ : weak_order (fin $ succ n)) with
-  minimum := fin.minimum
-, minimum_le := @fin.minimum_le _
-, le_minimum_of_forall_le := @fin.le_minimum_of_forall_le _
-, minimum_mem := @fin.minimum_mem _ }
+  minimum := λ s, fin.minimum s
+, minimum_le := λ s x h, fin.minimum_le s h
+, le_minimum_of_forall_le := λ s, fin.le_minimum_of_forall_le s
+, minimum_mem := λ s, fin.minimum_mem _ }

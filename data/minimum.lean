@@ -345,7 +345,8 @@ begin
   { apply h₀ },
   { apply h₁ },
   { apply fin.is_lt },
-  { apply @classical.epsilon_spec _ s ⟨_,h₀⟩ }
+  { apply @classical.epsilon_spec _ s,
+    apply exists_mem_of_ne_empty h₀ }
 end
 
 end

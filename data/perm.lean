@@ -575,4 +575,35 @@ begin
   apply rotate_right_f_gt_eq_self _ _ h,
 end
 
+def to_total_aux {n : ℕ} (f : fin n → fin n) (i : ℕ) : ℕ :=
+if h : i < n then (f ⟨i,h⟩).val else i
+
+lemma to_total_f_inverse (p : perm n) (x : ℕ)
+: to_total_aux (p.g) (to_total_aux (p.f) x) = x :=
+begin
+  cases decidable.em (x < n) with h h,
+  { unfold to_total_aux,
+    rw [dif_pos h,dif_pos (p.f ⟨x, h⟩).is_lt],
+    assert h : (⟨(p.f ⟨x, h⟩).val, (p.f ⟨x, h⟩).is_lt⟩ : fin n) = p.f ⟨x, h⟩,
+    { apply eq_of_veq, refl },
+    rw [h,p.f_inv], },
+  { unfold to_total_aux,
+    rw [dif_neg h,dif_neg h], }
+end
+
+lemma to_total_g_inverse (p : perm n) (x : ℕ)
+: to_total_aux (p.f) (to_total_aux (p.g) x) = x :=
+begin
+  note h := to_total_f_inverse (rev p) x,
+  rw [rev_f,rev_g] at h,
+  apply h
+end
+
+def to_total {n : ℕ} (p : perm n) : bijection ℕ ℕ :=
+bijection.mk
+  (to_total_aux p.f)
+  (to_total_aux p.g)
+  (to_total_f_inverse p)
+  (to_total_g_inverse p)
+
 end perm

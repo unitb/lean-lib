@@ -575,6 +575,9 @@ begin
   apply rotate_right_f_gt_eq_self _ _ h,
 end
 
+def rotate_right' {n : ℕ} (i : fin n) : perm n :=
+rev (rotate_right i)
+
 def to_total_aux {n : ℕ} (f : fin n → fin n) (i : ℕ) : ℕ :=
 if h : i < n then (f ⟨i,h⟩).val else i
 
@@ -606,4 +609,66 @@ bijection.mk
   (to_total_f_inverse p)
   (to_total_g_inverse p)
 
+lemma to_total_g_eq_self_of_ge {n : ℕ} (p : perm n) {x : ℕ}
+  (h : n ≤ x)
+: (to_total p).g x = x :=
+begin
+  unfold to_total bijection.mk bijection.g to_total_aux,
+  rw dif_neg (not_lt_of_ge h),
+end
+
+lemma to_total_g_eq_of_lt {n : ℕ} (p : perm n) {x : ℕ}
+  (h : x < n)
+: (to_total p).g x = (p.g ⟨x,h⟩).val :=
+begin
+  unfold to_total bijection.mk bijection.g to_total_aux,
+  rw dif_pos h,
+end
+
 end perm
+
+namespace bijection
+
+def rotate_right (i j : ℕ) (h : i < j) : bijection ℕ ℕ :=
+@perm.to_total j (perm.rotate_right ⟨i,h⟩)
+
+def rotate_right' (i j : ℕ) (h : i < j) : bijection ℕ ℕ :=
+@perm.to_total j (perm.rotate_right' ⟨i,h⟩)
+
+lemma rotate_right'_g_eq_of_ge_j {i j : ℕ} (x : ℕ)
+  (Hij : i < j)
+  (Hjx : j ≤ x)
+: (rotate_right' i j Hij).g x = x :=
+begin
+  unfold rotate_right',
+  apply perm.to_total_g_eq_self_of_ge _ Hjx,
+end
+
+lemma rotate_right'_g_eq_of_lt_i {i j : ℕ} (x : ℕ)
+  (Hij : i < j)
+  (Hxi : x < i)
+: (rotate_right' i j Hij).g x = x :=
+begin
+  unfold rotate_right' perm.rotate_right',
+  rw [perm.to_total_g_eq_of_lt _ (lt_trans Hxi Hij),rev_g
+     ,perm.rotate_right_f_gt_eq_self],
+  apply Hxi,
+end
+
+lemma succ_rotate_right'_g_eq_self {i j : ℕ} (x : ℕ)
+  (Hij : i < j)
+  (Hix : i < x)
+  (Hxj : x < j)
+: nat.succ ((rotate_right' i j Hij).g x) = x :=
+begin
+  unfold rotate_right' perm.rotate_right',
+  rw [perm.to_total_g_eq_of_lt _ Hxj,rev_g
+     ,perm.rotate_right_f_lt_shifted
+     ,fin.pred_def,nat.succ_pred_eq_of_pos],
+  { unfold fin.val,
+    apply lt_of_le_of_lt _ Hix,
+    apply nat.zero_le },
+  { apply Hix },
+end
+
+end bijection

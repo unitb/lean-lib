@@ -146,4 +146,44 @@ lemma pred_lt_self_of_pos : ∀ {v : ℕ},
 | 0 p := absurd p (not_lt_zero _)
 | (succ n) _ := lt_succ_self _
 
+protected lemma sub_le_sub_left {m p q : ℕ}
+  (h₁ : q ≤ p)
+: m - p ≤ m - q :=
+begin
+  revert p ;
+  induction q with q IH ;
+  intros p h,
+  { apply sub_le },
+  cases p with p,
+  { cases not_succ_le_zero _ h },
+  { unfold has_sub.sub nat.sub,
+    apply pred_le_pred,
+    apply IH,
+    apply le_of_succ_le_succ h, }
+end
+
+protected lemma sub_lt_sub_left {m p q : ℕ}
+  (h₀ : p ≤ m)
+  (h₁ : q < p)
+: m - p < m - q :=
+begin
+  apply lt_of_succ_le,
+  rw -succ_sub h₀,
+  cases p with p,
+  { cases not_lt_zero _ h₁ },
+  { rw succ_sub_succ,
+    apply nat.sub_le_sub_left,
+    apply le_of_succ_le_succ h₁ },
+end
+
+protected lemma sub_le_sub {m n p q : ℕ}
+  (h₀ : m ≤ n)
+  (h₁ : q ≤ p)
+: m - p ≤ n - q :=
+begin
+  transitivity,
+  apply nat.sub_le_sub_right h₀,
+  apply nat.sub_le_sub_left h₁
+end
+
 end nat

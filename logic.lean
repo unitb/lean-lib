@@ -130,10 +130,6 @@ lemma imp_imp_imp_right' {p q r : Prop} (h : r → p → q)
    (h' : r → p) : (r → q) :=
 take h'', h h'' (h' h'')
 
-lemma or_not_and (p q : Prop)
-: p ∨ (¬ p ∧ q) ↔ p ∨ q :=
-sorry
-
 variables {a b c : Prop}
 
 lemma distrib_left_or : (a ∧ b) ∨ c ↔ (a ∨ c) ∧ (b ∨ c) :=
@@ -155,6 +151,10 @@ end
 lemma distrib_right_or
 : c ∨ (a ∧ b) ↔ (c ∨ a) ∧ (c ∨ b) :=
 by { rw [or_comm,distrib_left_or], simp }
+
+lemma or_not_and (p q : Prop)
+: p ∨ (¬ p ∧ q) ↔ p ∨ q :=
+by simp [distrib_right_or,iff_true_intro $ classical.em p]
 
 lemma not_or_of_not_and_not {p q : Prop} : ¬ (p ∨ q) → ¬ p ∧ ¬ q :=
 begin

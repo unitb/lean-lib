@@ -255,7 +255,21 @@ lemma map_seq_comm (h : β → β') (hx : (α → β) → α' → β') (hy : α 
                    (H : ∀ (F : α → β) (y : α), hx F (hy y) = h (F y))
 :   functor_pair.map (compose f' g') h (x <*> y)
   = functor_pair.map (compose f' g') hx x <*> functor_pair.map (compose f' g') hy y  :=
-sorry
+begin
+  cases x with x,
+  cases y with y,
+  unfold has_seq.seq compose.seq functor_pair.map map_pair,
+  apply congr_arg,
+  pose x' : f (g α → g β) := has_map.map has_seq.seq x,
+  pose h' : g β → g' β' := (functor_pair.map g' h),
+  pose hx' : (g α → g β) → g' α' → g' β' := λ F i, functor_pair.map _ h (F sorry),
+  pose hy' : g α → g' α' := functor_pair.map _ hy,
+  pose hh := @functor_pair.map g g' _ _ _ h,
+  note H' : (∀ (F : g α → g β) (y : g α), hx' F (hy' y) = h' (F y)) := sorry,
+  rw @applicative_pair.map_seq_comm f f' _ (g α) (g β) (g' α') (g' β')
+        h' hx' hy' x' y H',
+  admit,
+end
 
 end applicative_pair
 

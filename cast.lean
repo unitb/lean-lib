@@ -27,37 +27,44 @@ lemma cast_none' : ∀ {α β} (P : α = β), none.cast' P = none
 lemma cast_cast : ∀ {α β} (P₀ : α = β) (P₁ : β = α) (x : β), cast P₀ (cast P₁ x) = x
  | α ._ rfl rfl x := rfl
 
-lemma option_cast_cast : ∀ {α β : Type u} (P₀ : α = β) (P₁ : β = α) (x : option β), option.cast(option.cast x P₁) P₀ = x
- | α ._ rfl rfl (some x) := rfl
- | α ._ rfl rfl none := rfl
+lemma option_cast_cast {α : Type u}
+: ∀ {β : Type u} (P₀ : α = β) (P₁ : β = α) (x : option β), option.cast(option.cast x P₁) P₀ = x
+ | ._ rfl rfl (some x) := rfl
+ | ._ rfl rfl none := rfl
 
-lemma option_cast'_eq_option_cast : ∀ {α β : Type u} (P : α = β) (x : option β),
-  option.cast' x P = option.cast x P.symm
- | α ._ rfl (some x) := rfl
- | α ._ rfl none := rfl
+lemma option_cast'_eq_option_cast {α : Type u}
+: ∀ {β : Type u} (P : α = β) (x : option β), option.cast' x P = option.cast x P.symm
+ | ._ rfl (some x) := rfl
+ | ._ rfl none := rfl
 
-lemma option_cast_cast' : ∀ {α β : Type u} (P₀ P₁ : α = β) (x : option β),
-  option.cast (option.cast' x P₁) P₀ = x
- | α ._ rfl rfl (some x) := rfl
- | α ._ rfl rfl none := rfl
+lemma option_cast_cast' {α : Type u}
+: ∀ {β : Type u} (P₀ P₁ : α = β) (x : option β), option.cast (option.cast' x P₁) P₀ = x
+ | ._ rfl rfl (some x) := rfl
+ | ._ rfl rfl none := rfl
 
-lemma option_cast'_cast : ∀ {α β : Type u} (P₀ P₁ : α = β) (x : option α),
-  option.cast' (option.cast x P₁) P₀ = x
- | α ._ rfl rfl (some x) := rfl
- | α ._ rfl rfl none := rfl
+lemma option_cast'_cast {α : Type u}
+: ∀ {β : Type u} (P₀ P₁ : α = β) (x : option α), option.cast' (option.cast x P₁) P₀ = x
+ | ._ rfl rfl (some x) := rfl
+ | ._ rfl rfl none := rfl
 
-lemma option_cast_injective {α β : Type u} (P : α = β) : function.injective (λ x, option.cast x P) :=
+open function
+
+lemma option.cast_left_inverse {α β : Type u} (P : α = β)
+: left_inverse (flip option.cast P) (flip option.cast' P) :=
+option_cast_cast' P P
+
+lemma option.cast_right_inverse {α β : Type u} (P : α = β)
+: right_inverse (flip option.cast P) (flip option.cast' P) :=
+option_cast'_cast P P
+
+lemma option_cast_injective {α β : Type u} (P : α = β) : injective (flip option.cast P) :=
 begin
-  apply function.injective_of_has_left_inverse,
-  unfold function.has_left_inverse function.left_inverse,
-  existsi (λ x, option.cast' x P),
-  intro, simp [option_cast'_cast],
+  apply injective_of_left_inverse,
+  apply option.cast_right_inverse,
 end
 
-lemma option_cast'_injective {α β : Type u} (P : α = β) : function.injective (λ x, option.cast' x P) :=
+lemma option_cast'_injective {α β : Type u} (P : α = β) : injective (flip option.cast' P) :=
 begin
-  apply function.injective_of_has_left_inverse,
-  unfold function.has_left_inverse function.left_inverse,
-  existsi (λ x, option.cast x P),
-  intro, simp [option_cast_cast],
+  apply injective_of_left_inverse,
+  apply option.cast_right_inverse,
 end

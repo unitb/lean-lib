@@ -102,6 +102,12 @@ begin
   ; exact ⟨y,x,H⟩
 end
 
+lemma exists_and {α : Sort u}
+   (P : α → Prop)
+   (Q : Prop)
+: (∃ x, P x) ∧ Q ↔ (∃ x, P x ∧ Q) :=
+by simp [and_exists]
+
 lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
 by refl
 

@@ -28,18 +28,6 @@ begin
   apply le_total
 end
 
-lemma exists_mem_of_ne_empty {α} {s : set α}
-  (h : s ≠ ∅)
-: ∃ x : α, x ∈ s :=
-begin
-  apply classical.by_contradiction,
-  intro h',
-  note h'' := forall_not_of_not_exists h',
-  apply h,
-  apply set.eq_empty_of_forall_not_mem,
-  apply h''
-end
-
 section minimum
 
 -- open has_minimum

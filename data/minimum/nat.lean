@@ -1,4 +1,5 @@
 
+import util.data.set
 import util.data.minimum.basic
 
 namespace nat
@@ -34,7 +35,7 @@ lemma gt_accessible (x y : ℕ)
   (h : gt s P y x)
 : acc (gt s P) y :=
 begin
-  note Hex : ∃ z, z ∈ s := exists_mem_of_ne_empty P,
+  note Hex : ∃ z, z ∈ s := set.exists_mem_of_ne_empty P,
   cases Hex with z hz,
   assert hz_le_zxx : z ≤ z - x + x,
   { rw [nat.sub_add_cancel],

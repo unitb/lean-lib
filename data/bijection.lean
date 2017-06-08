@@ -394,7 +394,9 @@ end
 
 end
 
-def bij.even_odd.f x := if x % 2 = 1 then sum.inr (x / 2) else sum.inl (x / 2)
+def bij.even_odd.f (x : ℕ) : ℕ ⊕ ℕ :=
+if x % 2 = 1 then sum.inr (x / 2) else sum.inl (x / 2)
+
 def bij.even_odd.g : ℕ ⊕ ℕ → ℕ
   | (sum.inr x) := 2 * x + 1
   | (sum.inl x) := 2 * x

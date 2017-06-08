@@ -279,3 +279,10 @@ begin
   apply fin.eq_of_veq,
   unfold fin.shift fin.max, simp,
 end
+
+lemma fin.val_of_nat {m n : ℕ} (h : n < nat.succ m)
+: (@fin.of_nat m n).val = n :=
+begin
+  unfold fin.of_nat fin.val,
+  rw mod_eq_of_lt h
+end

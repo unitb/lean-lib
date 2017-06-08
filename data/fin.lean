@@ -28,11 +28,7 @@ instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
 
 lemma fin.zero_def (n : ℕ)
 : (0 : fin (succ n)).val = 0 :=
-begin
-  unfold zero has_zero.zero fin.of_nat fin.val,
-  apply mod_eq_of_lt,
-  apply zero_lt_succ
-end
+by refl
 
 lemma fin.zero_def' (n : ℕ)
 : (0 : fin (succ n)) = ⟨0, zero_lt_succ _ ⟩ :=
@@ -44,16 +40,16 @@ def fin.next {n : ℕ} : fin n → fin (succ n)
 def fin.pred' {n} : fin n → fin n
   | ⟨i,P⟩ := ⟨pred i,lt_of_le_of_lt (pred_le _) P⟩
 
-def fin.succ {n} : fin n → fin n
+def fin.succ' {n} : fin n → fin n
   | ⟨i,P⟩ := if P' : succ i < n then ⟨succ i,P'⟩
                                 else ⟨i,P⟩
 
 lemma fin.val_succ_le_nat_succ {n : ℕ} (x : fin n)
-: x.succ.val ≤ succ (x.val) :=
+: x.succ'.val ≤ succ (x.val) :=
 begin
   cases n with n
   ; cases x with x Pn
-  ; unfold fin.succ fin.val,
+  ; unfold fin.succ' fin.val,
   { cases not_lt_zero _ Pn },
   cases decidable.em (succ x < succ n) with h h,
   { rw dif_pos h },
@@ -70,10 +66,10 @@ end
 
 lemma fin.succ_def  {n : ℕ} (x : fin n)
   (h : succ x.val < n)
-: (x.succ).val = succ x.val :=
+: (x.succ').val = succ x.val :=
 begin
   cases x with x Px,
-  unfold fin.succ fin.val,
+  unfold fin.succ' fin.val,
   unfold fin.val at h,
   rw dif_pos h,
 end
@@ -85,7 +81,7 @@ lemma fin.max_def {n}
 
 lemma fin.pred_succ {n} (x : fin n)
   (h : succ x.val < n)
-: x.succ.pred' = x :=
+: x.succ'.pred' = x :=
 begin
   apply fin.eq_of_veq,
   rw [fin.pred_def,fin.succ_def,pred_succ],
@@ -94,7 +90,7 @@ end
 
 lemma fin.succ_pred {n} (x : fin (succ n))
   (h : 0 < x)
-: x.pred'.succ = x :=
+: x.pred'.succ' = x :=
 begin
   apply fin.eq_of_veq,
   assert h' : 0 < x.val,
@@ -107,7 +103,7 @@ end
 
 lemma fin.succ_le_self {n} (x : fin (succ n))
   (h : x < fin.max)
-: ¬ x.succ ≤ x :=
+: ¬ x.succ' ≤ x :=
 begin
   rw [fin.le_def,fin.succ_def],
   apply not_succ_le_self,
@@ -117,10 +113,10 @@ begin
 end
 
 lemma fin.le_succ_self {n} (x : fin (succ n))
-: x ≤ x.succ :=
+: x ≤ x.succ' :=
 begin
   cases x with x Px,
-  unfold fin.succ,
+  unfold fin.succ',
   cases decidable.em (succ x < succ n) with h h,
   { rw [dif_pos h,fin.le_def],
     apply le_succ },
@@ -139,3 +135,10 @@ end
 
 lemma fin.val_injective {n} : function.injective (@fin.val n)
  | ⟨x,_⟩ ⟨.(x),_⟩ rfl := rfl
+
+lemma fin.val_of_nat {m n : ℕ} (h : n < nat.succ m)
+: (@fin.of_nat m n).val = n :=
+begin
+  unfold fin.of_nat fin.val,
+  rw mod_eq_of_lt h
+end

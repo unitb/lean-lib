@@ -2,13 +2,13 @@
 import util.control.applicative
 import util.data.functor
 
+structure {u v} cell (α : Type u) : Type (max u v) :=
+  (get : α)
+
+structure {u v} cell' (α : Type u) : Type (max v u) :=
+  (get : α)
+
 universe variables u v u'
-
-structure cell (α : Type u) : Type (max u v) :=
-  (get : α)
-
-structure cell' (α : Type u) : Type (max v u) :=
-  (get : α)
 
 class traversable (t : Type u → Type u) : Type (u+1) :=
 (to_functor : functor t)

@@ -1,6 +1,4 @@
 
-import util.data.bijection
-
 namespace nat
 
 theorem lt_of_not_le {m n : ℕ} (h : ¬ m ≤ n) : n < m :=
@@ -184,6 +182,74 @@ begin
   transitivity,
   apply nat.sub_le_sub_right h₀,
   apply nat.sub_le_sub_left h₁
+end
+
+protected lemma mul_add_mod_self_left
+  (x y k : ℕ)
+  (h : k < x)
+: (x * y + k) % x = k :=
+by simp [mod_eq_of_lt h]
+
+lemma div_lt_of_lt_mul (x : ℕ) {m n : ℕ} (h : x < m * n) : x / n < m :=
+begin
+  assert hmn : 0 < m * n,
+  { apply lt_of_le_of_lt _ h,
+    apply nat.zero_le },
+  assert hn : 0 < n,
+  { apply pos_of_mul_pos_left hmn,
+    apply nat.zero_le, },
+  clear hmn,
+  revert x,
+  induction m with m ; intros x h,
+  { simp at h, cases not_lt_zero _ h },
+  { cases (lt_or_ge x n) with h' h',
+    { rw [div_eq_of_lt h'], apply zero_lt_succ },
+    { rw [div_eq_sub_div hn h',nat.add_one_eq_succ],
+      apply succ_lt_succ,
+      apply ih_1,
+      apply @nat.lt_of_add_lt_add_left n,
+      rw [-nat.add_sub_assoc h',nat.add_sub_cancel_left],
+      simp [succ_mul] at h, simp [h],  } }
+end
+
+protected lemma mul_add_div_self_left (x y k : ℕ) (h : k < x)
+: (x * y + k) / x = y :=
+begin
+  assert h₀ : x > 0,
+  { apply lt_of_le_of_lt (zero_le _) h },
+  simp,
+  induction y with y,
+  { simp [div_eq_of_lt h] },
+  { rw [mul_succ,div_eq_sub_div h₀],
+    { simp [nat.add_sub_cancel_left,add_one_eq_succ],
+      apply congr_arg,
+      apply eq.trans _ ih_1,
+      simp },
+    { simp, apply le_add_right } }
+end
+
+protected lemma add_mul_div_self_right {a} b {n : ℕ} (h : a < n)
+: (a + b * n) / n = b :=
+by rw [add_comm,mul_comm,nat.mul_add_div_self_left _ _ _ h]
+
+protected lemma mul_lt_mul {a b c d : ℕ}
+  (h₀ : a < c)
+  (h₁ : b < d)
+: a * b < c * d :=
+begin
+  revert a,
+  induction c with c ; intros a h₀,
+  { cases (nat.not_lt_zero _ h₀) },
+  cases a with a,
+  { rw [nat.succ_mul],
+    apply lt_of_lt_of_le,
+    simp, apply lt_of_le_of_lt (zero_le b), apply h₁,
+    apply le_add_left  },
+  { rw [succ_mul,succ_mul],
+    apply add_lt_add,
+    apply ih_1,
+    apply lt_of_succ_lt_succ h₀,
+    apply h₁, }
 end
 
 end nat

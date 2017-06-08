@@ -1,117 +1,8 @@
 
 import util.data.fin
+import util.data.nat
 
 universe variables u₀ u₁ u₂
-
--- section order
-
--- lemma indirect_lt_left {α : Type u₀} (x y : α)
---   (h : (∀ z, y ≤ z → x ≤ z))
--- : x < y
-
--- end order
-
-namespace fin
-
-open nat
-
-lemma val_of_nat {m n : ℕ} (h : n < nat.succ m)
-: (@of_nat m n).val = n :=
-begin
-  unfold of_nat fin.val,
-  rw mod_eq_of_lt h
-end
-
-end fin
-
-namespace nat
-
-
-protected lemma mul_mod_cancel {x : ℕ} (y : ℕ) (h : x > 0)
-: x * y % x = 0 :=
-begin
-  induction y with y,
-  { simp [mod_eq_of_lt h] },
-  { rw [mul_succ,mod_eq_sub_mod h,nat.add_sub_cancel,ih_1],
-    apply le_add_left }
-end
-
-protected lemma mul_add_modulo_cancel
-  (x y k : ℕ)
-  (h : k < x)
-: (x * y + k) % x = k :=
-by simp [mod_eq_of_lt h]
-
-lemma div_lt_of_lt_mul (x) { m n : ℕ} (h : x < m * n) : x / n < m :=
-begin
-  assert hmn : 0 < m * n,
-  { apply lt_of_le_of_lt _ h,
-    apply nat.zero_le },
-  assert hn : 0 < n,
-  { apply pos_of_mul_pos_left hmn,
-    apply nat.zero_le, },
-  clear hmn,
-  revert x,
-  induction m with m ; intros x h,
-  { simp at h, cases not_lt_zero _ h },
-  { cases (lt_or_ge x n) with h' h',
-    { rw [div_eq_of_lt h'], apply zero_lt_succ },
-    { rw [div_eq_sub_div hn h',nat.add_one_eq_succ],
-      apply succ_lt_succ,
-      apply ih_1,
-      apply @nat.lt_of_add_lt_add_left n,
-      rw [-nat.add_sub_assoc h',nat.add_sub_cancel_left],
-      simp [succ_mul] at h, simp [h],  } }
-end
-
-protected lemma mul_add_div_cancel (x y k : ℕ) (h : k < x)
-: (x * y + k) / x = y :=
-begin
-  assert h₀ : x > 0,
-  { apply lt_of_le_of_lt (zero_le _) h },
-  simp,
-  induction y with y,
-  { simp [div_eq_of_lt h] },
-  { rw [mul_succ,div_eq_sub_div h₀],
-    { simp [nat.add_sub_cancel_left,add_one_eq_succ],
-      apply congr_arg,
-      apply eq.trans _ ih_1,
-      simp },
-    { simp, apply le_add_right } }
-end
-
-protected lemma add_mul_mod {a} b {n : ℕ} (h : a < n)
-: (a + b * n) % n = a :=
-begin
-  rw [add_comm,mul_comm,nat.mul_add_modulo_cancel _ _ _ h]
-end
-protected lemma add_mul_div {a} b {n : ℕ} (h : a < n)
-: (a + b * n) / n = b :=
-begin
-  rw [add_comm,mul_comm,nat.mul_add_div_cancel _ _ _ h]
-end
-
-protected lemma mul_lt_mul {a b c d : ℕ}
-  (h₀ : a < c)
-  (h₁ : b < d)
-: a * b < c * d :=
-begin
-  revert a,
-  induction c with c ; intros a h₀,
-  { cases (nat.not_lt_zero _ h₀) },
-  cases a with a,
-  { rw [nat.succ_mul],
-    apply lt_of_lt_of_le,
-    simp, apply lt_of_le_of_lt (zero_le b), apply h₁,
-    apply le_add_left  },
-  { rw [succ_mul,succ_mul],
-    apply add_lt_add,
-    apply ih_1,
-    apply lt_of_succ_lt_succ h₀,
-    apply h₁, }
-end
-
-end nat
 
 section bijection
 
@@ -341,10 +232,11 @@ begin
   cases x with x₀ x₁,
   cases x₀ with x₀ Px,
   unfold bij.prod.pre.g bij.prod.pre.f,
-  apply congr, apply congr_arg,
-  apply fin.eq_of_veq, unfold fin.val,
-  rw [nat.add_mul_mod _ Px],
-  rw [nat.add_mul_div _ Px],
+  apply congr,
+  { apply congr_arg,
+    apply fin.eq_of_veq, unfold fin.val,
+    rw [nat.add_mul_mod_self_right _ _ _,nat.mod_eq_of_lt Px], },
+  { rw [nat.add_mul_div_self_right _ Px] },
 end
 begin
   intros x,
@@ -471,8 +363,8 @@ def bij.prod.append : bijection (fin m × fin n) (fin (m*n)) :=
     apply pair.eq,
     unfold to_pair bij.prod.append.f,
     rw [to_pair_prod_g],
-    rw [ nat.mul_add_modulo_cancel _ _ _ Px₁
-       , nat.mul_add_div_cancel _ _ _ Px₁]
+    rw [ nat.mul_add_mod_self_left _ _ _ Px₁
+       , nat.mul_add_div_self_left _ _ _ Px₁]
   end
   begin
     intro x,
@@ -501,7 +393,7 @@ begin
     cases h' with h' h',
     { apply or.inr, apply ih_1,
       apply lt_of_succ_lt_succ h' },
-    { apply or.inl, injection h' with h, apply h } }
+    { apply or.inl, injection h' with h, } }
 end
 
 end
@@ -519,13 +411,13 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
         cases x with x x,
         { assert h' : 2 > 0, apply nat.le_succ,
           assert h : ¬ 2 * x % 2 = 1,
-          { rw nat.mul_mod_cancel, contradiction, apply h' },
+          { rw nat.mul_mod_right, contradiction },
           unfold bij.even_odd.g bij.even_odd.f,
           rw [if_neg h], rw [nat.mul_div_cancel_left _ h'] },
         { unfold bij.even_odd.g bij.even_odd.f,
           note h' := nat.le_refl 2,
-          rw [if_pos,nat.mul_add_div_cancel _ _ _ h'],
-          rw [nat.mul_add_modulo_cancel _ _ _ h'] }
+          rw [if_pos,nat.mul_add_div_self_left _ _ _ h'],
+          rw [nat.mul_add_mod_self_left _ _ _ h'] }
       end
       begin
         intros x,
@@ -1048,17 +940,7 @@ def bij.option.fin.g {n : ℕ} : fin (succ n) → option (fin n)
 
 lemma bij.option.fin.g_zero (n : ℕ)
 : bij.option.fin.g (0 : fin $ succ n) = none :=
-begin
-  unfold zero has_zero.zero fin.of_nat,
-  generalize (@fin.of_nat._proof_1 n 0) X,
-  note Y := @zero_mod (succ n),
-  revert Y,
-  generalize (0 % succ n) k,
-  intros k H,
-  subst k,
-  intro,
-  refl,
-end
+rfl
 
 lemma bij.option.fin.g_succ {n : ℕ} (m : fin n)
 : bij.option.fin.g (fin.succ m : fin $ succ n) = some m :=
@@ -1079,7 +961,7 @@ end)
   ; cases x
   ; unfold bij.option.fin.g bij.option.fin.f fin.succ
   ; apply fin.eq_of_veq,
-  { apply fin.val_of_nat is_lt, },
+  { apply fin.zero_def, },
   { refl },
 end)
 
@@ -1094,8 +976,7 @@ begin
   note h' := le_antisymm (zero_le _) h,
   apply fin.eq_of_veq,
   unfold zero has_zero.zero,
-  rw fin.val_of_nat, apply h',
-  apply zero_lt_succ
+  subst val,
 end
 
 instance : pos_finite unit :=

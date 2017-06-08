@@ -348,7 +348,7 @@ def rotate_right_f : ∀ {n} (k i : fin n), fin n
 def rotate_right_g : ∀ {n} (k i : fin n), fin n
   | 0 k i := i
   | (succ n) k i := if i.val = n then k
-                    else if k.val ≤ i.val then i.succ
+                    else if k.val ≤ i.val then i.succ'
                     else i
 
 -- def rotate_right_inverse (k x y : fin n)
@@ -431,13 +431,13 @@ begin
       cases decidable.em (k.val ≤ x.val) with Hle Hn_le,
       { rw if_pos Hle,
         unfold rotate_right_f,
-        assert Hne : k.val ≠ (succ x).val,
+        assert Hne : k.val ≠ (succ' x).val,
         { apply ne_of_lt, rw [fin.succ_def],
           { apply succ_le_succ Hle },
           { apply lt_of_le_of_ne,
             apply x.is_lt,
             intro h, apply Hne_n,
-            injection h with h, apply h } },
+            injection h with h, } },
         rw [if_neg Hne,if_pos,fin.pred_succ],
         { apply succ_lt_succ,
           apply lt_of_le_of_ne _ Hne_n,

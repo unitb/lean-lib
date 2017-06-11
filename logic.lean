@@ -154,6 +154,18 @@ begin
     apply or.inr ha, }
 end
 
+lemma iff_of_not_iff_not {p q : Prop} (h : ¬ p ↔ ¬ q)
+: p ↔ q :=
+begin
+  split ; intro h₀ ; apply classical.by_contradiction,
+  { rw -h, intro h₁, apply h₁ h₀ },
+  { rw h, intro h₁, apply h₁ h₀ },
+end
+
+lemma not_iff_not_iff {p q : Prop}
+: (¬ p ↔ ¬ q) ↔ (p ↔ q) :=
+⟨ iff_of_not_iff_not, not_congr ⟩
+
 lemma distrib_right_or
 : c ∨ (a ∧ b) ↔ (c ∨ a) ∧ (c ∨ b) :=
 by { rw [or_comm,distrib_left_or], simp }
@@ -309,6 +321,10 @@ begin
   { rw [eq_true_intro hp,true_or,not_true,false_implies_iff], },
   { rw [eq_false_intro hnp,false_or,not_false_iff,true_imp], }
 end
+
+lemma imp_iff_not_or (p q : Prop)
+: p → q ↔ ¬ p ∨ q :=
+by rw [or_iff_not_imp,not_not_iff_self]
 
 lemma exists_one_point_right {α : Type u} (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)

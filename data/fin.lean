@@ -1,4 +1,6 @@
 
+import util.logic
+
 open nat
 
 lemma fin.veq_def {n} (x y : fin n)
@@ -136,9 +138,37 @@ end
 lemma fin.val_injective {n} : function.injective (@fin.val n)
  | ⟨x,_⟩ ⟨.(x),_⟩ rfl := rfl
 
-lemma fin.val_of_nat {m n : ℕ} (h : n < nat.succ m)
-: (@fin.of_nat m n).val = n :=
+def widen {n} : fin n → fin (nat.succ n)
+| ⟨i,P⟩ := ⟨i,nat.le_succ_of_le P⟩
+
+def restr {n α} (f : fin (nat.succ n) → α) (x : fin n) : α :=
+f (widen x)
+
+lemma forall_fin_zero_iff_true (p : fin 0 → Prop)
+: (∀ i, p i) ↔ true :=
 begin
-  unfold fin.of_nat fin.val,
-  rw mod_eq_of_lt h
+  split,
+  { intros, trivial },
+  { intros h' i, apply fin.elim0 i }
+end
+
+lemma forall_split_one {n : ℕ} (p : fin (nat.succ n) → Prop)
+: (∀ i, p i) ↔ p fin.max ∧ (∀ i, restr p i) :=
+begin
+  split ; intro h,
+  split,
+  { apply h },
+  { intro, apply h },
+  { intro i, cases i with i hi,
+    cases (lt_or_eq_of_le $ le_of_lt_succ hi) with h₀ h₁,
+    { apply h.right ⟨i,h₀⟩ },
+    { subst i, apply h.left } },
+end
+
+lemma exists_split_one {n : ℕ} (p : fin (nat.succ n) → Prop)
+: (∃ i, p i) ↔ p fin.max ∨ (∃ i, restr p i) :=
+begin
+  rw [-not_iff_not_iff],
+  simp [not_or_iff_not_and_not,not_exists_iff_forall_not,forall_split_one],
+  refl
 end

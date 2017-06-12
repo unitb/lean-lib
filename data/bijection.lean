@@ -14,7 +14,6 @@ structure bijection (α  : Type (u₀)) (β : Type (u₁)) : Type (max (u₀) (u
   (f : α → β)
   (g : β → α)
   (inverse : ∀ x y, f x = y ↔ x = g y)
---  (right_cancel : ∀ x, g (f x) = x)
 
 def bijection.mk (f : α → β) (g : β → α)
     (f_inv : ∀ x, g (f x) = x)
@@ -296,9 +295,6 @@ def bij.sum.append : bijection (fin m ⊕ fin n) (fin (n+m)) :=
       apply le_of_not_gt h }
   end
 
--- set_option pp.implicit true
--- set_option pp.notation false
-
 def bij.prod.append.f : fin m × fin n → fin (m*n)
   | (⟨x,Px⟩,⟨y,Py⟩) :=
        have h : n*x + y < m * n,
@@ -450,7 +446,6 @@ def bij.prod.succ : ℕ × ℕ → ℕ × ℕ
 
 def diag : ℕ × ℕ → ℕ × ℕ → Prop
 := inv_image (prod.lex nat.lt nat.lt) (λ x, (x^.fst+x^.snd, x^.fst))
---  | (x₀,x₁) (y₀,y₁) := prod.lex lt lt (x₀+y₀,x₀) (x₁+y₁,x₁)
 
 def diag_wf : well_founded diag
 := @inv_image.wf (ℕ × ℕ) _ _
@@ -505,7 +500,6 @@ end
 
 lemma bij.prod.g_succ (n m : ℕ) : bij.prod.g (succ n,m) = succ (bij.prod.g (n,succ m)) :=
 begin
---  transitivity,
   unfold bij.prod.g,
   rw [well_founded.fix_eq],
   unfold bij.prod.g._match_2 bij.prod.g._match_1,
@@ -623,9 +617,6 @@ begin
   ; rw bijection.g_inv
 end
 
--- def bijection.sum.f : α ⊕ β → ℕ := _
--- def bijection.sum.g : ℕ → α ⊕ β := _
-
 end bijection_add
 
 section bijection_mul
@@ -738,42 +729,6 @@ def concat.g : ℕ → list ℕ :=
          p^.fst :: g p^.snd h
      end
 
--- section strong_rec
-
--- variables {t : ℕ → Type u₀} (n : ℕ)
--- variables (P : Π n, (Π m, m < n → t m) → t n)
-
--- variable r : α → α → Prop
--- variable wf : well_founded r
-
--- lemma foo (n : ℕ) (h₀ : t 0) (hn : ∀ n, t n → t (succ n))
--- : @nat.rec _ h₀ hn (succ n) = hn n (nat.rec h₀ hn n) :=
--- begin
---   simp
--- end
-
--- lemma nat.strong_rec_on_def
--- : ∀ n, well_founded.fix nat.lt_wf P n = P n (λ m h, well_founded.fix nat.lt_wf P m)
---    :=
---    begin
---      intro n,
---      pose Q := λ n, Π (m : ℕ), m < n → t m,
---      unfold nat.strong_rec_on,
---      change (λ (n : ℕ),
---        @nat.rec Q (λ (m : ℕ) (h₁ : m < 0), (absurd h₁ (not_lt_zero m) : t m))
---          (λ (n : ℕ) (ih : Π (m : ℕ), m < n → t m) (m : ℕ) (h₁ : m < succ n),
---             or.by_cases (lt_or_eq_of_le (le_of_lt_succ h₁)) (λ (a : m < n), ih m a)
---               (λ (a : m = n), eq.rec (λ (h₁ : n < succ n), P n ih) (eq.symm a) h₁))
---          n) (succ n) n (lt_succ_self n) = _,
---      change @nat.rec Q (λ (m : ℕ) (h₁ : m < 0), (absurd h₁ (not_lt_zero m) : t m))
---          (λ (n : ℕ) (ih : Π (m : ℕ), m < n → t m) (m : ℕ) (h₁ : m < succ n),
---             or.by_cases (lt_or_eq_of_le (le_of_lt_succ h₁)) (λ (a : m < n), ih m a)
---               (λ (a : m = n), eq.rec (λ (h₁ : n < succ n), P n ih) (eq.symm a) h₁))
---          (succ n) n (lt_succ_self n) = _, unfold nat.rec
---     end
-
--- end strong_rec
-
 lemma concat.g_zero
 : concat.g 0 = [] :=
 begin
@@ -797,7 +752,6 @@ begin
   induction x,
   { unfold concat.f, apply concat.g_zero },
   { unfold concat.f,
-    -- bij.prod.g_succ
     assert h : ∀ x, bij.prod.f (bij.prod.g x) = x, { apply bij.prod^.f_inv },
     rw concat.g_succ,
     apply congr, apply congr_arg,

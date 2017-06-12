@@ -37,8 +37,6 @@ begin
   refl
 end
 
--- print nat.rec
--- set_option pp.implicit true
 section s
 
 universe variables u

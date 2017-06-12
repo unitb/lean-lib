@@ -20,18 +20,6 @@ lemma rounds_succ (m n : ℕ) :
 rounds m (succ n) = succ n :: rounds m n :=
 by apply stream.corec_eq
 
--- def rounds' : ℕ → ℕ → stream ℕ
---   | n 0 := stream.cons 0 $ rounds' (succ n) (succ n)
---   | n (succ p) := stream.cons p $ rounds' (succ n) p
-
--- def rounds : stream (ℕ × ℕ)
---   | 0 := (0,1)
---   | (succ n) :=
---       match (rounds n)^.fst with
---       | 0 := ((rounds n)^.snd, succ (rounds n)^.snd)
---       | (succ k) := (k,(rounds n)^.snd)
---       end
-
 section wf
 
 open well_founded
@@ -41,67 +29,6 @@ end wf
 
 def inf_interleave : stream ℕ
 := rounds 0 0
-
--- theorem g (i : ℕ) : (rounds i)^.snd > 0 :=
--- begin
---   induction i with i,
---   { unfold rounds rounds._match_1 prod.snd prod.snd, apply nat.le_refl },
---   { unfold rounds,
---     -- unfold rounds at ih_1,
---     destruct (rounds i), intros i₀ i₁ h,
---     -- rw h at ih_1,
---     rw h,
---     -- unfold prod.fst at ih_1,
---     unfold prod.fst,
---     cases i₀ with i₀,
---     { unfold rounds._match_1 prod.snd prod.fst,
---       apply zero_lt_succ  },
---     { unfold rounds._match_1 prod.snd prod.fst,
---       rw h at ih_1,
---       apply ih_1 } },
--- end
-
--- theorem g' (i n : ℕ) : rounds i = (0,0) → i = 0 :=
--- begin
---   induction i with i,
---   { unfold rounds, intro, refl },
---   { unfold rounds,
---     destruct (rounds i),
---     intros i₀ i₁ h, simp [h],
---     unfold prod.fst,
---     cases i₀ with i₀,
---     { unfold rounds._match_1 prod.snd, intro hh, injection hh, contradiction },
---     { unfold rounds._match_1 prod.snd, intro hh, injection hh,  }, }
--- end
-
--- theorem f' (i n k : ℕ) : rounds i = (n,k) → rounds (i+k) = (succ n,succ n) :=
--- begin
---   induction k with k,
---   unfold rounds,
--- end
-
--- theorem f (i n p : ℕ) : rounds i = (n,p) → n < p :=
--- begin
---   revert n p,
---   induction i with i,
---   { intros n p, unfold rounds, intro h, injection h, subst n, subst p },
---   { intros n p,
---     unfold rounds,
---     destruct (rounds i),
---     intros i₀ i₁ h,
---     rw h, unfold prod.fst,
---     cases i₀ with i₀,
---     { unfold rounds._match_1 prod.snd,
---       intro h', injection h', subst n, subst p },
---     { unfold rounds._match_1 prod.snd,
---       intro h', injection h', subst n, subst p,
---       apply le_of_succ_le, apply ih_1 _ _ h }, }
--- end
-
--- theorem d (i n p : ℕ) : rounds (succ i) = (n,p) → (rounds $ i + p)^.fst = succ n :=
--- begin
-
--- end
 
 def is_suffix {α} (p q : stream α) : Prop := ∃ i, p = stream.drop i q
 
@@ -120,12 +47,6 @@ begin
   existsi 0,
   refl
 end
--- lemma stream.le_antisymm : s₀ ⊑ s₁ → s₁ ⊑ s₀ → s₀ = s₁ :=
--- begin
---   intros h₀ h₁,
---   cases h₀ with i h₀,
---   cases h₁ with j h₁,
--- end
 
 lemma stream.le_trans : s₀ ⊑ s₁ → s₁ ⊑ s₂ → s₀ ⊑ s₂ :=
 begin
@@ -136,12 +57,6 @@ begin
   existsi i+j,
   rw [-stream.drop_drop,-h₁,h₀],
 end
-
--- instance {α} : weak_order (stream α) :=
--- { (_ : has_le (stream α)) with
---   le_refl := stream.le_refl
--- , le_antisymm := stream.le_antisymm
--- , le_trans := stream.le_trans }
 
 end weak_order
 
@@ -216,21 +131,11 @@ variable {α : Type u}
 variables P Q : α → Prop
 variables Hq : ∀ x, P x → Q x
 
--- lemma exists_imp_exists : (∃ x, P x) → (∃ x, Q x)
---   | ⟨x,Hx⟩ := ⟨ x, Hq _ Hx ⟩
-
-
 end exist
 
 variable {α : Type}
 variable i : ℕ
 variable s : stream α
-
--- theorem inf_repeat_inf_inter_foo₀ (i j : ℕ) (x) -- (h : s ⊑ inf_interleave)
--- : ∃ s', i ≤ x ∧ s' ⊑ rounds i j ∧ head s' = x :=
--- begin
-
--- end
 
 theorem rounds_suffix_rounds
   {s : stream ℕ}

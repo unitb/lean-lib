@@ -13,7 +13,6 @@ begin
   cases x with x H,
   intro i,
   existsi x + succ n - (i % succ n),
-  -- refine ⟨x + succ n - (i % succ n),_⟩, -- i + x + succ n - (i % succ n)
   tactic.swap,
   unfold fin_interleave,
   assert h : i % succ n ≤ succ n,

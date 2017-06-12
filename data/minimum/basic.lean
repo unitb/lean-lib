@@ -30,8 +30,6 @@ end
 
 section minimum
 
--- open has_minimum
-
 parameters {α : Type u}
 parameters [has_minimum α]
 parameters {s : set α}

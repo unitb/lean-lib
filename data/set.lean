@@ -61,8 +61,6 @@ lemma mem_fmap_iff_mem_of_inj
 : f x ∈ f <$> s ↔ x ∈ s :=
 ⟨ mem_of_mem_fmap Hinj, mem_fmap_of_mem ⟩
 
-#print bijective
-
 lemma mem_fmap_iff_mem_of_bij
   (Hinv : left_inverse f g)
   {x : β}

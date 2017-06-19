@@ -172,3 +172,9 @@ begin
   simp [not_or_iff_not_and_not,not_exists_iff_forall_not,forall_split_one],
   refl
 end
+
+def fin.nest {n m : ℕ} : fin n → fin (m + n) :=
+sorry
+
+def fin.shift {n m : ℕ} : fin n → fin (m + n) :=
+sorry

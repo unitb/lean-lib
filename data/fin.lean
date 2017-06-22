@@ -1,5 +1,6 @@
 
 import util.logic
+import util.data.nat
 
 open nat
 
@@ -17,7 +18,7 @@ inhabited.mk ⟨n,lt_succ_self _⟩
 instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
   { le := has_le.le
   , lt := has_lt.lt
-  , le_refl := take x, by simp [fin.le_def]
+  , le_refl  := take x, by simp [fin.le_def]
   , le_trans := take x y z, by { simp [fin.le_def], apply le_trans }
   , le_antisymm := take x y, by { simp [fin.le_def,fin.veq_def], apply le_antisymm }
   , le_total := take x y, by { simp [fin.le_def], apply le_total }
@@ -35,6 +36,10 @@ by refl
 lemma fin.zero_def' (n : ℕ)
 : (0 : fin (succ n)) = ⟨0, zero_lt_succ _ ⟩ :=
 by { apply fin.eq_of_veq, rw fin.zero_def }
+
+lemma fin.all_eq_zero (x : fin 1)
+: x = 0 :=
+sorry
 
 def fin.next {n : ℕ} : fin n → fin (succ n)
   | ⟨i,P⟩ := ⟨succ i, succ_lt_succ P⟩
@@ -173,8 +178,83 @@ begin
   refl
 end
 
-def fin.nest {n m : ℕ} : fin n → fin (m + n) :=
-sorry
+def fin.nest {n m : ℕ} : fin m → fin (m + n)
+  | ⟨i,P⟩ := ⟨i,lt_of_lt_of_le P (le_add_right m n)⟩
 
-def fin.shift {n m : ℕ} : fin n → fin (m + n) :=
-sorry
+def fin.shift {n m : ℕ} : fin n → fin (m + n)
+  | ⟨i,P⟩ := ⟨m+i,add_lt_add_left P _⟩
+
+def fin.split {n m : ℕ} : fin (m + n) → fin m ⊕ fin n
+  | ⟨k,P⟩ :=
+if h : k < m
+  then sum.inl ⟨k,h⟩
+  else
+    have h₀ : n = (m + n) - m, by rw nat.add_sub_cancel_left,
+    have h₁ : k - m < n,
+         begin rw h₀,
+               apply nat.sub_lt_sub_right _ P,
+               apply le_of_not_gt h
+         end,
+    sum.inr ⟨k-m,h₁⟩
+
+def fin.unsplit {n m : ℕ} : fin m ⊕ fin n → fin (m + n)
+  | (sum.inl n) := fin.nest n
+  | (sum.inr n) := fin.shift n
+
+lemma fin.split_unsplit {n m : ℕ} (k : fin m ⊕ fin n)
+: fin.split (fin.unsplit k) = k :=
+begin
+  cases k with k k
+  ; unfold fin.unsplit
+  ; cases k with k Hk
+  ; unfold fin.shift fin.nest fin.split,
+  { rw dif_pos Hk },
+  { assert H : ¬ m + k < m,
+    { apply not_lt_of_ge, apply le_add_right },
+    rw [dif_neg H], simp,
+    apply congr_arg,
+    apply fin.eq_of_veq,
+    unfold fin.val,
+      -- simp, below, invokes two similar lemmas for the
+      -- stability of the proof
+    simp [nat.add_sub_cancel_left,nat.add_sub_cancel] },
+end
+
+lemma fin.unsplit_split {n m : ℕ} (k : fin (m + n))
+: fin.unsplit (fin.split k) = k :=
+begin
+  cases k with k Hk,
+  cases classical.em (k < m) with h h
+  ; unfold fin.split,
+  { rw dif_pos h, unfold fin.unsplit fin.nest, refl },
+  { rw dif_neg h,
+    apply fin.eq_of_veq,
+    unfold fin.unsplit fin.shift fin.val,
+    rw [-nat.add_sub_assoc,nat.add_sub_cancel_left],
+    apply le_of_not_gt h },
+end
+
+lemma fin.unsplit_eq_iff_eq_split {n m : ℕ} (p : fin m ⊕ fin n) (q : fin (m + n))
+: fin.unsplit p = q ↔ p = fin.split q :=
+begin
+  split ; intro h,
+  { rw [-h,fin.split_unsplit], },
+  { rw [h,fin.unsplit_split], },
+end
+
+lemma fin.nest_eq_iff_eq_split {n m : ℕ} (p : fin m) (q : fin (m + n))
+: fin.nest p = q ↔ sum.inl p = fin.split q :=
+by { rw -fin.unsplit_eq_iff_eq_split, refl }
+
+lemma fin.shift_eq_iff_eq_split {n m : ℕ} (p : fin n) (q : fin (m + n))
+: fin.shift p = q ↔ sum.inr p = fin.split q :=
+by { rw -fin.unsplit_eq_iff_eq_split, refl }
+
+lemma fin.split_injective  {n m : ℕ} (p q : fin (m + n))
+  (h : fin.split p = fin.split q)
+: p = q :=
+by { rw [-fin.unsplit_eq_iff_eq_split,fin.unsplit_split] at h, assumption }
+
+lemma fin.val_shift_zero (m n : ℕ)
+: (@fin.shift _ m (0 : fin (succ n))).val = m :=
+rfl

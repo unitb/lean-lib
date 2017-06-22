@@ -18,12 +18,10 @@ end
 
 theorem mod_mod (m n : ℕ) : (m % n) % n = m % n :=
 begin
-  cases decidable.em (n > 0) with h h,
+  cases lt_or_eq_of_le (zero_le n) with h h,
   { apply mod_of_lt, apply mod_lt _ h },
-  { note h' := le_antisymm (zero_le _) (le_of_not_gt h),
-    subst n, rw [mod_def,if_neg],
-    intro h', apply h,
-    cases h' with h₀ h₁, apply h₀ }
+  { subst n, rw [mod_def,if_neg],
+    intro h', apply lt_irrefl _ h'.left }
 end
 
 theorem mod_plus (n p : ℕ) (h : p > 0) : ∃k q, q < p ∧ n = k * p + q :=
@@ -160,6 +158,27 @@ begin
     apply le_of_succ_le_succ h, }
 end
 
+protected lemma sub_lt_sub_right {m n p : ℕ}
+  (h₀ : p ≤ m)
+  (h₁ : m < n)
+: m - p < n - p :=
+begin
+  induction p with p IH,
+  { apply h₁ },
+  { simp [sub_succ],
+    assert Hmp : m - p ≠ 0,
+    { apply ne_of_gt,
+      apply nat.sub_pos_of_lt h₀ },
+    assert Hnp : n - p ≠ 0,
+    { apply ne_of_gt,
+      apply nat.sub_pos_of_lt,
+      apply nat.lt_trans h₀ h₁  },
+    apply pred_lt_pred Hmp Hnp,
+    apply IH,
+    apply le_trans _ h₀,
+    apply le_succ }
+end
+
 protected lemma sub_lt_sub_left {m p q : ℕ}
   (h₀ : p ≤ m)
   (h₁ : q < p)
@@ -179,7 +198,7 @@ protected lemma sub_le_sub {m n p q : ℕ}
   (h₁ : q ≤ p)
 : m - p ≤ n - q :=
 begin
-  transitivity,
+  transitivity n - p,
   apply nat.sub_le_sub_right h₀,
   apply nat.sub_le_sub_left h₁
 end

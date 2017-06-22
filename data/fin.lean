@@ -201,14 +201,19 @@ def fin.unsplit {n m : ℕ} : fin m ⊕ fin n → fin (m + n)
   | (sum.inl n) := fin.nest n
   | (sum.inr n) := fin.shift n
 
-lemma fin.split_unsplit {n m : ℕ} (k : fin m ⊕ fin n)
-: fin.split (fin.unsplit k) = k :=
+lemma fin.split_nest {n m : ℕ} (k : fin m)
+: fin.split (@fin.nest n m k) = sum.inl k :=
 begin
-  cases k with k k
-  ; unfold fin.unsplit
-  ; cases k with k Hk
-  ; unfold fin.shift fin.nest fin.split,
-  { rw dif_pos Hk },
+  cases k with k Hk,
+  unfold fin.shift fin.nest fin.split,
+  rw dif_pos Hk
+end
+
+lemma fin.split_shift {n m : ℕ} (k : fin n)
+: fin.split (@fin.shift n m k) = sum.inr k :=
+begin
+  cases k with k Hk,
+  unfold fin.shift fin.nest fin.split,
   { assert H : ¬ m + k < m,
     { apply not_lt_of_ge, apply le_add_right },
     rw [dif_neg H], simp,
@@ -218,6 +223,15 @@ begin
       -- simp, below, invokes two similar lemmas for the
       -- stability of the proof
     simp [nat.add_sub_cancel_left,nat.add_sub_cancel] },
+end
+
+lemma fin.split_unsplit {n m : ℕ} (k : fin m ⊕ fin n)
+: fin.split (fin.unsplit k) = k :=
+begin
+  cases k with k k
+  ; unfold fin.unsplit,
+  { rw fin.split_nest },
+  { rw fin.split_shift },
 end
 
 lemma fin.unsplit_split {n m : ℕ} (k : fin (m + n))
@@ -258,3 +272,10 @@ by { rw [-fin.unsplit_eq_iff_eq_split,fin.unsplit_split] at h, assumption }
 lemma fin.val_shift_zero (m n : ℕ)
 : (@fin.shift _ m (0 : fin (succ n))).val = m :=
 rfl
+
+lemma fin.shift_zero (m : ℕ)
+: fin.max = (@fin.shift _ m (0 : fin 1)) :=
+begin
+  apply fin.eq_of_veq,
+  unfold fin.shift fin.max, simp,
+end

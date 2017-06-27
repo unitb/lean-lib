@@ -34,7 +34,7 @@ begin
   cases decidable.em (val <$> s = ∅) with h h,
   { unfold nat.minimum,
     rw dif_pos h, apply zero_lt_succ },
-  { note h' := nat.minimum_mem (val <$> s) h,
+  { have h' := nat.minimum_mem (val <$> s) h,
     apply lt_of_mem_fin_set _ h', },
 end
 
@@ -74,7 +74,7 @@ begin
   apply nat.le_minimum_of_forall_le,
   { simp [set.fmap_eq_empty_iff_eq_empty,h₀], },
   { intros y h,
-    note hy := lt_of_mem_fin_set _ h,
+    have hy := lt_of_mem_fin_set _ h,
     change x.val ≤ fin.val ⟨y,hy⟩,
     rw -le_def,
     apply h₁,

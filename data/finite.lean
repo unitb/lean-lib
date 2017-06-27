@@ -15,7 +15,7 @@ begin
   existsi x + succ n - (i % succ n),
   tactic.swap,
   unfold fin_interleave,
-  assert h : i % succ n ≤ succ n,
+  have h : i % succ n ≤ succ n,
   { apply nat.le_of_lt (mod_lt _ _),
     apply succ_le_succ, apply zero_le },
   apply fin.eq_of_veq, unfold fin.val ,

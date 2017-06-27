@@ -247,7 +247,7 @@ begin
   split,
   { intro h, apply classical.by_contradiction, intros h',
     apply h, intro i,
-    note h'' := forall_not_of_not_exists h' i,
+    have h'' := forall_not_of_not_exists h' i,
     rw not_not_iff_self at h'',
     apply h'' },
   { intros h₀ h₁,
@@ -365,8 +365,8 @@ lemma exists_range_subtype {α : Type u}
   (p : α → Prop) (q : α → Prop)
 : (∃ i, p i ∧ q i) ↔ (∃ j : subtype p, q j) :=
 begin
-  pose f := λ (x : α) (h : p x ∧ q x), subtype.mk x h.left,
-  pose g := λ (x : subtype p) (h : q x), x.val,
+  let f := λ (x : α) (h : p x ∧ q x), subtype.mk x h.left,
+  let g := λ (x : subtype p) (h : q x), x.val,
   apply exists_variable_change' _ _ f g,
   { intros x h, apply h.right },
   { intros x h, exact ⟨x.property, h⟩  },

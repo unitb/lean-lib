@@ -100,7 +100,7 @@ lemma fin.succ_pred {n} (x : fin (succ n))
 : x.pred'.succ' = x :=
 begin
   apply fin.eq_of_veq,
-  assert h' : 0 < x.val,
+  have h' : 0 < x.val,
   { rw [fin.lt_def,fin.zero_def] at h,
     apply h },
   rw [fin.succ_def,fin.pred_def,succ_pred_eq_of_pos h'],
@@ -214,7 +214,7 @@ lemma fin.split_shift {n m : ℕ} (k : fin n)
 begin
   cases k with k Hk,
   unfold fin.shift fin.nest fin.split,
-  { assert H : ¬ m + k < m,
+  { have H : ¬ m + k < m,
     { apply not_lt_of_ge, apply le_add_right },
     rw [dif_neg H], simp,
     apply congr_arg,

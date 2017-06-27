@@ -52,7 +52,7 @@ lemma minimum_unique
   (h₁ : ∀ y, y ∈ s → x ≤ y)
 : has_minimum.minimum s = x :=
 begin
-  note h₂ := set.ne_empty_of_mem h₀,
+  have h₂ := set.ne_empty_of_mem h₀,
   apply @le_antisymm α,
   { apply minimum_le h₀, },
   { apply le_minimum_of_forall_le h₂ h₁, },

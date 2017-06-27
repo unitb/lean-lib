@@ -160,9 +160,9 @@ begin
       cases lt_or_gt_of_ne Heq with Hlt Hgt,
       { rw [if_pos Hlt],
         unfold rotate_right_g,
-        note Hx_pos' : 0 < x.val :=
+        have Hx_pos' : 0 < x.val :=
            lt_of_le_of_lt (zero_le _) Hlt,
-        assert Hx_pos : 0 < x,
+        have Hx_pos : 0 < x,
         { rw [lt_def,zero_def],
           apply Hx_pos' },
         rw [if_neg,if_pos],
@@ -175,8 +175,8 @@ begin
           apply lt_of_succ_lt_succ,
           rw [succ_pred_eq_of_pos Hx_pos'],
           apply x.is_lt, }, },
-      { note Hn_lt := not_lt_of_gt Hgt,
-        note Hn_le := not_le_of_gt Hgt,
+      { have Hn_lt := not_lt_of_gt Hgt,
+        have Hn_le := not_le_of_gt Hgt,
         rw [if_neg Hn_lt],
         unfold rotate_right_g,
         rw [if_neg Hn_le,if_neg],
@@ -198,7 +198,7 @@ begin
       cases decidable.em (k.val ≤ x.val) with Hle Hn_le,
       { rw if_pos Hle,
         unfold rotate_right_f,
-        assert Hne : k.val ≠ (succ' x).val,
+        have Hne : k.val ≠ (succ' x).val,
         { apply ne_of_lt, rw [fin.succ_def],
           { apply succ_le_succ Hle },
           { apply lt_of_le_of_ne,
@@ -214,7 +214,7 @@ begin
           apply le_trans Hle,
           rw [-le_def],
           apply fin.le_succ_self, }, },
-      { assert Hne : k.val ≠ x.val,
+      { have Hne : k.val ≠ x.val,
         { apply ne_of_gt,
           apply lt_of_not_le Hn_le },
         rw if_neg Hn_le,
@@ -223,48 +223,6 @@ begin
         apply not_lt_of_ge,
         apply le_of_not_le Hn_le, }, }, },
 end
-
--- lemma taken_length (xs : list α)
--- : taken (length xs) xs = xs :=
--- begin
---   induction xs with x xs IH,
---   { refl },
---   { simp [IH] }
--- end
-
--- lemma dropn_length (xs : list α)
--- : dropn (length xs) xs = [] :=
--- begin
---   induction xs with x xs IH,
---   { refl },
---   { simp [IH] }
--- end
-
--- lemma length_to_list {n : ℕ} (x : perm n) : length x.to_list = n :=
--- bijection.length_to_list x
-
--- lemma rotate_left_swaps
---   {x : fin n} {xs : list (fin n)}
---   (h : (rotate_left n).to_list = x :: xs)
--- : (rotate_left n).to_list = xs ++ [x] :=
--- begin
---   cases n with n,
---   { note Hlength := length_to_list (rotate_left 0),
---     rw h at Hlength,
---     simp [add_one_eq_succ] at Hlength,
---     contradiction, },
---   note h' := rotate_left'.f_swaps _ h,
---   note Htaken := taken_length xs,
---   note Hdropn := dropn_length xs,
---   assert Hlength : length xs = n,
---   { note Hlength := length_to_list (rotate_left (succ n)),
---     rw h at Hlength,
---     simp [add_one_eq_succ] at Hlength,
---     injection Hlength with H, apply H },
---   rw Hlength at Htaken Hdropn,
---   simp [Htaken,Hdropn] at h',
---   apply h',
--- end
 
 @[simp]
 lemma rotate_right_f_eq {n : ℕ} (k : fin n)
@@ -354,7 +312,7 @@ begin
   cases decidable.em (x < n) with h h,
   { unfold to_total_aux,
     rw [dif_pos h,dif_pos (p.f ⟨x, h⟩).is_lt],
-    assert h : (⟨(p.f ⟨x, h⟩).val, (p.f ⟨x, h⟩).is_lt⟩ : fin n) = p.f ⟨x, h⟩,
+    have h : (⟨(p.f ⟨x, h⟩).val, (p.f ⟨x, h⟩).is_lt⟩ : fin n) = p.f ⟨x, h⟩,
     { apply eq_of_veq, refl },
     rw [h,p.f_inv], },
   { unfold to_total_aux,
@@ -364,7 +322,7 @@ end
 lemma to_total_g_inverse (p : perm n) (x : ℕ)
 : to_total_aux (p.f) (to_total_aux (p.g) x) = x :=
 begin
-  note h := to_total_f_inverse (rev p) x,
+  have h := to_total_f_inverse (rev p) x,
   rw [rev_f,rev_g] at h,
   apply h
 end

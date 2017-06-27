@@ -100,7 +100,7 @@ begin
   induction i with i IH
   ; intros s,
   { refl },
-  { assert H : tail s i = s (succ i), { refl },
+  { have H : tail s i = s (succ i), { refl },
     rw [approx_succ,IH,approx_succ,list.cons_append,H], }
 end
 

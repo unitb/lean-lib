@@ -73,7 +73,7 @@ def pos_of_finite {α} [finite α] [_ne : nonempty α] : pos_finite α :=
       rw nat.succ_pred_eq_of_pos,
       apply finite.to_nat,
       cases _ne with x,
-      note H := ((finite.to_nat α).f x).is_lt,
+      have H := ((finite.to_nat α).f x).is_lt,
       apply lt_of_le_of_lt (nat.zero_le _) H,
     end }
 
@@ -144,8 +144,8 @@ protected lemma eq {α β} (b₀ b₁ : bijection α β)
 begin
   cases b₀, cases b₁,
   unfold bijection.f bijection.g at Hf Hg,
-  note Hf' : f = f_1 := funext Hf,
-  note Hg' : g = g_1 := funext Hg,
+  have Hf' : f = f_1 := funext Hf,
+  have Hg' : g = g_1 := funext Hg,
   subst f_1, subst g_1
 end
 
@@ -154,16 +154,16 @@ infixr ∘ := bij.comp
 lemma bijection.left_id {α β} (x : bijection α β) : id ∘ x = x :=
 begin
   cases x, unfold id bij.comp,
-  note Hf : function.comp id.f f = f := function.left_id _,
-  note Hg : function.comp g id.g = g := function.right_id _,
+  have Hf : function.comp id.f f = f := function.left_id _,
+  have Hg : function.comp g id.g = g := function.right_id _,
   simp [Hf,Hg],
 end
 
 lemma bijection.right_id {α β} (x : bijection α β) : x ∘ id = x :=
 begin
   cases x, unfold id bij.comp,
-  note Hf : function.comp f id.f = f := function.left_id _,
-  note Hg : function.comp id.g g = g := function.left_id _,
+  have Hf : function.comp f id.f = f := function.left_id _,
+  have Hg : function.comp id.g g = g := function.left_id _,
   simp [Hf,Hg],
 end
 
@@ -198,7 +198,7 @@ def bij.sum.pre : bijection (fin n ⊕ ℕ) ℕ :=
     { cases x with x Px,
       unfold bij.sum.pre.f bij.sum.pre.g,
       rw [dif_pos Px] },
-    { assert h : ¬ x + n < n,
+    { have h : ¬ x + n < n,
       { apply not_lt_of_ge, apply nat.le_add_left },
       unfold bij.sum.pre.f bij.sum.pre.g,
       rw [dif_neg h,nat.add_sub_cancel] }
@@ -273,7 +273,7 @@ def bij.sum.append : bijection (fin m ⊕ fin n) (fin (n+m)) :=
       unfold bij.sum.append.f bij.sum.append.g,
       rw [dif_pos Px] },
     { cases x with x Px,
-      assert h : ¬ x + m < m,
+      have h : ¬ x + m < m,
       { apply not_lt_of_ge, apply nat.le_add_left },
       unfold bij.sum.append.f bij.sum.append.g,
       rw [dif_neg h], apply congr_arg,
@@ -301,7 +301,7 @@ def bij.prod.append.f : fin m × fin n → fin (m*n)
          begin
            apply lt_of_lt_of_le,
            { apply add_lt_add_left Py },
-           { note h := eq.symm (nat.succ_mul x n),
+           { have h := eq.symm (nat.succ_mul x n),
              transitivity, rw [mul_comm, h],
              apply nat.mul_le_mul_right _ Px  }
          end,
@@ -311,7 +311,7 @@ def bij.prod.append.g : fin (m*n) → fin m × fin n
   | ⟨x,Px⟩ :=
          have hn : 0 < n,
            begin
-             assert h : 0 < m * n,
+             have h : 0 < m * n,
              { apply lt_of_le_of_lt _ Px,
                apply nat.zero_le },
              apply pos_of_mul_pos_left h,
@@ -385,7 +385,7 @@ lemma enum_less {n k : ℕ} (h : n < k) : n ∈ less k :=
 begin
   induction k with k,
   { cases nat.not_lt_zero _ h },
-  { unfold less, note h' := @lt_or_eq_of_le ℕ _ _ _ h,
+  { unfold less, have h' := @lt_or_eq_of_le ℕ _ _ _ h,
     cases h' with h' h',
     { apply or.inr, apply ih_1,
       apply lt_of_succ_lt_succ h' },
@@ -405,13 +405,13 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
       begin
         intro x,
         cases x with x x,
-        { assert h' : 2 > 0, apply nat.le_succ,
-          assert h : ¬ 2 * x % 2 = 1,
+        { have h' : 2 > 0, apply nat.le_succ,
+          have h : ¬ 2 * x % 2 = 1,
           { rw nat.mul_mod_right, contradiction },
           unfold bij.even_odd.g bij.even_odd.f,
           rw [if_neg h], rw [nat.mul_div_cancel_left _ h'] },
         { unfold bij.even_odd.g bij.even_odd.f,
-          note h' := nat.le_refl 2,
+          have h' := nat.le_refl 2,
           rw [if_pos,nat.mul_add_div_self_left _ _ _ h'],
           rw [nat.mul_add_mod_self_left _ _ _ h'] }
       end
@@ -421,12 +421,12 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
         ; unfold bij.even_odd.f,
         { rw [if_pos h],
           unfold bij.even_odd.f bij.even_odd.g,
-          note h₂ := nat.mod_add_div x 2,
+          have h₂ := nat.mod_add_div x 2,
           rw add_comm, rw h at h₂, apply h₂ },
         { rw [if_neg h],
-          assert h' : x % 2 = 0,
-          { note h₂ := @nat.mod_lt x 2 (nat.le_succ _),
-            note h₃ := enum_less h₂,
+          have h' : x % 2 = 0,
+          { have h₂ := @nat.mod_lt x 2 (nat.le_succ _),
+            have h₃ := enum_less h₂,
             unfold less mem has_mem.mem list.mem at h₃,
             cases h₃ with h₃ h₃,
             { cases h h₃ },
@@ -434,7 +434,7 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
             { apply h₃ },
             { cases h₃ } },
           { unfold bij.even_odd.g,
-            note h₂ := nat.mod_add_div x 2,
+            have h₂ := nat.mod_add_div x 2,
             rw h' at h₂, simp at h₂, apply h₂ } },
       end
 
@@ -570,8 +570,8 @@ instance : finite unit :=
           intros x y,
           cases y with y Py,
           cases x,
-          note h' := nat.le_of_succ_le_succ Py,
-          note h := nat.le_antisymm h' (nat.zero_le _),
+          have h' := nat.le_of_succ_le_succ Py,
+          have h := nat.le_antisymm h' (nat.zero_le _),
           subst y,
           { split ; intro h₂ ; refl },
         end } }
@@ -699,7 +699,7 @@ end
 
 lemma prod_f_snd_le_self (n) : (bij.prod.f n)^.snd ≤ n :=
 begin
-  assert h : (bij.prod.f n)^.snd ≤ prod.sum (bij.prod.f n),
+  have h : (bij.prod.f n)^.snd ≤ prod.sum (bij.prod.f n),
   { cases bij.prod.f n,
     simp [prod.sum],
     apply le_add_left },
@@ -752,7 +752,7 @@ begin
   induction x,
   { unfold concat.f, apply concat.g_zero },
   { unfold concat.f,
-    assert h : ∀ x, bij.prod.f (bij.prod.g x) = x, { apply bij.prod^.f_inv },
+    have h : ∀ x, bij.prod.f (bij.prod.g x) = x, { apply bij.prod^.f_inv },
     rw concat.g_succ,
     apply congr, apply congr_arg,
     { rw h },
@@ -767,7 +767,7 @@ begin
   { rw concat.g_zero, unfold concat.f, refl },
   { rw concat.g_succ, unfold concat.f,
     rw IH,
-    assert h' : ∀ x, bij.prod.g (bij.prod.f x) = x, { apply bij.prod^.g_inv },
+    have h' : ∀ x, bij.prod.g (bij.prod.f x) = x, { apply bij.prod^.g_inv },
     destruct bij.prod.f x,
     intros x₀ x₁ h, simp [h],
     unfold prod.fst prod.snd,
@@ -830,7 +830,7 @@ bijection.mk (fconcat.f _) (fconcat.g n)
        , well_founded.fix_eq ],
     refl },
   { unfold fconcat.f,
-    note h := (bij.prod.pre n)^.f_inv,
+    have h := (bij.prod.pre n)^.f_inv,
     unfold bij.prod.pre bijection.mk bijection.f bijection.g at h,
     rw fconcat.g_succ,
     apply congr, apply congr_arg,
@@ -926,8 +926,8 @@ begin
 end
 begin
   intro x, cases x,
-  note h := le_of_succ_le_succ is_lt,
-  note h' := le_antisymm (zero_le _) h,
+  have h := le_of_succ_le_succ is_lt,
+  have h' := le_antisymm (zero_le _) h,
   apply fin.eq_of_veq,
   unfold zero has_zero.zero,
   subst val,

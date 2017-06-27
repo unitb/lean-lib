@@ -16,7 +16,7 @@ lemma gt_accessible'
 : ∀ (x y z k : ℕ), z ∈ s → z ≤ k + x  → gt s P y x → acc (gt s P) y
 | x y z 0 Hz V P :=
 begin
-  note h := P.left z Hz,
+  have h := P.left z Hz,
   exfalso,
   apply not_le_of_gt h,
   simp at V,
@@ -35,9 +35,9 @@ lemma gt_accessible (x y : ℕ)
   (h : gt s P y x)
 : acc (gt s P) y :=
 begin
-  note Hex : ∃ z, z ∈ s := set.exists_mem_of_ne_empty P,
+  have Hex : ∃ z, z ∈ s := set.exists_mem_of_ne_empty P,
   cases Hex with z hz,
-  assert hz_le_zxx : z ≤ z - x + x,
+  have hz_le_zxx : z ≤ z - x + x,
   { rw [nat.sub_add_cancel],
     apply le_of_lt,
     apply h.left _ hz, },

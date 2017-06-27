@@ -36,7 +36,7 @@ lemma ind_concat
   (Hcons : ∀ x xs, P xs → P (concat xs x))
 : ∀ xs, P xs :=
 begin
-  pose Q := P ∘ reverse,
+  let Q := P ∘ reverse,
   intro,
   rw -reverse_reverse xs,
   generalize (reverse xs) ys, clear xs,
@@ -45,7 +45,7 @@ begin
   induction ys with y ys IH,
   { apply Hnil },
   { change P _,
-    note h := Hcons y (reverse ys) IH,
+    have h := Hcons y (reverse ys) IH,
     rw [-reverse_cons y ys] at h,
     apply h },
 end

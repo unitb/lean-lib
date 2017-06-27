@@ -48,9 +48,9 @@ end
 
 theorem succ_mod' {n p : ℕ} (h : succ (n % p) < p) : succ n % p = succ (n % p) :=
 begin
-   assert h₁ : p > 0,
+   have h₁ : p > 0,
    { apply lt_of_le_of_lt (zero_le _), apply h },
-   note h₀ := mod_plus n p h₁,
+   have h₀ := mod_plus n p h₁,
    cases h₀ with k h₀, cases h₀ with q h₀,
    cases h₀ with h₀ h₁,
    subst n,
@@ -63,7 +63,7 @@ begin
   symmetry,
   cases decidable.em (0 < p) with h₂ h₂,
   cases decidable.em (p ≤ succ (n % p)) with h₃ h₃,
-  { assert h' : succ (n % p) = p,
+  { have h' : succ (n % p) = p,
     { apply le_antisymm _ h₃,
       { apply mod_lt _ h₂ } },
     cases mod_plus n p h₂  with k h₀,
@@ -71,13 +71,13 @@ begin
     cases h₀ with h₀ h₁,
     rw [mod_def,if_pos (and.intro h₂ h₃),h',nat.sub_self,zero_mod],
     subst n, rw [mul_plus_mod _ _ _ h₀] at h',
-    assert h₁ : k * p + succ q = (k+1) * p + 0,
+    have h₁ : k * p + succ q = (k+1) * p + 0,
     { rw h', simp [add_mul] },
     rw [-add_succ, h₁, mul_plus_mod _ _ _ h₂], },
-  { note h₀ := lt_of_not_ge h₃,
+  { have h₀ := lt_of_not_ge h₃,
     rw [succ_mod' h₀,succ_mod',mod_mod],
     { rw mod_mod, apply h₀ }  },
-  { note h'' := le_antisymm (zero_le _) (le_of_not_gt h₂),
+  { have h'' := le_antisymm (zero_le _) (le_of_not_gt h₂),
     subst p, simp [nat.mod_zero] },
 end
 
@@ -97,9 +97,9 @@ theorem nat.mod_self' {m : ℕ} : m % m = 0 :=
 begin
   rw [mod_def],
   cases decidable.em (0 < m) with h h,
-  { note h' := and.intro h (nat.le_refl m),
+  { have h' := and.intro h (nat.le_refl m),
     rw [if_pos h',nat.sub_self,zero_mod] },
-  { assert h' : ¬ (0 < m ∧ m ≤ m),
+  { have h' : ¬ (0 < m ∧ m ≤ m),
     { intro h', apply h,
       cases h' with h₀ h₁,
       apply h₀ },
@@ -166,10 +166,10 @@ begin
   induction p with p IH,
   { apply h₁ },
   { simp [sub_succ],
-    assert Hmp : m - p ≠ 0,
+    have Hmp : m - p ≠ 0,
     { apply ne_of_gt,
       apply nat.sub_pos_of_lt h₀ },
-    assert Hnp : n - p ≠ 0,
+    have Hnp : n - p ≠ 0,
     { apply ne_of_gt,
       apply nat.sub_pos_of_lt,
       apply nat.lt_trans h₀ h₁  },
@@ -211,10 +211,10 @@ by simp [mod_eq_of_lt h]
 
 lemma div_lt_of_lt_mul (x : ℕ) {m n : ℕ} (h : x < m * n) : x / n < m :=
 begin
-  assert hmn : 0 < m * n,
+  have hmn : 0 < m * n,
   { apply lt_of_le_of_lt _ h,
     apply nat.zero_le },
-  assert hn : 0 < n,
+  have hn : 0 < n,
   { apply pos_of_mul_pos_left hmn,
     apply nat.zero_le, },
   clear hmn,
@@ -234,7 +234,7 @@ end
 protected lemma mul_add_div_self_left (x y k : ℕ) (h : k < x)
 : (x * y + k) / x = y :=
 begin
-  assert h₀ : x > 0,
+  have h₀ : x > 0,
   { apply lt_of_le_of_lt (zero_le _) h },
   simp,
   induction y with y,

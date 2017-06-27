@@ -20,7 +20,7 @@ lemma exists_mem_of_ne_empty {α} {s : set α}
 begin
   apply classical.by_contradiction,
   intro h',
-  note h'' := forall_not_of_not_exists h',
+  have h'' := forall_not_of_not_exists h',
   apply h,
   apply set.eq_empty_of_forall_not_mem,
   apply h''
@@ -66,7 +66,7 @@ lemma mem_fmap_iff_mem_of_bij
   {x : β}
 : x ∈ f <$> s ↔ g x ∈ s :=
 begin
-  assert H : bijective f,
+  have H : bijective f,
   { unfold bijective, split,
     { apply Hinj },
     { apply surjective_of_has_right_inverse,
@@ -82,9 +82,9 @@ begin
   split
   ; intro h,
   { apply eq_empty_of_forall_not_mem,
-    note h₁ := congr_fun h,
+    have h₁ := congr_fun h,
     intros x h₂,
-    note h₃ := h₁ (f x),
+    have h₃ := h₁ (f x),
     change (∅ : set β) (f x),
     rw -iff_eq_eq at h₃,
     rw - h₃, apply mem_fmap_of_mem h₂, },

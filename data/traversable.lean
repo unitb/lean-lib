@@ -134,7 +134,7 @@ lemma traverse_cons (g : α → f β) (x : f' α) (xs : f' (list α))
 : traverse g <$> (cons <$> x <*> xs) = (λ y ys, cons <$> y <*> ys) <$> (g <$> x) <*> (traverse g <$> xs) :=
 begin
   rw [applicative.map_seq_assoc,-functor.map_comp],
-  assert H : function.comp (traverse g) ∘ cons = (λ x xs, cons <$> g x <*> traverse g xs),
+  have H : function.comp (traverse g) ∘ cons = (λ x xs, cons <$> g x <*> traverse g xs),
   { apply funext, intro x,
     apply funext, intro xs,
     refl },

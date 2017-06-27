@@ -82,14 +82,14 @@ theorem suffix_self_of_le (i j k : ℕ) :
 begin
   intro h,
   induction k with k,
-  { note h' := le_zero_of_eq_zero h, subst j,
+  { have h' := le_zero_of_eq_zero h, subst j,
     apply stream.le_refl },
   cases decidable.em (j ≤ k) with h' h',
   { rw rounds_succ,
     apply stream.le_trans,
     { apply ih_1 h' },
     { apply suffix_cons } },
-  { assert h' : j = succ k,
+  { have h' : j = succ k,
     { apply le_antisymm h,
       apply lt_of_not_le h' },
     rw h', apply stream.le_refl }
@@ -117,7 +117,7 @@ end
 
 theorem is_prefix_of_le (i j : ℕ) (h : j ≤ i) : rounds i i ⊑ rounds j j :=
 begin
-  assert h' : i = j + (i - j),
+  have h' : i = j + (i - j),
   { rw [-nat.add_sub_assoc h, nat.add_sub_cancel_left] },
   rw h',
   apply is_prefix_add
@@ -156,10 +156,10 @@ begin
     rw drop_succ,
     cases j with j,
     { rw [rounds_zero,tail_cons] ,
-      note h' := @ih_1 (succ i) (succ i) (nat.le_refl _),
+      have h' := @ih_1 (succ i) (succ i) (nat.le_refl _),
       apply h',  },
-    { note Hij' := nat.le_of_succ_le Hij,
-      note h' := @ih_1 i j Hij',
+    { have Hij' := nat.le_of_succ_le Hij,
+      have h' := @ih_1 i j Hij',
       rw [rounds_succ,tail_cons],
       apply h', } },
 end
@@ -194,9 +194,9 @@ end
 theorem inf_repeat_inf_inter : ∀ x i, ∃ j, inf_interleave (i+j) = x :=
 begin
   intros x i,
-  assert h' : drop i inf_interleave ⊑ inf_interleave,
+  have h' : drop i inf_interleave ⊑ inf_interleave,
   { unfold is_suffix, existsi i, refl },
-  note h  := search_inf_interleave (drop i inf_interleave) x h',
+  have h  := search_inf_interleave (drop i inf_interleave) x h',
   cases h with s' h,
   cases h with h₀ h₁,
   unfold is_suffix at h₀,

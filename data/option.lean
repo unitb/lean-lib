@@ -15,9 +15,29 @@ lemma some_or_else (x : α) (y : option α)
 by { refl }
 
 @[simp]
+lemma or_else_eq_none_iff (x y : option α)
+: (x <|> y) = none ↔ x = none ∧ y = none :=
+begin
+  split ; intros h,
+  cases x with x,
+  { simp at h, simp [h] },
+  { simp at h, contradiction },
+  { simp [h.left,h.right] }
+end
+
+@[simp]
 lemma fmap_none (f : α → β)
 : f <$> none = none := rfl
 
 @[simp]
 lemma fmap_some (f : α → β) (x : α)
 : f <$> some x = some (f x) := rfl
+
+@[simp]
+lemma fmap_eq_none_iff (f : α → β) (x : option α)
+: f <$> x = none ↔ x = none :=
+begin
+  cases x ; simp,
+  split ; intro h ;
+  contradiction
+end

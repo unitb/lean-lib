@@ -1,12 +1,13 @@
 
 universe variables u u' u₀ u₁ u₂
+variables  {α : Sort u} {β : Sort u'}
 
-lemma forall_imp_forall {α : Sort u} {p q : α → Prop}
+lemma forall_imp_forall {p q : α → Prop}
    (h : ∀ a, (p a → q a))
    (p : ∀ a, p a) : ∀ a, q a :=
   take a, h _ (p a)
 
-lemma forall_imp_forall' {α : Sort u} {β : Sort u'}
+lemma forall_imp_forall'
    {p : α → Prop}
    {q : β → Prop}
    (f : β → α)
@@ -17,7 +18,7 @@ begin
   apply h, apply P
 end
 
-lemma exists_or  {α : Type u}
+lemma exists_or
    {p q : α → Prop}
 : (∃ i, p i ∨ q i) ↔ (∃ i, p i) ∨ (∃ i, q i) :=
 begin
@@ -33,7 +34,7 @@ begin
     { apply or.intro_right }, },
 end
 
-lemma exists_imp_exists'' {α : Sort u} {β : Sort u'}
+lemma exists_imp_exists''
    {p : α → Prop}
    {q : β → Prop}
    (f : ∀ x: α, p x → β)
@@ -45,7 +46,7 @@ begin
   apply h _ P,
 end
 
-lemma exists_imp_exists' {α : Sort u} {β : Sort u'}
+lemma exists_imp_exists'
    {p : α → Prop}
    {q : β → Prop}
    (f : α → β)
@@ -57,7 +58,7 @@ begin
   apply h _ P,
 end
 
-lemma exists_imp_iff_forall_imp {α : Sort u}
+lemma exists_imp_iff_forall_imp
   (p : α → Prop) (q : Prop)
 : (∃ x, p x) → q ↔ (∀ x, p x → q) :=
 begin
@@ -70,7 +71,7 @@ begin
     apply H _ H', },
 end
 
-lemma exists_swap {α : Sort u} {β : Sort u'}
+lemma exists_swap
   (P : α → β → Prop)
 : (∃ x y, P x y) ↔ (∃ y x, P x y) :=
 begin
@@ -81,7 +82,7 @@ begin
   ; exact ⟨_,_,H⟩
 end
 
-lemma forall_swap {α : Sort u} {β : Sort u'}
+lemma forall_swap
   (P : α → β → Prop)
 : (∀ x y, P x y) ↔ (∀ y x, P x y) :=
 begin
@@ -90,7 +91,7 @@ begin
   ; apply H
 end
 
-lemma and_exists {α : Sort u}
+lemma and_exists
    (P : Prop)
    (Q : α → Prop)
 : P ∧ (∃ x, Q x) ↔ (∃ x, P ∧ Q x) :=
@@ -102,7 +103,7 @@ begin
   ; exact ⟨y,x,H⟩
 end
 
-lemma exists_and {α : Sort u}
+lemma exists_and
    (P : α → Prop)
    (Q : Prop)
 : (∃ x, P x) ∧ Q ↔ (∃ x, P x ∧ Q) :=
@@ -326,7 +327,7 @@ lemma imp_iff_not_or (p q : Prop)
 : p → q ↔ ¬ p ∨ q :=
 by rw [or_iff_not_imp,not_not_iff_self]
 
-lemma exists_one_point_right {α : Type u} (y : α) {p : α → Prop}
+lemma exists_one_point_right (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)
 : (∃ x, p x) ↔ p y :=
 begin

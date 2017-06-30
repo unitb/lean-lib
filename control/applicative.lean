@@ -281,12 +281,8 @@ instance
   [applicative_pair f f'] [applicative_pair g g']
 : applicative_pair (compose f g) (compose f' g') :=
 { (by apply_instance : functor_pair (compose f g) (compose f' g')) with
-  f_appl := by { apply applicative_compose,
-                 apply applicative_pair.f_appl f f',
-                 apply applicative_pair.f_appl g g', }
-, g_appl := by { apply applicative_compose,
-                 apply applicative_pair.g_appl f f',
-                 apply applicative_pair.g_appl g g', }
+  f_appl := by apply applicative_compose
+, g_appl := by apply applicative_compose
 , map_pure_comm := @compose.map_pure_comm f g f' g' _ _
 , map_seq_comm := @compose.map_seq_comm f g f' g' _ _ }
 

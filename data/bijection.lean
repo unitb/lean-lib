@@ -980,6 +980,18 @@ instance inf_list_of_fin [pos_finite α] : infinite (list α) :=
 instance inf_list_of_inf  [infinite α] : infinite (list α) :=
  { to_nat := concat ∘ bijection.map (infinite.to_nat α) }
 
+def infinite_of_injective
+  (f : α → ℕ)
+  (h : function.injective f)
+: infinite α :=
+sorry
+
+def finite_of_injective {n : ℕ}
+  (f : α → fin n)
+  (h : function.injective f)
+: finite α :=
+sorry
+
 end
 
 end bijection

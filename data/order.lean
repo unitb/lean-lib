@@ -88,3 +88,34 @@ lemma indirect_le_right_of_le
 indirect_le_right_iff.mp h z
 
 end
+
+section
+
+parameters {α : Type u}
+parameters x y z : α
+variable [decidable_linear_order α]
+
+lemma le_max_iff_le_or_le
+: x ≤ max y z ↔ x ≤ y ∨ x ≤ z :=
+begin
+  split
+  ; intros H
+  ; cases decidable.em (y ≤ z) with H' H'
+  ; unfold max at H
+  ; unfold max,
+  { rw if_pos H' at H,
+    right, apply H },
+  { rw if_neg H' at H,
+    left, apply H },
+  { rw if_pos H',
+    cases H with H H,
+    transitivity y ; assumption,
+    assumption },
+  { rw if_neg H',
+    have H₂ := le_of_not_ge H',
+    cases H with H H,
+    assumption,
+    transitivity z ; assumption }
+end
+
+end

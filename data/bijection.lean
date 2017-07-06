@@ -1010,7 +1010,7 @@ def infinite_of_injective
 sorry
 
 def finite_of_injective {n : ℕ}
-  (f : α → fin n)
+  {f : α → fin n}
   (h : function.injective f)
 : finite α :=
 sorry

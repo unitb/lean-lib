@@ -1,5 +1,6 @@
 
 import util.data.fin
+import util.data.order
 
 universe variables u₀ u₁ u₂
 variables {α : Type u₀} {β β' : Type u₁} {γ : Type u₂}
@@ -41,6 +42,31 @@ begin
     unfold function.comp,
     rw push_head_pop xs,
     admit }
+end
+
+def maximum_aux {n : ℕ} (a : array ℕ n) (i : ℕ) (H : i ≤ n) : ℕ :=
+array.iterate_aux a (λ _, max) i H 0
+
+lemma le_maximum_aux {n : ℕ} (a : array ℕ n) (k : ℕ) (Hk : k ≤ n)
+  (i  : fin n)
+  (Hi : i.val < k)
+: a.read i ≤ maximum_aux a k Hk :=
+begin
+  induction k,
+  case nat.zero { admit },
+  case nat.succ k
+  { unfold maximum_aux iterate_aux,
+    simp, admit },
+end
+
+def maximum {n : ℕ} (a : array ℕ n) : ℕ :=
+maximum_aux a n (by refl)
+
+lemma le_maximum {n : ℕ} (a : array ℕ n) (i : fin n)
+: a.read i ≤ maximum a :=
+begin
+  apply le_maximum_aux,
+  apply i.is_lt
 end
 
 end array

@@ -181,6 +181,17 @@ end
 def fin.nest' {n m : ℕ} (H : m ≤ n) : fin m → fin n
   | ⟨i,P⟩ := ⟨i,lt_of_lt_of_le P H⟩
 
+lemma fin.nest'_injective {n m : ℕ} (H : m ≤ n)
+: function.injective (fin.nest' H) :=
+begin
+  intros i j,
+  cases i with i Hi, cases j with j Hj,
+  unfold fin.nest',
+  intros H,
+  apply fin.eq_of_veq, unfold fin.val,
+  apply fin.veq_of_eq H,
+end
+
 def fin.nest {n m : ℕ} : fin m → fin (m + n)
   | ⟨i,P⟩ := ⟨i,lt_of_lt_of_le P (le_add_right m n)⟩
 

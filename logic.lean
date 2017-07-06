@@ -315,6 +315,10 @@ begin
   { simp [eq_false_intro h] },
 end
 
+lemma not_imp_iff_and_not (p q : Prop)
+: ¬ (p → q) ↔ p ∧ ¬ q :=
+sorry
+
 lemma or_iff_not_imp (p q : Prop)
 : p ∨ q ↔ ¬ p → q :=
 begin

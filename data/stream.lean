@@ -1,6 +1,10 @@
 
 import data.stream
 
+import util.classical
+
+universe variables u
+
 namespace stream
 
 open nat
@@ -38,8 +42,6 @@ begin
 end
 
 section s
-
-universe variables u
 
 variables {α β : Type u} (f : α → α) (g : α → β) (x : α)
 variables i : ℕ
@@ -107,5 +109,64 @@ end
 lemma approx_succ_eq_concat (i : ℕ) (s : stream α)
 : approx (succ i) s = list.concat (approx i s) (s i) :=
 by rw [list.concat_eq_append,approx_succ_eq_append]
+
+section next
+
+parameter {p : ℕ → Prop}
+parameter Hp : ∀ i, ∃ j, i ≤ j ∧ p j
+
+noncomputable def solutions : stream ℕ
+  | 0 := classical.some (Hp 0)
+  | (succ n) := classical.some $ Hp $ succ $ solutions n
+
+lemma solutions_spec (i : ℕ)
+: p (solutions i) :=
+begin
+  cases i with i,
+  { apply classical.some_spec',
+    intro, apply and.right },
+  { apply classical.some_spec',
+    intro, apply and.right },
+end
+
+lemma solutions_increases {i j : ℕ}
+  (H : i < j)
+: solutions i < solutions j :=
+begin
+  rw -add_sub_of_le H,
+  clear H,
+  generalize (j - succ i) k,
+  clear j, intro k,
+  rw [succ_add],
+  induction k,
+  case zero
+  { unfold solutions,
+    apply classical.some_spec',
+    unfold solutions._main,
+    simp,
+    intro, apply and.right, },
+  case succ j
+  { unfold solutions,
+    apply classical.some_spec',
+    intros x Hx,
+    rw [add_succ] at Hx,
+    transitivity, apply ih_1,
+    { apply Hx.left } },
+end
+
+lemma solutions_injective
+: function.injective solutions :=
+begin
+  intros i j H,
+  apply classical.by_contradiction,
+  intros H',
+  revert H,
+  apply (@ne_iff_lt_or_gt ℕ _ _ _).mpr,
+  cases (@ne_iff_lt_or_gt ℕ _ _ _).mp H' with H₁ H₁,
+  { left, apply solutions_increases _ H₁, },
+  { right, apply solutions_increases _ H₁, },
+end
+
+end next
 
 end stream

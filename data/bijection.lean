@@ -49,6 +49,22 @@ begin
   apply bijection.g_inv
 end
 
+lemma bijection.f_injective (b : bijection α β)
+: function.injective (b.f) :=
+begin
+  intros i j,
+  rw [b.inverse,b.f_inv],
+  apply id
+end
+
+lemma bijection.g_injective (b : bijection α β)
+: function.injective (b.g) :=
+begin
+  intros i j,
+  rw [-b.inverse,b.g_inv],
+  apply id
+end
+
 def bijection.id : bijection α α :=
     bijection.mk id id (λ _, by simp) (λ _, by simp)
 
@@ -980,9 +996,16 @@ instance inf_list_of_fin [pos_finite α] : infinite (list α) :=
 instance inf_list_of_inf  [infinite α] : infinite (list α) :=
  { to_nat := concat ∘ bijection.map (infinite.to_nat α) }
 
+local attribute [instance] classical.prop_decidable
+
+noncomputable def left_inverse (f : α → β) (x : β) : option α :=
+if h : (∃ y, f y = x) then some (classical.some h) else none
+
 def infinite_of_injective
-  (f : α → ℕ)
-  (h : function.injective f)
+  {f : α → ℕ}
+  {g : ℕ → α}
+  (Hf : function.injective f)
+  (Hg : function.injective g)
 : infinite α :=
 sorry
 

@@ -7,7 +7,8 @@ universe variables u₀ u₁ u₂
 section bijection
 
 variables {α α' : Type (u₀)}
-variables {β β' γ : Type (u₁)}
+variables {β β' : Type (u₁)}
+variables {γ : Type u₂}
 
 structure bijection (α  : Type (u₀)) (β : Type (u₁)) : Type (max (u₀) (u₁)) :=
   mk' ::
@@ -130,7 +131,7 @@ def bij.prod.swap : bijection (α × β) (β × α) :=
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
 
-def rev (x : bijection α β) : bijection β α :=
+def bijection.rev (x : bijection α β) : bijection β α :=
   { f := x^.g
   , g := x^.f
   , inverse :=
@@ -140,6 +141,8 @@ def rev (x : bijection α β) : bijection β α :=
       { rw [x^.inverse,h] },
       { rw [-x^.inverse,-h], }
     end }
+
+open bijection
 
 @[simp]
 lemma rev_f  (x : bijection α β)

@@ -2,6 +2,8 @@
 import util.control.applicative
 import util.data.functor
 
+open function
+
 structure {u v} cell (α : Type u) : Type (max u v) :=
   (get : α)
 
@@ -52,7 +54,7 @@ begin
   unfold traverse comp,
   rw [compose.fmap_mk],
   apply congr_arg,
-  rw [-functor.map_comp,-functor.map_comp,traverse_mk'],
+  rw [← functor.map_comp,← functor.map_comp,traverse_mk'],
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)
@@ -97,14 +99,13 @@ lemma traverse_comp (g : α → f β) (h : β → f' γ) : ∀ (x : option α),
 begin
   unfold traverse, rw applicative.map_pure,
   unfold traverse, unfold pure has_pure.pure compose.pure comp,
-  refl
 end
   | (some x) :=
 begin
   unfold traverse comp,
   rw [compose.fmap_mk],
   apply congr_arg,
-  rw [-functor.map_comp,-functor.map_comp,traverse_mk'],
+  rw [← functor.map_comp,← functor.map_comp,traverse_mk'],
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)
@@ -133,12 +134,12 @@ def traverse (g : α → f β) : list α → f (list β)
 lemma traverse_cons (g : α → f β) (x : f' α) (xs : f' (list α))
 : traverse g <$> (cons <$> x <*> xs) = (λ y ys, cons <$> y <*> ys) <$> (g <$> x) <*> (traverse g <$> xs) :=
 begin
-  rw [applicative.map_seq_assoc,-functor.map_comp],
+  rw [applicative.map_seq_assoc,← functor.map_comp],
   have H : function.comp (traverse g) ∘ cons = (λ x xs, cons <$> g x <*> traverse g xs),
   { apply funext, intro x,
     apply funext, intro xs,
     refl },
-  rw [H,-functor.map_comp g,applicative.seq_map_comm,-functor.map_comp],
+  rw [H,← functor.map_comp g,applicative.seq_map_comm,← functor.map_comp],
   refl
 end
 
@@ -156,14 +157,13 @@ lemma traverse_comp (g : α → f β) (h : β → f' γ) : ∀ (x : list α),
 begin
   unfold traverse, rw applicative.map_pure,
   unfold traverse, unfold pure has_pure.pure compose.pure comp,
-  refl
 end
   | (x :: xs) :=
 begin
   unfold traverse comp,
   rw [compose.fmap_mk,traverse_comp,compose.seq_mk],
   apply congr_arg,
-  rw [traverse_cons h,-functor.map_comp],
+  rw [traverse_cons h,← functor.map_comp],
 end
 
 lemma fmap_eq_traverse_id {α β : Type u} (f : α → β)

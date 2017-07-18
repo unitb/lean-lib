@@ -26,7 +26,7 @@ begin
     { intro h, cases not_concat_eq_nil _ _ h },
     { intros z zs Hconcat,
       rw Hconcat, unfold front,
-      rw [-Hconcat,IH], }, }
+      rw [← Hconcat,IH], }, }
 end
 
 variables {P : list α → Prop}
@@ -38,7 +38,7 @@ lemma ind_concat
 begin
   let Q := P ∘ reverse,
   intro,
-  rw -reverse_reverse xs,
+  rw ← reverse_reverse xs,
   generalize (reverse xs) ys, clear xs,
   intros ys,
   change Q ys,
@@ -46,7 +46,7 @@ begin
   { apply Hnil },
   { change P _,
     have h := Hcons y (reverse ys) IH,
-    rw [-reverse_cons y ys] at h,
+    rw [← reverse_cons y ys] at h,
     apply h },
 end
 
@@ -107,7 +107,7 @@ begin
   { refl },
   case cons x xs IH
   { unfold foldl foldr,
-    rw -IH, symmetry,
+    rw ← IH, symmetry,
     rw [foldl_hom (f x) f f _ _ xs,is_commutative.comm f],
     { intros y z, rw is_associative.assoc f } },
 end

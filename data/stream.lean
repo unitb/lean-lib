@@ -133,7 +133,7 @@ lemma solutions_increases {i j : ℕ}
   (H : i < j)
 : solutions i < solutions j :=
 begin
-  rw -add_sub_of_le H,
+  rw ← add_sub_of_le H,
   clear H,
   generalize (j - succ i) k,
   clear j, intro k,
@@ -142,15 +142,14 @@ begin
   case zero
   { unfold solutions,
     apply classical.some_spec',
-    unfold solutions._main,
     simp,
     intro, apply and.right, },
   case succ j
   { unfold solutions,
     apply classical.some_spec',
     intros x Hx,
-    rw [add_succ] at Hx,
-    transitivity, apply ih_1,
+    transitivity solutions Hp (succ (i + j)),
+    { apply ih_1 },
     { apply Hx.left } },
 end
 

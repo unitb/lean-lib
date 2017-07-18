@@ -38,7 +38,7 @@ begin
     simp,
     unfold read data push_aux,
     rw fin.zero_def', refl },
-  { rw [-push_head_pop xs,IH],
+  { rw [← push_head_pop xs,IH],
     unfold function.comp,
     rw push_head_pop xs,
     admit }
@@ -89,7 +89,7 @@ begin
     { refl },
   case succ k
     { rw array.iterate_aux.equations._eqn_2 (pop ar), simp,
-      rw -ih_1, unfold iterate_aux, simp,
+      rw ← ih_1, unfold iterate_aux, simp,
       apply congr_fun,
       cases ar, refl }
 end

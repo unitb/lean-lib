@@ -5,7 +5,7 @@ variables  {α : Sort u} {β : Sort u'}
 lemma forall_imp_forall {p q : α → Prop}
    (h : ∀ a, (p a → q a))
    (p : ∀ a, p a) : ∀ a, q a :=
-  take a, h _ (p a)
+  assume a, h _ (p a)
 
 lemma forall_imp_forall'
    {p : α → Prop}
@@ -127,15 +127,15 @@ lemma imp_mono {p p' q q' : Prop}
 
 lemma imp_imp_imp_left {p q r : Prop} (h : p → q)
    (h' : q → r) : (p → r) :=
-take h'', h' (h h'')
+assume h'', h' (h h'')
 
 lemma imp_imp_imp_right {p q r : Prop} (h : p → q)
    (h' : r → p) : (r → q) :=
-take h'', h (h' h'')
+assume h'', h (h' h'')
 
 lemma imp_imp_imp_right' {p q r : Prop} (h : r → p → q)
    (h' : r → p) : (r → q) :=
-take h'', h h'' (h' h'')
+assume h'', h h'' (h' h'')
 
 variables {a b c : Prop}
 
@@ -159,7 +159,7 @@ lemma iff_of_not_iff_not {p q : Prop} (h : ¬ p ↔ ¬ q)
 : p ↔ q :=
 begin
   split ; intro h₀ ; apply classical.by_contradiction,
-  { rw -h, intro h₁, apply h₁ h₀ },
+  { rw ← h, intro h₁, apply h₁ h₀ },
   { rw h, intro h₁, apply h₁ h₀ },
 end
 
@@ -173,7 +173,7 @@ by { rw [or_comm,distrib_left_or], simp }
 
 lemma or_not_and (p q : Prop)
 : p ∨ (¬ p ∧ q) ↔ p ∨ q :=
-by simp [distrib_right_or,iff_true_intro $ classical.em p]
+by simp [distrib_right_or,iff_true_intro (classical.em p)]
 
 lemma not_or_of_not_and_not {p q : Prop} : ¬ (p ∨ q) → ¬ p ∧ ¬ q :=
 begin
@@ -337,7 +337,7 @@ lemma exists_one_point_right (y : α) {p : α → Prop}
 begin
   split ; intro h,
   { cases h with x h',
-    rw [-h _ h'],
+    rw [ ← h _ h' ],
     apply h' },
   { exact ⟨_,h⟩ }
 end

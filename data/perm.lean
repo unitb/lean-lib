@@ -106,7 +106,6 @@ begin
   apply bijection.eq
   ; intro x
   ; simp [comp_f,comp_g]
-  ; unfold function.comp
   ; simp [swap_symmetry']
 end
 
@@ -212,7 +211,7 @@ begin
           apply x.is_lt },
         { apply lt_of_le_of_ne _ Hne,
           apply le_trans Hle,
-          rw [-le_def],
+          rw [← le_def],
           apply fin.le_succ_self, }, },
       { have Hne : k.val ≠ x.val,
         { apply ne_of_gt,
@@ -247,7 +246,7 @@ lemma rotate_right_g_max {n : ℕ} (k : fin (succ n))
 : (rotate_right k).g fin.max = k :=
 begin
   symmetry,
-  rw [-bijection.inverse,rotate_right_f_k],
+  rw [← bijection.inverse,rotate_right_f_k],
 end
 
 lemma rotate_right_f_lt_shifted {n : ℕ} (k i : fin n)
@@ -257,12 +256,12 @@ begin
   cases n with n
   ; simp
   ; unfold rotate_right_f,
-  { cases i with i Hi, unfold fin.succ,
+  { cases i with i Hi,
     cases not_lt_zero _ Hi },
   { rw [if_neg,if_pos],
-    rw -lt_def, apply h,
+    rw ← lt_def, apply h,
     apply ne_of_lt,
-    rw [-lt_def], apply h }
+    rw [← lt_def], apply h }
 end
 
 lemma rotate_right_g_lt_shifted {n : ℕ} (k i : fin n)
@@ -270,7 +269,7 @@ lemma rotate_right_g_lt_shifted {n : ℕ} (k i : fin n)
 : (rotate_right k).g i.pred' = i :=
 begin
   symmetry,
-  rw [-bijection.inverse,rotate_right_f_lt_shifted _ _ h],
+  rw [← bijection.inverse,rotate_right_f_lt_shifted _ _ h],
 end
 
 lemma rotate_right_f_gt_eq_self {n : ℕ} (k i : fin n)
@@ -279,15 +278,15 @@ lemma rotate_right_f_gt_eq_self {n : ℕ} (k i : fin n)
 begin
   cases n with n
   ; simp
-  ; unfold rotate_right_f, refl,
+  ; unfold rotate_right_f,
   rw [if_neg,if_neg],
   { apply not_lt_of_gt,
     unfold gt,
-    rw [-lt_def],
+    rw [← lt_def],
     apply h },
   { apply ne_of_gt,
     unfold gt,
-    rw [-lt_def],
+    rw [← lt_def],
     apply h }
 end
 
@@ -296,7 +295,7 @@ lemma rotate_right_g_gt_eq_self {n : ℕ} (k i : fin n)
 : (rotate_right k).g i = i :=
 begin
   symmetry,
-  rw -bijection.inverse,
+  rw ← bijection.inverse,
   apply rotate_right_f_gt_eq_self _ _ h,
 end
 

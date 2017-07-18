@@ -19,8 +19,8 @@ begin
   { apply nat.le_of_lt (mod_lt _ _),
     apply succ_le_succ, apply zero_le },
   apply fin.eq_of_veq, unfold fin.val ,
-  rw [nat.add_sub_assoc h,add_comm x,-add_assoc,mod_add,@mod_add i],
-  rw [-@mod_add' (i % succ n),-nat.add_sub_assoc h],
+  rw [nat.add_sub_assoc h,add_comm x,← add_assoc,mod_add,@mod_add i],
+  rw [← @mod_add' (i % succ n),← nat.add_sub_assoc h],
   rw [nat.add_sub_cancel_left, nat.mod_self',nat.zero_add,mod_mod,mod_of_lt],
   apply H,
 end

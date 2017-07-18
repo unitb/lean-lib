@@ -66,7 +66,7 @@ instance : functor_pair identity identity :=
     intros α β β' γ,
     intros h hp hp' h' x,
     intros H, unfold has_map.map,
-    rw [-identity.map_comp,-identity.map_comp,H],
+    rw [← identity.map_comp,← identity.map_comp,H],
   end }
 
 lemma identity.fmap_mk {α β : Type v}  (f : α → β) (x : α)
@@ -143,7 +143,7 @@ instance compose_functor_pair
     unfold compose.map_pair compose.map,
     apply congr_arg,
     rw [functor_pair.map_fmap_comm],
-    apply funext, intro i, unfold comp has_map.map,
+    apply funext, intro i, unfold function.comp has_map.map,
     rw [functor_pair.map_fmap_comm],
     apply H,
   end }

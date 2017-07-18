@@ -55,7 +55,7 @@ begin
   cases h₁ with j h₁,
   unfold is_suffix,
   existsi i+j,
-  rw [-stream.drop_drop,-h₁,h₀],
+  rw [← stream.drop_drop,← h₁,h₀],
 end
 
 end weak_order
@@ -118,7 +118,7 @@ end
 theorem is_prefix_of_le (i j : ℕ) (h : j ≤ i) : rounds i i ⊑ rounds j j :=
 begin
   have h' : i = j + (i - j),
-  { rw [-nat.add_sub_assoc h, nat.add_sub_cancel_left] },
+  { rw [← nat.add_sub_assoc h, nat.add_sub_cancel_left] },
   rw h',
   apply is_prefix_add
 end
@@ -152,8 +152,7 @@ begin
   { existsi i, existsi j,
     apply and.intro Hij,
     refl },
-  { unfold inf_interleave,
-    rw drop_succ,
+  { rw drop_succ,
     cases j with j,
     { rw [rounds_zero,tail_cons] ,
       have h' := @ih_1 (succ i) (succ i) (nat.le_refl _),
@@ -204,5 +203,5 @@ begin
   existsi y,
   rw [drop_drop,add_comm] at h₀,
   change (nth (i + y) inf_interleave) = _,
-  rw [-head_drop,-h₀,h₁]
+  rw [← head_drop,← h₀,h₁]
 end

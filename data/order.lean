@@ -13,7 +13,7 @@ begin
   split ; intro h,
   { subst y, intro, refl },
   apply @le_antisymm α,
-  { rw -h },
+  { rw ← h },
   { rw h },
 end
 
@@ -24,7 +24,7 @@ begin
   { subst y, intro, refl },
   apply @le_antisymm α,
   { rw h },
-  { rw -h },
+  { rw ← h },
 end
 
 lemma indirect_le_left_iff
@@ -101,8 +101,8 @@ begin
   split
   ; intros H
   ; cases decidable.em (y ≤ z) with H' H'
-  ; unfold max at H
-  ; unfold max,
+  ; try { unfold max at H }
+  ; try { unfold max },
   { rw if_pos H' at H,
     right, apply H },
   { rw if_neg H' at H,

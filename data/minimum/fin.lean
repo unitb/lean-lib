@@ -25,7 +25,7 @@ begin
   unfold has_map.map set.image at h,
   rw [mem_set_of] at h,
   cases h with i h, cases h with h₀ h₁,
-  rw -h₁, apply i.is_lt
+  rw ← h₁, apply i.is_lt
 end
 
 lemma nat_minimum_bounded
@@ -47,9 +47,7 @@ lemma minimum_mem
   (h : s ≠ ∅)
 : fin.minimum s ∈ s :=
 begin
-  unfold fin.minimum,
-  simp, apply set.mem_of_mem_fmap fin.val_injective,
-  unfold fin.val,
+  apply set.mem_of_mem_fmap fin.val_injective,
   apply nat.minimum_mem,
   simp [@set.fmap_eq_empty_iff_eq_empty _ _ s val,h],
 end
@@ -58,7 +56,6 @@ protected lemma minimum_le {x : t}
   (h : x ∈ s)
 : fin.minimum s ≤ x :=
 begin
-  unfold minimum,
   simp [le_def],
   apply nat.minimum_le,
   apply set.mem_fmap_of_mem h,
@@ -69,14 +66,13 @@ protected lemma le_minimum_of_forall_le (x : t)
   (h₁ : ∀ y, y ∈ s → x ≤ y)
 : x ≤ fin.minimum s :=
 begin
-  unfold minimum,
   simp [le_def],
   apply nat.le_minimum_of_forall_le,
   { simp [set.fmap_eq_empty_iff_eq_empty,h₀], },
   { intros y h,
     have hy := lt_of_mem_fin_set _ h,
     change x.val ≤ fin.val ⟨y,hy⟩,
-    rw -le_def,
+    rw ← le_def,
     apply h₁,
     apply set.mem_of_mem_fmap val_injective, apply h, },
 end

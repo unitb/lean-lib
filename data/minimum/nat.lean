@@ -26,7 +26,7 @@ end
 begin
   apply acc.intro _ (λ y', gt_accessible' y y' z k Hz _),
   apply le_trans V,
-  rw [succ_add,-add_succ],
+  rw [succ_add,← add_succ],
   apply add_le_add_left,
   apply P.right,
 end
@@ -90,7 +90,7 @@ variables [decidable (s = ∅)]
 
 protected def minimum : ℕ :=
 have h' : ∀ (j : ℕ), j ∈ s → 0 ≤ j,
-   from take j _, zero_le j,
+   from assume j _, zero_le j,
 if h : s = ∅ then 0
               else minimum_aux s h 0 h'
 

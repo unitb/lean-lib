@@ -52,7 +52,7 @@ begin
   unfold has_map.map image at h,
   rw mem_set_of at h,
   cases h with y h₀, cases h₀ with h₀ h₁,
-  rw -Hinj h₁,
+  rw ← Hinj h₁,
   apply h₀
 end
 
@@ -71,7 +71,7 @@ begin
     { apply Hinj },
     { apply surjective_of_has_right_inverse,
       exact ⟨g,Hinv⟩ } },
-  rw [-Hinv x,mem_fmap_iff_mem_of_inj Hinj,Hinv x]
+  rw [← Hinv x,mem_fmap_iff_mem_of_inj Hinj,Hinv x]
 end
 
 omit Hinj
@@ -86,8 +86,8 @@ begin
     intros x h₂,
     have h₃ := h₁ (f x),
     change (∅ : set β) (f x),
-    rw -iff_eq_eq at h₃,
-    rw - h₃, apply mem_fmap_of_mem h₂, },
+    rw ← iff_eq_eq at h₃,
+    rw ← h₃, apply mem_fmap_of_mem h₂, },
   { rw h,
     apply eq_empty_of_forall_not_mem,
     intros x h',

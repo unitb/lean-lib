@@ -34,7 +34,7 @@ variables (x : f (α → β)) (y : f α)
 
 lemma applicative.map_seq_assoc
 : @has_map.map f _ _ _ g (x <*> y) = comp g <$> x <*> y :=
-by rw [-pure_seq_eq_map
+by rw [← pure_seq_eq_map
       ,seq_assoc
       ,map_pure
       ,pure_seq_eq_map]
@@ -49,7 +49,7 @@ variables (x : f (β → γ)) (y : f α)
 lemma applicative.seq_map_comm
 : x <*> g <$> y = flip comp g <$> x <*> y :=
 begin
-  rw [-pure_seq_eq_map _ y,seq_assoc,seq_pure,-functor.map_comp],
+  rw [← pure_seq_eq_map _ y,seq_assoc,seq_pure,← functor.map_comp],
   refl,
 end
 
@@ -59,7 +59,7 @@ end
 --   apply funext, intro x,
 --   apply funext, intro y,
 --   unfold comp has_map.map,
---   rw [-right_id comp,functor.map_comp],
+--   rw [← right_id comp,functor.map_comp],
 -- end
 
 end
@@ -152,7 +152,7 @@ local infix ` <*> ` := seq
 lemma map_pure (h : α → β) (x : α) : (h <$> pure x : compose f g β) = pure (h x) :=
 begin
   unfold compose.pure comp compose.map,
-  apply congr_arg, unfold has_map.map,
+  apply congr_arg,
   rw [applicative.map_pure,applicative.map_pure],
 end
 
@@ -162,7 +162,7 @@ begin
   cases h with h,
   unfold compose.map compose.pure compose.seq comp,
   apply congr_arg,
-  rw [applicative.seq_pure,-functor.map_comp],
+  rw [applicative.seq_pure,← functor.map_comp],
   apply congr_fun, apply congr_arg,
   apply funext, intro y,
   unfold comp,
@@ -178,13 +178,13 @@ begin
   repeat { rw [applicative.seq_assoc] },
   apply congr_fun,
   apply congr_arg,
-  rw [-functor.map_comp],
-  rw [-functor.map_comp],
-  rw [-applicative.pure_seq_eq_map has_seq.seq
+  rw [← functor.map_comp],
+  rw [← functor.map_comp],
+  rw [← applicative.pure_seq_eq_map has_seq.seq
      ,applicative.seq_assoc
      ,applicative.seq_pure _ has_seq.seq],
-  repeat { rw [-functor.map_comp] },
-  rw [applicative.map_seq_assoc has_seq.seq,-functor.map_comp],
+  repeat { rw [← functor.map_comp] },
+  rw [applicative.map_seq_assoc has_seq.seq,← functor.map_comp],
   apply congr_fun,
   apply congr_arg,
   apply congr_fun,
@@ -244,7 +244,7 @@ lemma map_pure_comm (hp : α → β') (x : α)
 :   functor_pair.map (compose f' g') hp (compose.pure x : compose f g α)
   = compose.pure (hp x) :=
 begin
-  unfold compose.pure comp functor_pair.map map_pair,
+  unfold compose.pure function.comp functor_pair.map map_pair,
   apply congr_arg,
   rw applicative_pair.map_pure_comm,
   rw applicative_pair.map_pure_comm,

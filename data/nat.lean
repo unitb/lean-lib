@@ -55,7 +55,7 @@ begin
    cases h₀ with h₀ h₁,
    subst n,
    rw mul_plus_mod _ _ _ h₀ at h,
-   rw [-add_succ,mul_plus_mod _ _ _ h₀,mul_plus_mod _ _ _ h],
+   rw [← add_succ,mul_plus_mod _ _ _ h₀,mul_plus_mod _ _ _ h],
 end
 
 theorem succ_mod (n p : ℕ) : succ n % p = succ (n % p) % p :=
@@ -73,7 +73,7 @@ begin
     subst n, rw [mul_plus_mod _ _ _ h₀] at h',
     have h₁ : k * p + succ q = (k+1) * p + 0,
     { rw h', simp [add_mul] },
-    rw [-add_succ, h₁, mul_plus_mod _ _ _ h₂], },
+    rw [← add_succ, h₁, mul_plus_mod _ _ _ h₂], },
   { have h₀ := lt_of_not_ge h₃,
     rw [succ_mod' h₀,succ_mod',mod_mod],
     { rw mod_mod, apply h₀ }  },
@@ -85,7 +85,7 @@ theorem mod_add' {m n p : ℕ} : (m + n) % p = (m + n % p) % p :=
 begin
   induction m with m,
   { symmetry, simp, apply mod_mod },
-  { rw [succ_add,succ_mod,ih_1,succ_add,-succ_mod] }
+  { rw [succ_add,succ_mod,ih_1,succ_add,← succ_mod] }
 end
 
 theorem mod_add {m n p : ℕ} : (m + n) % p = (m % p + n % p) % p :=
@@ -170,7 +170,7 @@ protected lemma sub_lt_sub_left {m p q : ℕ}
 : m - p < m - q :=
 begin
   apply lt_of_succ_le,
-  rw -succ_sub h₀,
+  rw ← succ_sub h₀,
   cases p with p,
   { cases not_lt_zero _ h₁ },
   { rw succ_sub_succ,
@@ -212,7 +212,7 @@ begin
       apply succ_lt_succ,
       apply ih_1,
       apply @nat.lt_of_add_lt_add_left n,
-      rw [-nat.add_sub_assoc h',nat.add_sub_cancel_left],
+      rw [← nat.add_sub_assoc h',nat.add_sub_cancel_left],
       simp [succ_mul] at h, simp [h],  } }
 end
 

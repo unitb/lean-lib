@@ -30,7 +30,7 @@ def bijection.mk (f : α → β) (g : β → α)
 
 lemma bijection.f_inv (b : bijection α β) (x : α) : b^.g (b^.f x) = x := begin
   symmetry,
-  rw [-b^.inverse]
+  rw [← b^.inverse]
 end
 
 lemma bijection.g_inv (b : bijection α β) (x : β) : b^.f (b^.g x) = x := begin
@@ -63,7 +63,7 @@ lemma bijection.g_injective (b : bijection α β)
 : function.injective (b.g) :=
 begin
   intros i j,
-  rw [-b.inverse,b.g_inv],
+  rw [← b.inverse,b.g_inv],
   apply id
 end
 
@@ -129,8 +129,8 @@ def prod.swap : α × β → β × α
 
 def bij.prod.swap : bijection (α × β) (β × α) :=
    bijection.mk prod.swap prod.swap
-   (by intro x ; cases x with x x ; unfold sum.swap ; refl)
-   (by intro x ; cases x with x x ; unfold sum.swap ; refl)
+   (by intro x ; cases x with x x ; refl)
+   (by intro x ; cases x with x x ; refl)
 
 def bijection.rev (x : bijection α β) : bijection β α :=
   { f := x^.g
@@ -140,7 +140,7 @@ def bijection.rev (x : bijection α β) : bijection β α :=
       intros i j,
       split ; intro h ; symmetry,
       { rw [x^.inverse,h] },
-      { rw [-x^.inverse,-h], }
+      { rw [← x^.inverse,← h], }
     end }
 
 open bijection
@@ -177,6 +177,7 @@ begin
   have Hf : function.comp id.f f = f := function.left_id _,
   have Hg : function.comp g id.g = g := function.right_id _,
   simp [Hf,Hg],
+  refl
 end
 
 lemma bijection.right_id {α β} (x : bijection α β) : x ∘ id = x :=
@@ -185,6 +186,7 @@ begin
   have Hf : function.comp f id.f = f := function.left_id _,
   have Hg : function.comp id.g g = g := function.left_id _,
   simp [Hf,Hg],
+  refl,
 end
 
 @[simp]
@@ -195,7 +197,6 @@ begin
   cases y with Yf Yg Yinv,
   cases z with Zf Zg Zinv,
   unfold bij.comp bijection.f bijection.g,
-  simp
 end
 
 section pre
@@ -228,7 +229,7 @@ def bij.sum.pre : bijection (fin n ⊕ ℕ) ℕ :=
     cases decidable.em (x < n) with h h,
     { unfold bij.sum.pre.g,
       rw [dif_pos h],
-      unfold bij.sum.pre.f, refl },
+      unfold bij.sum.pre.f,  },
     { unfold bij.sum.pre.g,
       rw [dif_neg h],
       unfold bij.sum.pre.f,
@@ -306,7 +307,7 @@ def bij.sum.append : bijection (fin m ⊕ fin n) (fin (n+m)) :=
     cases decidable.em (x < m) with h h,
     { unfold bij.sum.append.g,
       rw [dif_pos h],
-      unfold bij.sum.append.f, refl },
+      unfold bij.sum.append.f, },
     { unfold bij.sum.append.g,
       rw [dif_neg h],
       unfold bij.sum.append.f,
@@ -360,13 +361,13 @@ end
 lemma to_pair_prod_g (x : ℕ) (P : x < m * n)
 : to_pair (bij.prod.append.g ⟨x,P⟩) = (x / n, x % n) :=
 begin
-  unfold bij.prod.append.g to_pair, refl
+  unfold bij.prod.append.g to_pair,
 end
 
 lemma val_prod_f (x₀ x₁ : ℕ) (P₀ : x₀ < m) (P₁ : x₁ < n)
 : fin.val (bij.prod.append.f (⟨x₀,P₀⟩,⟨x₁,P₁⟩)) = n*x₀ + x₁ :=
 begin
-  unfold bij.prod.append.f fin.val, refl
+  unfold bij.prod.append.f fin.val,
 end
 
 def bij.prod.append : bijection (fin m × fin n) (fin (m*n)) :=
@@ -449,7 +450,7 @@ def bij.even_odd : bijection (ℕ ⊕ ℕ) ℕ :=
           have h' : x % 2 = 0,
           { have h₂ := @nat.mod_lt x 2 (nat.le_succ _),
             have h₃ := enum_less h₂,
-            unfold less mem has_mem.mem list.mem at h₃,
+            unfold less has_mem.mem list.mem at h₃,
             cases h₃ with h₃ h₃,
             { cases h h₃ },
             cases h₃ with h₃ h₃,
@@ -480,11 +481,11 @@ def bij.prod.f : ℕ → ℕ × ℕ
 
 def bij.prod.g : ℕ × ℕ → ℕ :=
   well_founded.fix diag_wf $
-   take ⟨x₀,x₁⟩,
+   assume ⟨x₀,x₁⟩,
    match (x₀,x₁) with
-    | (0,0) := take _, 0
+    | (0,0) := assume _, 0
     | (0,succ n) :=
-       take g : Π (y : ℕ × ℕ), diag y (0,succ n) → ℕ,
+       assume g : Π (y : ℕ × ℕ), diag y (0,succ n) → ℕ,
        have h : diag (n, 0) (0, succ n),
          begin
            unfold diag inv_image prod.fst prod.snd,
@@ -492,7 +493,7 @@ def bij.prod.g : ℕ × ℕ → ℕ :=
          end,
        succ (g (n,0) h)
     | (succ n,m) :=
-       take g : Π (y : ℕ × ℕ), diag y (succ n,m) → ℕ,
+       assume g : Π (y : ℕ × ℕ), diag y (succ n,m) → ℕ,
        have h : diag (n, succ m) (succ n, m),
          begin
            unfold diag inv_image prod.fst prod.snd,
@@ -525,7 +526,6 @@ begin
   unfold bij.prod.g,
   rw [well_founded.fix_eq],
   unfold bij.prod.g._match_2 bij.prod.g._match_1,
-  apply congr_arg, simp
 end
 
 lemma bij.prod.prod_succ_le_succ (m n : ℕ) : (bij.prod.succ (m,n))^.snd ≤ succ (n+m) :=
@@ -692,11 +692,11 @@ def option.map (f : α → β) : option α → option β
 def bijection.fmap (b : bijection α β) : bijection (option α) (option β) :=
 bijection.mk (option.map b^.f) (option.map b^.g)
 begin
-  intro x, cases x ; unfold option.map, refl,
+  intro x, cases x ; unfold option.map,
   rw b^.f_inv
 end
 begin
-  intro x, cases x ; unfold option.map, refl,
+  intro x, cases x ; unfold option.map,
   rw b^.g_inv
 end
 
@@ -786,14 +786,13 @@ begin
   clear x,
   intros x IH,
   cases x with x,
-  { rw concat.g_zero, unfold concat.f, refl },
+  { rw concat.g_zero, unfold concat.f,  },
   { rw concat.g_succ, unfold concat.f,
     rw IH,
     have h' : ∀ x, bij.prod.g (bij.prod.f x) = x, { apply bij.prod^.g_inv },
     destruct bij.prod.f x,
     intros x₀ x₁ h, simp [h],
-    unfold prod.fst prod.snd,
-    rw [-h,h'],
+    rw [← h,h'],
     apply lt_succ_of_le,
     apply prod_f_snd_le_self }
 end
@@ -939,7 +938,6 @@ end)
   ; unfold bij.option.fin.g bij.option.fin.f fin.succ
   ; apply fin.eq_of_veq,
   { apply fin.zero_def, },
-  { refl },
 end)
 
 def bij.lifted.f {t : Type u₀}
@@ -984,7 +982,7 @@ begin
   have h := le_of_succ_le_succ is_lt,
   have h' := le_antisymm (zero_le _) h,
   apply fin.eq_of_veq,
-  unfold zero has_zero.zero,
+  unfold has_zero.zero,
   subst val,
 end
 
@@ -1137,7 +1135,7 @@ begin
   have n : {n // bt.f x = n } := ⟨_,rfl⟩ ,
   cases n with n Hn,
   revert Hn,
-  rw -next_0 bt x,
+  rw ← next_0 bt x,
   generalize 0 k,
   revert x,
   induction n ;
@@ -1153,7 +1151,7 @@ begin
     rw [bijection.bij.sigma_inf_fin_g_def,dif_pos],
     subst x,
     apply congr_arg, symmetry,
-    rw -bijection.inverse,
+    rw ← bijection.inverse,
     apply fin.eq_of_veq, refl, -/ },
   case succ n
   { simp [fin.sum_succ],
@@ -1181,9 +1179,9 @@ begin
     { simp [fin.sum_succ'],
       unfold function.comp,
       simp [widen_val,fin.max_def],
-      rw -nat.add_assoc,
+      rw ← nat.add_assoc,
       apply congr_fun, apply congr_arg,
-      rw [-nat.add_sub_assoc,nat.add_sub_cancel_left],
+      rw [← nat.add_sub_assoc,nat.add_sub_cancel_left],
       apply le_of_not_gt h },
     { apply sub_lt_of_pos_le,
       apply zero_lt_succ,

@@ -23,13 +23,13 @@ inhabited.mk ⟨n,lt_succ_self _⟩
 instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
   { le := has_le.le
   , lt := has_lt.lt
-  , le_refl  := take x, by simp [fin.le_def]
-  , le_trans := take x y z, by { simp [fin.le_def], apply le_trans }
-  , le_antisymm := take x y, by { simp [fin.le_def,fin.veq_def], apply le_antisymm }
-  , le_total := take x y, by { simp [fin.le_def], apply le_total }
-  , le_iff_lt_or_eq := take x y,
+  , le_refl  := assume x, by simp [fin.le_def]
+  , le_trans := assume x y z, by { simp [fin.le_def], apply le_trans }
+  , le_antisymm := assume x y, by { simp [fin.le_def,fin.veq_def], apply le_antisymm }
+  , le_total := assume x y, by { simp [fin.le_def], apply le_total }
+  , le_iff_lt_or_eq := assume x y,
          by { rw [fin.le_def,fin.lt_def,fin.veq_def], apply le_iff_lt_or_eq }
-  , lt_irrefl := take x, by { simp [fin.lt_def], apply lt_irrefl }
+  , lt_irrefl := assume x, by { simp [fin.lt_def], apply lt_irrefl }
   , decidable_eq := fin.decidable_eq _
   , decidable_le := fin.decidable_le
   , decidable_lt := fin.decidable_lt }
@@ -182,7 +182,7 @@ end
 lemma exists_split_one {n : ℕ} (p : fin (nat.succ n) → Prop)
 : (∃ i, p i) ↔ p fin.max ∨ (∃ i, restr p i) :=
 begin
-  rw [-not_iff_not_iff],
+  rw [← not_iff_not_iff],
   simp [not_or_iff_not_and_not,not_exists_iff_forall_not,forall_split_one],
   refl
 end
@@ -239,7 +239,7 @@ begin
   unfold fin.shift fin.nest fin.split,
   { have H : ¬ m + k < m,
     { apply not_lt_of_ge, apply le_add_right },
-    rw [dif_neg H], simp,
+    rw [dif_neg H],
     apply congr_arg,
     apply fin.eq_of_veq,
     unfold fin.val,
@@ -263,11 +263,11 @@ begin
   cases k with k Hk,
   cases classical.em (k < m) with h h
   ; unfold fin.split,
-  { rw dif_pos h, unfold fin.unsplit fin.nest, refl },
+  { rw dif_pos h, unfold fin.unsplit fin.nest, },
   { rw dif_neg h,
     apply fin.eq_of_veq,
     unfold fin.unsplit fin.shift fin.val,
-    rw [-nat.add_sub_assoc,nat.add_sub_cancel_left],
+    rw [← nat.add_sub_assoc,nat.add_sub_cancel_left],
     apply le_of_not_gt h },
 end
 
@@ -275,22 +275,22 @@ lemma fin.unsplit_eq_iff_eq_split {n m : ℕ} (p : fin m ⊕ fin n) (q : fin (m 
 : fin.unsplit p = q ↔ p = fin.split q :=
 begin
   split ; intro h,
-  { rw [-h,fin.split_unsplit], },
+  { rw [← h,fin.split_unsplit], },
   { rw [h,fin.unsplit_split], },
 end
 
 lemma fin.nest_eq_iff_eq_split {n m : ℕ} (p : fin m) (q : fin (m + n))
 : fin.nest p = q ↔ sum.inl p = fin.split q :=
-by { rw -fin.unsplit_eq_iff_eq_split, refl }
+by { rw ← fin.unsplit_eq_iff_eq_split, refl }
 
 lemma fin.shift_eq_iff_eq_split {n m : ℕ} (p : fin n) (q : fin (m + n))
 : fin.shift p = q ↔ sum.inr p = fin.split q :=
-by { rw -fin.unsplit_eq_iff_eq_split, refl }
+by { rw ← fin.unsplit_eq_iff_eq_split, refl }
 
 lemma fin.split_injective  {n m : ℕ} (p q : fin (m + n))
   (h : fin.split p = fin.split q)
 : p = q :=
-by { rw [-fin.unsplit_eq_iff_eq_split,fin.unsplit_split] at h, assumption }
+by { rw [← fin.unsplit_eq_iff_eq_split,fin.unsplit_split] at h, assumption }
 
 lemma fin.val_shift_zero (m n : ℕ)
 : (@fin.shift _ m (0 : fin (succ n))).val = m :=
@@ -300,7 +300,7 @@ lemma fin.shift_zero (m : ℕ)
 : fin.max = (@fin.shift _ m (0 : fin 1)) :=
 begin
   apply fin.eq_of_veq,
-  unfold fin.shift fin.max, simp,
+  unfold fin.shift fin.max, simp [fin.val_shift_zero],
 end
 
 lemma fin.val_of_nat {m n : ℕ} (h : n < nat.succ m)

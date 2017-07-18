@@ -1,8 +1,13 @@
 
 import util.logic
 import util.data.nat
+-- import util.data.array
 
 open nat
+
+universe variables u v
+
+variables {α : Type u} {β : Type v}
 
 lemma fin.veq_def {n} (x y : fin n)
 : x = y ↔ x.val = y.val :=
@@ -148,6 +153,10 @@ def widen {n} : fin n → fin (nat.succ n)
 
 def restr {n α} (f : fin (nat.succ n) → α) (x : fin n) : α :=
 f (widen x)
+
+lemma widen_val {n : ℕ} (x : fin n)
+: (widen x).val = x.val :=
+by { cases x, refl }
 
 lemma forall_fin_zero_iff_true (p : fin 0 → Prop)
 : (∀ i, p i) ↔ true :=
@@ -300,3 +309,12 @@ begin
   unfold fin.of_nat fin.val,
   rw mod_eq_of_lt h
 end
+
+def fin.foldl {n : ℕ}
+  (f : α → β → β) (x : β) (a : fin n → α) : β :=
+(array.mk a).foldl x f
+
+def fin.sum (n : ℕ)
+  [has_add α] [has_zero α]
+  (a : fin n → α) : α :=
+fin.foldl has_add.add 0 a

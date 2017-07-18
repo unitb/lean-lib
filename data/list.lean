@@ -90,4 +90,28 @@ begin
     rw [h₂,h₃], }
 end
 
+-- def maximum
+
+section
+
+variable {f : α → α → α}
+variable [is_associative α f]
+variable [is_commutative α f]
+variable x₀ : α
+
+lemma foldl_eq_foldr_of_ac
+: foldl f x₀ xs = foldr f x₀ xs :=
+begin
+  induction xs,
+  case nil
+  { refl },
+  case cons x xs IH
+  { unfold foldl foldr,
+    rw -IH, symmetry,
+    rw [foldl_hom (f x) f f _ _ xs,is_commutative.comm f],
+    { intros y z, rw is_associative.assoc f } },
+end
+
+end
+
 end list

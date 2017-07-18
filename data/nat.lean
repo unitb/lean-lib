@@ -256,4 +256,13 @@ begin
     apply h₁, }
 end
 
+lemma sub_succ_eq_pred_sub (x y : ℕ)
+: x - succ y = pred x - y :=
+begin
+  induction y,
+  { refl },
+  { unfold has_sub.sub nat.sub,
+    apply congr_arg, apply ih_1 }
+end
+
 end nat

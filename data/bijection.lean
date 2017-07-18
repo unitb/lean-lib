@@ -1,8 +1,9 @@
 
-import util.data.fin
+import util.data.array
 import util.data.nat
+import util.data.sigma
 
-universe variables u₀ u₁ u₂
+universe variables u₀ u₁ u₂ u₃ u₄
 
 section bijection
 
@@ -610,8 +611,8 @@ instance : infinite ℕ :=
 
 section bijection_add
 
-parameters {α α' : Type (u₀)}
-parameters {β β' γ : Type (u₁)}
+parameters {α : Type (u₀)} {α' : Type (u₁)}
+parameters {β : Type (u₂)} {β' : Type (u₃)}
 parameters (b₀ : bijection α β) (b₁ : bijection α' β')
 
 def bijection.add.f : α ⊕ α' → β ⊕ β'
@@ -642,8 +643,8 @@ end bijection_add
 
 section bijection_mul
 
-parameters {α α' : Type (u₀)}
-parameters {β β' γ : Type (u₁)}
+parameters {α : Type (u₀)} {α' : Type (u₂)}
+parameters {β : Type (u₁)} {β' : Type (u₃)}
 parameters (b₀ : bijection α β) (b₁ : bijection α' β')
 
 def bijection.mul.f : α × α' → β × β'
@@ -881,7 +882,8 @@ end bijection_map
 section
 
 variables {α α' : Type (u₀)}
-variables {β β' γ : Type (u₀)}
+variables {β β' : Type (u₁)}
+variables {γ : Type (u₂)}
 
 local infixr ∘ := bij.comp
 local infix + := bijection.add
@@ -940,6 +942,38 @@ end)
   { refl },
 end)
 
+def bij.lifted.f {t : Type u₀}
+  {F : t → Type u₁} {G : t → Type u₂}
+  (b : Π x : t, bijection (F x) (G x))
+  (f : Π x, F x) (x : t)
+: G x :=
+(b x).f (f x)
+
+def bij.lifted.g {t : Type u₀}
+  {F : t → Type u₁} {G : t → Type u₂}
+  (b : Π x : t, bijection (F x) (G x))
+  (f : Π x, G x) (x : t)
+: F x :=
+(b x).g (f x)
+
+def bij.lifted {t : Type u₀}
+  {F : t → Type u₁} {G : t → Type u₂}
+  (b : Π x : t, bijection (F x) (G x))
+: bijection (Π x, F x) (Π x, G x) :=
+bijection.mk (bij.lifted.f b) (bij.lifted.g b)
+begin
+  intros f,
+  apply funext, intro x,
+  unfold bij.lifted.f bij.lifted.g,
+  apply (b x).f_inv
+end
+begin
+  intros f,
+  apply funext, intro x,
+  unfold bij.lifted.f bij.lifted.g,
+  apply (b x).g_inv
+end
+
 def bij.unit : bijection unit (fin 1) :=
 bijection.mk (λ _, 0) (λ _, ())
 begin
@@ -986,6 +1020,203 @@ instance finite_prod [finite α] [finite β] : finite (α × β) :=
   , to_nat := bij.prod.append _ _ ∘ (finite.to_nat α * finite.to_nat β)
   }
 
+end
+
+section
+
+variables {α α' : Type (u₀)}
+variables {β β' : Type (u₁)}
+variables {γ : Type (u₂)}
+
+def bij.embed.f {t : Type u₀} {t' : Type u₁}
+  {F : t → Type u₂} {G : t' → Type u₃}
+  (bt : bijection t t')
+  (b : Π x : t, bijection (F x) (G $ bt.f x))
+: (Σ x, F x) → (Σ x, G x)
+  | ⟨x,Fx⟩ := ⟨bt.f x, (b x).f Fx⟩
+
+def bij.embed.g {t : Type u₀} {t' : Type u₁}
+  {F : t → Type u₂} {G : t' → Type u₃}
+  (bt : bijection t t')
+  (b : Π x : t, bijection (F x) (G $ bt.f x))
+: (Σ x, G x) → (Σ x, F x)
+  | ⟨x',Gx⟩ :=
+have h : G _ = G _, from (congr_arg G (bt.g_inv x')).symm,
+⟨bt.g x',(b _).g (cast h Gx)⟩
+
+def bij.embed' {t : Type u₀} {t' : Type u₁}
+  {F : t → Type u₂} {G : t' → Type u₃}
+  (bt : bijection t t')
+  (b : Π x : t, bijection (F x) (G $ bt.f x))
+: bijection (Σ x, F x) (Σ x, G x) :=
+bijection.mk (bij.embed.f bt b) (bij.embed.g bt b)
+begin
+  intros x, cases x with x Fx,
+  unfold bij.embed.f bij.embed.g,
+  apply sigma.ext,
+  { unfold sigma.fst,
+    apply bt.f_inv },
+  { unfold sigma.snd sigma.fst,
+    intros H,
+    generalize (bij.embed.g._main._proof_1 bt (bt.f x)) H',
+    rw H,
+    intros H',
+    rw cast_eq H',
+    rw f_inv }
+end
+begin
+  intros x, cases x with x Fx,
+  unfold bij.embed.f bij.embed.g,
+  apply sigma.ext,
+  { unfold sigma.fst,
+    apply bt.g_inv },
+  { unfold sigma.snd sigma.fst,
+    intros H,
+    rw g_inv (b (bt.g x)),
+    generalize (bij.embed.g._main._proof_1 bt x) H',
+    rw H,
+    intros H',
+    rw cast_eq H' }
+end
+
+def bij.embed {t : Type u₀}
+  {F : t → Type u₁} {G : t → Type u₂}
+  (b : Π x : t, bijection (F x) (G x))
+: bijection (Σ x, F x) (Σ x, G x) :=
+bij.embed' id b
+
+section
+
+parameter {t : Type u₀}
+parameter {F : t → Type u₂}
+parameter {sz : t → ℕ}
+parameter (bt : bijection t ℕ)
+parameter (b : Π x : t, bijection (F x) (fin $ succ $ sz x))
+
+def bij.sigma_inf_fin_f : (Σ x, F x) → ℕ
+  | ⟨x,Fx⟩ := fin.sum (bt.f x) (λ i, succ $ sz $ bt.g i.val) + ( (b x).f Fx ).val
+
+def bij.sigma_inf_fin_g : ℕ → ℕ → (Σ x, F x)
+  | j i :=
+let x : t := bt.g i in
+if h : j < succ (sz x)
+then ⟨x, (b x).g ⟨_,h⟩⟩
+else
+  have H : j - succ (sz x) < j,
+    begin
+      apply sub_lt_of_pos_le,
+      apply zero_lt_succ,
+      apply le_of_not_gt h,
+    end,
+  bij.sigma_inf_fin_g (j - succ (sz x)) (succ i)
+
+lemma bij.sigma_inf_fin_g_def
+  (i j : ℕ)
+:   bij.sigma_inf_fin_g i j
+  = if h : i < succ (sz $ bt.g j)
+    then ⟨bt.g j, (b $ bt.g j).g ⟨_,h⟩⟩
+    else bij.sigma_inf_fin_g (i - succ (sz $ bt.g j)) (succ j) :=
+by rw [bij.sigma_inf_fin_g.equations._eqn_1]
+
+def next (k : ℕ) (x : t) : t :=
+bt.g (bt.f x + k)
+
+lemma next_0 (x : t)
+: next 0 x = x :=
+by { unfold next, simp [bijection.f_inv] }
+
+def bij.sigma_inf_fin : bijection (Σ x, F x) ℕ :=
+bijection.mk
+  bij.sigma_inf_fin_f
+  (λ i, bij.sigma_inf_fin_g i 0)
+begin
+  intros x,
+  cases x with x Fx,
+  revert Fx,
+  unfold bij.sigma_inf_fin_f,
+  have n : {n // bt.f x = n } := ⟨_,rfl⟩ ,
+  cases n with n Hn,
+  revert Hn,
+  rw -next_0 bt x,
+  generalize 0 k,
+  revert x,
+  induction n ;
+  intros x k Hn Fx,
+  case zero
+  { simp [fin.sum_zero],
+    have Hx : (bt.g k) = x,
+    { apply bt.f_injective,
+      simp [bt.g_inv,Hn], admit },
+    admit,
+    /- have H : (((b x).f Fx).val < succ (sz (bt.g k))),
+    { rw Hx, apply fin.is_lt _, },
+    rw [bijection.bij.sigma_inf_fin_g_def,dif_pos],
+    subst x,
+    apply congr_arg, symmetry,
+    rw -bijection.inverse,
+    apply fin.eq_of_veq, refl, -/ },
+  case succ n
+  { simp [fin.sum_succ],
+    -- have H : ¬ (sz (bt.g (0 : fin $ succ n).val)
+    --     + (((b x).f Fx).val + fin.sum n ((λ (i : fin (succ n)), sz (bt.g (i.val))) ∘ fin.succ))
+    --     < succ (sz (bt.g 0))), admit,
+    rw [bijection.bij.sigma_inf_fin_g_def,dif_neg], admit, admit }
+end
+begin
+  intros x,
+  change _ = x + 0,
+  have H : x + 0 = x + fin.sum 0 (λ (i : fin 0), succ $ sz (bt.g (i.val))),
+  { rw fin.sum_zero },
+  rw H, clear H,
+  generalize 0 k,
+  apply nat.strong_induction_on x _,
+  clear x, intros x IH k,
+  rw [bijection.bij.sigma_inf_fin_g_def],
+  cases decidable.em (x < succ (sz (bt.g k))) with h h,
+  { rw [dif_pos h],
+    unfold bij.sigma_inf_fin_f,
+    simp [bijection.g_inv,fin.sum_zero],
+    rw [bijection.g_inv], },
+  { rw [dif_neg h,IH],
+    { simp [fin.sum_succ'],
+      unfold function.comp,
+      simp [widen_val,fin.max_def],
+      rw -nat.add_assoc,
+      apply congr_fun, apply congr_arg,
+      rw [-nat.add_sub_assoc,nat.add_sub_cancel_left],
+      apply le_of_not_gt h },
+    { apply sub_lt_of_pos_le,
+      apply zero_lt_succ,
+      apply le_of_not_gt h }, },
+end
+
+end
+
+def bij.sigma_pair {t : Type u₀}
+  {F : Type u₁}
+: bijection (Σ x : t, F) (t × F) :=
+bijection.mk' (λ x, (x.1,x.2)) (λ x, ⟨x.1,x.2⟩)
+begin
+  intros x y,
+  cases x, cases y, simp,
+  split
+  ; intros H
+  ; injection H with H₀ H₁
+  ; subst fst
+  ; cases H₁ ; refl,
+end
+
+instance infinite_sigma {t : Type u₀} (T : t → Type u₁)
+  [infinite t] [∀ x, infinite (T x)]
+: infinite (Σ i, T i) :=
+  { to_nat :=
+infinite.to_nat (t × ℕ) ∘ bij.sigma_pair ∘ bij.embed (λ x, infinite.to_nat (T x)) }
+
+instance infinite_sigma_of_pos_finite {t : Type u₀} (T : t → Type u₁)
+  [infinite t] [∀ x, pos_finite (T x)]
+: infinite (Σ i, T i) :=
+  { to_nat := infinite.to_nat (t × ℕ) ∘ bij.sigma_pair ∘ bij.embed (λ x, sorry ∘ pos_finite.to_nat (T x)) }
+
 instance pos_finite_option [finite α] : pos_finite (option α) :=
  { pred_count := finite.count α
  , to_nat := bij.option.fin ∘ bijection.fmap (finite.to_nat α) }
@@ -999,10 +1230,7 @@ instance inf_list_of_fin [pos_finite α] : infinite (list α) :=
 instance inf_list_of_inf  [infinite α] : infinite (list α) :=
  { to_nat := concat ∘ bijection.map (infinite.to_nat α) }
 
-local attribute [instance] classical.prop_decidable
 
-noncomputable def left_inverse (f : α → β) (x : β) : option α :=
-if h : (∃ y, f y = x) then some (classical.some h) else none
 
 def infinite_of_injective
   {f : α → ℕ}

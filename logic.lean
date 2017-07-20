@@ -58,6 +58,18 @@ begin
   apply h _ P,
 end
 
+lemma exists_imp_exists_prop {h₀ h₁ : Prop}
+   {p : h₀ → Prop}
+   {q : h₁ → Prop}
+   (a : h₀)
+   (f : h₀ → h₁)
+   (h : p a → q (f a))
+   (P : ∃ a, p a) : ∃ a, q a :=
+begin
+  apply @exists_imp_exists' _ _ p q f _ P,
+  intro, apply h
+end
+
 lemma exists_imp_iff_forall_imp
   (p : α → Prop) (q : Prop)
 : (∃ x, p x) → q ↔ (∀ x, p x → q) :=

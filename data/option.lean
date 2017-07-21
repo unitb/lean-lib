@@ -41,3 +41,8 @@ begin
   split ; intro h ;
   contradiction
 end
+
+@[simp]
+lemma coe_eq_some (x : α)
+: ↑x = some x :=
+rfl

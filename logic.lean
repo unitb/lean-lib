@@ -327,6 +327,20 @@ begin
   { simp [eq_false_intro h] },
 end
 
+lemma distrib_or_over_exists_left {t} [nonempty t] (p : t → Prop) (q : Prop)
+: q ∨ (∃ x, p x) ↔ (∃ x, q ∨ p x) :=
+begin
+  split ; intro h,
+  cases h with h h,
+  { cases _inst_1 with x,
+    existsi x, left, apply h },
+  { apply exists_imp_exists _ h,
+    intro, apply or.intro_right },
+  cases h with x h,
+  { apply or.imp_right _ h,
+    apply Exists.intro },
+end
+
 lemma not_imp_iff_and_not (p q : Prop)
 : ¬ (p → q) ↔ p ∧ ¬ q :=
 sorry

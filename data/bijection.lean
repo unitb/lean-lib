@@ -1026,28 +1026,36 @@ variables {α α' : Type (u₀)}
 variables {β β' : Type (u₁)}
 variables {γ : Type (u₂)}
 
-def bij.embed.f {t : Type u₀} {t' : Type u₁}
-  {F : t → Type u₂} {G : t' → Type u₃}
-  (bt : bijection t t')
-  (b : Π x : t, bijection (F x) (G $ bt.f x))
+section embedded_sigma
+
+parameters {t : Type u₀} {t' : Type u₁}
+parameters {F : t → Type u₂} {G : t' → Type u₃}
+parameters (bt : bijection t t')
+parameters (b : Π x : t, bijection (F x) (G $ bt.f x))
+
+def bij.embed.f
 : (Σ x, F x) → (Σ x, G x)
   | ⟨x,Fx⟩ := ⟨bt.f x, (b x).f Fx⟩
 
-def bij.embed.g {t : Type u₀} {t' : Type u₁}
-  {F : t → Type u₂} {G : t' → Type u₃}
-  (bt : bijection t t')
-  (b : Π x : t, bijection (F x) (G $ bt.f x))
+def bij.embed.g
 : (Σ x, G x) → (Σ x, F x)
   | ⟨x',Gx⟩ :=
 have h : G _ = G _, from (congr_arg G (bt.g_inv x')).symm,
 ⟨bt.g x',(b _).g (cast h Gx)⟩
 
-def bij.embed' {t : Type u₀} {t' : Type u₁}
-  {F : t → Type u₂} {G : t' → Type u₃}
-  (bt : bijection t t')
-  (b : Π x : t, bijection (F x) (G $ bt.f x))
+lemma foo_doo (x y : t) (Fx : F x)
+  (H : G (bt.f x) = G (bt.f y))
+  (H₀ : y = x)
+  (H₁ : (b x).g ((b x).f Fx) == Fx)
+: (b y).g (cast H ((b x).f Fx)) == Fx :=
+begin
+  cases H₀, rw cast_eq,
+  apply H₁
+end
+
+def bij.embed'
 : bijection (Σ x, F x) (Σ x, G x) :=
-bijection.mk (bij.embed.f bt b) (bij.embed.g bt b)
+bijection.mk bij.embed.f bij.embed.g
 begin
   intros x, cases x with x Fx,
   unfold bij.embed.f bij.embed.g,
@@ -1056,10 +1064,7 @@ begin
     apply bt.f_inv },
   { unfold sigma.snd sigma.fst,
     intros H,
-    generalize (bij.embed.g._main._proof_1 bt (bt.f x)) H',
-    rw H,
-    intros H',
-    rw cast_eq H',
+    apply foo_doo _ _ _ _ _ _ H,
     rw f_inv }
 end
 begin
@@ -1071,11 +1076,10 @@ begin
   { unfold sigma.snd sigma.fst,
     intros H,
     rw g_inv (b (bt.g x)),
-    generalize (bij.embed.g._main._proof_1 bt x) H',
-    rw H,
-    intros H',
-    rw cast_eq H' }
+    apply cast_heq, }
 end
+
+end embedded_sigma
 
 def bij.embed {t : Type u₀}
   {F : t → Type u₁} {G : t → Type u₂}
@@ -1136,10 +1140,10 @@ begin
   cases n with n Hn,
   revert Hn,
   rw ← next_0 bt x,
-  generalize 0 k,
+  generalize : 0 = k,
   revert x,
   induction n ;
-  intros x k Hn Fx,
+  intros x Hn Fx,
   case zero
   { simp [fin.sum_zero],
     have Hx : (bt.g k) = x,
@@ -1166,7 +1170,7 @@ begin
   have H : x + 0 = x + fin.sum 0 (λ (i : fin 0), succ $ sz (bt.g (i.val))),
   { rw fin.sum_zero },
   rw H, clear H,
-  generalize 0 k,
+  generalize : 0 = k, revert k,
   apply nat.strong_induction_on x _,
   clear x, intros x IH k,
   rw [bijection.bij.sigma_inf_fin_g_def],

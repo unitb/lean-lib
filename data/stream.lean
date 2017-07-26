@@ -135,8 +135,8 @@ lemma solutions_increases {i j : ℕ}
 begin
   rw ← add_sub_of_le H,
   clear H,
-  generalize (j - succ i) k,
-  clear j, intro k,
+  generalize : (j - succ i) = k,
+  clear j,
   rw [succ_add],
   induction k,
   case zero

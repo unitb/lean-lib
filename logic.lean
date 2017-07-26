@@ -306,6 +306,7 @@ begin
     ; exact ⟨_,h⟩ }
 end
 
+@[simp]
 lemma exists_true (P : true → Prop)
 : (∃ x : true, P x) ↔ P trivial :=
 begin

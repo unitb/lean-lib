@@ -21,7 +21,7 @@ instance arrow_cat : category (->) :=
   { ident := @id
   , comp := @function.comp
   , assoc := @function.comp.assoc
-  , left_ident := @function.comp.left_id
+  , left_ident  := @function.comp.left_id
   , right_ident := @function.comp.right_id }
 
 def kleisli (m : Sort u → Sort v) (a : Sort w) (b : Sort u) := a → m b

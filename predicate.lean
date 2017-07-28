@@ -685,44 +685,12 @@ begin
   refl,
 end
 
-instance {α} : category (@p_entails α) :=
+instance entails_category {α} : category (@p_entails α) :=
   { ident := by { intro, refl }
-  , comp := by { intros _ _ _, apply flip (entails_trans _) }
+  , comp  := by { intros _ _ _, apply flip (entails_trans _) }
   , assoc := by { intros, refl }
-  , left_ident := by { intros, refl }
+  , left_ident  := by { intros, refl }
   , right_ident := by { intros, refl } }
-
-class finite_disjunctive {α : Type u} (cat : pred' α → pred' α → Sort u')
-extends category cat :=
-  (disj : ∀ p q r : pred' α, cat p r → cat q r → cat (p || q) r)
-
-class disjunctive {α : Type u} (cat : pred' α → pred' α → Sort u')
-extends category cat :=
-  (disj : ∀ t (p : t → pred' α) r : pred' α, (∀ x, cat (p x) r) → cat (∃∃ x, p x) r)
-
-instance finite_of_disjunctive {α : Type u} (cat : pred' α → pred' α → Sort u')
-[_inst : disjunctive cat]
-: finite_disjunctive cat :=
- { (_inst.to_category : category cat) with
-   disj :=
-   begin
-     intros p q r X Y,
-     let f := λ x : bool, if x then p else q,
-     have H : p || q = ∃∃ x, f x,
-     { apply mutual_entails,
-       apply p_or_entails_of_entails,
-       { apply @p_exists_intro _ _ f tt, },
-       { apply @p_exists_intro _ _ f false, },
-       apply p_exists_elim,
-       intro x, cases x,
-       { apply p_or_intro_right },
-       { apply p_or_intro_left }, },
-     rw H, clear H,
-     apply _inst.disj,
-     apply bool.rec ; revert f
-     ; simp
-     ; assumption
-   end }
 
 end predicate
 

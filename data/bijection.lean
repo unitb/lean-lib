@@ -467,11 +467,11 @@ def bij.prod.succ : ℕ × ℕ → ℕ × ℕ
   | (n,0) := (0,succ n)
   | (n,succ m) := (succ n,m)
 
-def diag : ℕ × ℕ → ℕ × ℕ → Prop
-:= inv_image (prod.lex nat.lt nat.lt) (λ x, (x^.fst+x^.snd, x^.fst))
+def diag : ℕ × ℕ → ℕ × ℕ → Prop :=
+inv_image (prod.lex nat.lt nat.lt) (λ x, (x^.fst+x^.snd, x^.fst))
 
-def diag_wf : well_founded diag
-:= @inv_image.wf (ℕ × ℕ) _ _
+def diag_wf : well_founded diag :=
+@inv_image.wf (ℕ × ℕ) _ _
         (λ x, (x^.fst+x^.snd, x^.fst))
         (prod.lex_wf nat.lt_wf nat.lt_wf)
 

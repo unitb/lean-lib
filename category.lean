@@ -1,21 +1,30 @@
 
 universes u v w
 
-class has_comp {k : Sort u} (cat : k → k → Sort v) :=
+variables {k : Sort u}
+
+class has_comp (cat : k → k → Sort v) :=
   (comp : ∀ {α β γ}, cat β γ → cat α β → cat α γ)
 
 infixl ` <<< `:2 := has_comp.comp _
 
-class semigroupoid {k : Sort u} (cat : k → k → Sort v) extends has_comp cat :=
+class semigroupoid (cat : k → k → Sort v) extends has_comp cat :=
   (assoc : ∀ {α β γ φ} (x : cat γ φ) (y : cat β γ) (z : cat α β),
-             ( (x <<< y) <<< z ) = ( x <<< (y <<< z) ) )
+             ( x <<< (y <<< z) ) = ( (x <<< y) <<< z ) )
 
-class category {k : Sort u} (cat : k → k → Sort v) extends semigroupoid cat :=
+class category (cat : k → k → Sort v) extends semigroupoid cat :=
   (ident : ∀ {α}, cat α α)
   (left_ident : ∀ {α β} (x : cat α β), (ident <<< x) = x)
   (right_ident : ∀ {α β} (x : cat α β), (x <<< ident) = x)
 
 export category (ident)
+
+@[reducible]
+def category.assoc := semigroupoid.assoc
+
+attribute [simp] category.left_ident
+attribute [simp] category.right_ident
+attribute [simp] semigroupoid.assoc
 
 instance arrow_cat : category (->) :=
   { ident := @id

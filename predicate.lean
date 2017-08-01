@@ -26,36 +26,36 @@ def ew (p : pred' α) : Prop :=
 def False : pred' α := lifted₀ false
 def True : pred' α := lifted₀ true
 
-def p_or (p₀ p₁ : pred' α) : pred' α
-:= lifted₂ or p₀ p₁
+def p_or (p₀ p₁ : pred' α) : pred' α :=
+lifted₂ or p₀ p₁
 
 @[simp]
 lemma p_or_to_fun (p₀ p₁ : pred' α) (x : α)
 : p_or p₀ p₁ x ↔ p₀ x ∨ p₁ x := by refl
 
-def p_and (p₀ p₁ : pred' α) : pred' α
-:= lifted₂ and p₀ p₁
+def p_and (p₀ p₁ : pred' α) : pred' α :=
+lifted₂ and p₀ p₁
 
 @[simp]
 lemma p_and_to_fun (p₀ p₁ : pred' α) (x : α)
 : p_and p₀ p₁ x ↔ p₀ x ∧ p₁ x := by refl
 
-def p_impl (p₀ p₁ : pred' α) : pred' α
-:= lifted₂ implies p₀ p₁
+def p_impl (p₀ p₁ : pred' α) : pred' α :=
+lifted₂ implies p₀ p₁
 
 @[simp]
 lemma p_impl_to_fun (p₀ p₁ : pred' α) (x : α)
 : p_impl p₀ p₁ x ↔ (p₀ x → p₁ x) := by refl
 
 
-def p_entails (p₀ p₁ : pred' α) : Prop
-:= ew (p_impl p₀ p₁)
+def p_entails (p₀ p₁ : pred' α) : Prop :=
+ew (p_impl p₀ p₁)
 
 lemma p_entails_of_fun (p₀ p₁ : pred' α) (x : β)
 : p_entails p₀ p₁ ↔ ∀ x, p₀ x → p₁ x := by refl
 
-def p_not (p : pred' α) : pred' α
-:= lifted₁ not p
+def p_not (p : pred' α) : pred' α :=
+lifted₁ not p
 
 @[simp]
 lemma False_eq_false (τ : β) : False τ = false := rfl

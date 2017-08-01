@@ -27,8 +27,8 @@ open well_founded
 
 end wf
 
-def inf_interleave : stream ℕ
-:= rounds 0 0
+def inf_interleave : stream ℕ :=
+rounds 0 0
 
 def is_suffix {α} (p q : stream α) : Prop := ∃ i, p = stream.drop i q
 
@@ -73,8 +73,8 @@ begin
   existsi 1, refl
 end
 
-lemma le_zero_of_eq_zero {n : ℕ} (h : n ≤ 0) : n = 0
-:= le_antisymm h (zero_le _)
+lemma le_zero_of_eq_zero {n : ℕ} (h : n ≤ 0) : n = 0 :=
+le_antisymm h (zero_le _)
 
 theorem suffix_self_of_le (i j k : ℕ) :
   j ≤ k →

@@ -4,8 +4,8 @@ import util.data.nat
 open nat
 open list
 
-def fin_interleave (n : ℕ) (i : ℕ) : fin (succ n)
-:= ⟨i % succ n,mod_lt _ (succ_le_succ $ zero_le _)⟩
+def fin_interleave (n : ℕ) (i : ℕ) : fin (succ n) :=
+⟨i % succ n,mod_lt _ (succ_le_succ $ zero_le _)⟩
 
 theorem inf_repeat_fin_inter {n : ℕ} : ∀ x i, ∃ j, fin_interleave n (i+j) = x :=
 begin

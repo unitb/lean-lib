@@ -513,6 +513,17 @@ begin
   simp [distrib_or_over_exists_left]
 end
 
+@[congr]
+lemma p_exists_congr {p q : α → pred' β}
+  (h : ∀ i, p i = q i)
+: p_exists p = p_exists q :=
+begin
+  apply funext, intro,
+  simp,
+  rw exists_congr,
+  intro, rw h,
+end
+
 lemma p_and_over_p_exists_right {t} (p : t → pred' β) (q : pred' β)
 : (∃∃ x, p x) && q = (∃∃ x, p x && q) :=
 begin
@@ -524,6 +535,14 @@ begin
   ; cases h with x y
   ; cases y with y h
   ; exact ⟨y,x,h⟩,
+end
+
+lemma p_and_over_p_exists_left {t} (p : pred' β) (q : t → pred' β)
+: p && (∃∃ x, q x) = (∃∃ x, p && q x) :=
+begin
+  rw [p_and_comm,p_and_over_p_exists_right],
+  apply p_exists_congr,
+  intro, simp [p_and_comm]
 end
 
 lemma shunting (p q r : pred' β)
@@ -642,17 +661,6 @@ lemma p_exists_range_subtype {α : Type u}
 begin
   apply funext, intro i, simp,
   rw exists_range_subtype
-end
-
-@[congr]
-lemma p_exists_congr {p q : α → pred' β}
-  (h : ∀ i, p i = q i)
-: p_exists p = p_exists q :=
-begin
-  apply funext, intro,
-  simp,
-  rw exists_congr,
-  intro, rw h,
 end
 
 lemma p_or_iff_not_imp (p q : pred' β)

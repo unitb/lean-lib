@@ -342,10 +342,6 @@ begin
     apply Exists.intro },
 end
 
-lemma not_imp_iff_and_not (p q : Prop)
-: ¬ (p → q) ↔ p ∧ ¬ q :=
-sorry
-
 lemma or_iff_not_imp (p q : Prop)
 : p ∨ q ↔ ¬ p → q :=
 begin
@@ -357,6 +353,10 @@ end
 lemma imp_iff_not_or (p q : Prop)
 : p → q ↔ ¬ p ∨ q :=
 by rw [or_iff_not_imp,not_not_iff_self]
+
+lemma not_imp_iff_and_not (p q : Prop)
+: ¬ (p → q) ↔ p ∧ ¬ q :=
+by rw [imp_iff_not_or,not_or_iff_not_and_not,not_not_iff_self]
 
 lemma exists_one_point_right (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)

@@ -1,7 +1,6 @@
 
 import util.logic
 import util.data.nat
--- import util.data.array
 
 open nat
 
@@ -44,7 +43,7 @@ by { apply fin.eq_of_veq, rw fin.zero_def }
 
 lemma fin.all_eq_zero (x : fin 1)
 : x = 0 :=
-sorry
+by { cases x, cases val, refl, cases is_lt with i h, cases h, }
 
 def fin.next {n : ℕ} : fin n → fin (succ n)
   | ⟨i,P⟩ := ⟨succ i, succ_lt_succ P⟩

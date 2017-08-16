@@ -291,3 +291,34 @@ lemma compose.seq_mk {α β : Type u'}
   [applicative f] [applicative g]
   (h : f (g (α → β))) (x : f (g α))
 : compose.mk h <*> compose.mk x = compose.mk (has_seq.seq <$> h <*> x) := rfl
+
+namespace applicative
+
+def lift {m : Type u → Type v} [functor m] {α φ : Type u} (f : α → φ) (ma : m α) : m φ :=
+f <$> ma
+
+def lift₂ {m : Type u → Type v} [applicative m]
+  {α₁ α₂ φ : Type u}
+  (f : α₁ → α₂ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) : m φ :=
+f <$> ma₁ <*> ma₂
+
+def lift₃ {m : Type u → Type v} [applicative m]
+  {α₁ α₂ α₃ φ : Type u}
+  (f : α₁ → α₂ → α₃ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃
+
+def lift₄ {m : Type u → Type v} [applicative m]
+  {α₁ α₂ α₃ α₄ φ : Type u}
+  (f : α₁ → α₂ → α₃ → α₄ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄
+
+def lift₅ {m : Type u → Type v} [applicative m]
+  {α₁ α₂ α₃ α₄ α₅ φ : Type u}
+  (f : α₁ → α₂ → α₃ → α₄ → α₅ → φ)
+  (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) (ma₅ : m α₅) : m φ :=
+f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄ <*> ma₅
+
+end applicative

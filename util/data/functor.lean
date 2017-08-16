@@ -75,7 +75,7 @@ lemma identity.fmap_mk {α β : Type v}  (f : α → β) (x : α)
 /- compose functor instance -/
 
 structure compose (f : Type u → Type u') (g : Type v → Type u) (α : Type v) : Type u' :=
-  (run_compose : f $ g α)
+  (run : f $ g α)
 
 namespace compose
 

@@ -66,11 +66,11 @@ def diverge : nonterm α :=
 
 open nat
 
-def fix_aux (f : (α → nonterm β) → (α → nonterm β)) : ℕ → (α → nonterm β)
+def fix_aux {β : Type v} (f : (α → nonterm β) → (α → nonterm β)) : ℕ → (α → nonterm β)
  | 0 := f (λ _, diverge)
  | (succ n) := f (fix_aux n)
 
-def fix (f : (α → nonterm β) → (α → nonterm β)) (x : α) : nonterm β :=
+def fix {β : Type v} (f : (α → nonterm β) → (α → nonterm β)) (x : α) : nonterm β :=
 { run := λ i, (fix_aux f i x).run i
 , consistent :=
   begin
@@ -85,6 +85,9 @@ def fix (f : (α → nonterm β) → (α → nonterm β)) (x : α) : nonterm β 
       apply nonterm.consistent _ (i+k) _ _ (le_succ _),
       unfold fix_aux, admit }
   end }
+
+lemma unroll {β : Type v} (f : (α → nonterm β) → (α → nonterm β))
+: fix f = f (fix f) := sorry
 
 def yields (x : nonterm α) (y : α) : Prop :=
 ∃ i, x.run i = some y

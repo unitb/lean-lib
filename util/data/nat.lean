@@ -1,6 +1,11 @@
 
 namespace nat
 
+lemma eq_zero_of_le {n : ℕ}
+  (h : n ≤ 0)
+: n = 0 :=
+by { apply le_antisymm h, apply zero_le }
+
 theorem lt_of_not_le {m n : ℕ} (h : ¬ m ≤ n) : n < m :=
 begin
   cases lt_or_ge n m with h' h',

@@ -3,7 +3,7 @@ import util.data.option
 import util.data.nat
 import util.logic
 
-universes u v
+universes u v w
 
 structure nonterm (α : Type u) :=
   (run : ℕ → option α)
@@ -44,6 +44,10 @@ protected def bind (x : nonterm α) (f : α → nonterm β) : nonterm β :=
 
 instance : has_bind nonterm := ⟨ @nonterm.bind ⟩
 instance : has_pure nonterm := ⟨ @nonterm.pure ⟩
+
+protected lemma run_to_bind (i : ℕ) (x : nonterm α) (f : α → nonterm β) (v : β)
+: run_to (x >>= f) i v ↔ (∃ v', run_to x i v' ∧ run_to (f v') i v) :=
+sorry
 
 lemma id_map (x : nonterm α)
 : x >>= pure ∘ id = x :=
@@ -87,6 +91,31 @@ begin
   cases H with i H,
   unfold diverge run_to nonterm.run at H,
   contradiction,
+end
+
+def assert (p : Prop) [decidable p] : nonterm (plift p) :=
+if H : p then pure ⟨ H ⟩ else diverge
+
+protected lemma ext (x y : nonterm α)
+  (h : ∀ i v, run_to x i v ↔ run_to y i v)
+: x = y :=
+begin
+  cases x with x Hx, cases y with y Hy,
+  tactic.congr,
+  apply funext, intro i,
+  unfold run_to at h,
+  destruct (x i),
+  destruct (y i),
+  { intros h₀ h₁, rw [h₀,h₁] },
+  { intros x' h₀ h₁,
+    unfold nonterm.run at h,
+    rw [← h i x',h₁] at h₀,
+    contradiction },
+  { intros x' h₀,
+    unfold nonterm.run at h,
+    rw h₀,
+    rw [h i x'] at h₀,
+    rw h₀ },
 end
 
 protected def le (x y : nonterm α) : Prop :=
@@ -162,39 +191,71 @@ instance : has_orelse nonterm :=
 
 end instances
 
-section fix
+end nonterm
 
+class has_mono (m : Type u → Type v)
+extends monad m :=
+  (le : ∀ {α}, weak_order (m α))
+  (input_t  : Type v)
+  (result_t : Type u → Type v)
+  (run_to : ∀ {α}, m α → ℕ → input_t → result_t α → Prop)
+  (run_to_imp_run_to_of_le : ∀ {α} (x y : m α) i v₀ v,
+     x ≤ y → run_to x i v₀ v → run_to y i v₀ v)
+
+export has_mono (run_to input_t result_t run_to_imp_run_to_of_le)
+
+instance fix_weak_order {m α} [has_mono m] : weak_order (m α) :=
+has_mono.le _
+
+section monotonic
+
+parameters {m : Type v → Type w}
+parameters [has_mono m]
 parameters {α : Type u}
 parameters {β : Type v}
 
-parameter f : (α → nonterm β) → (α → nonterm β)
+parameter f : (α → m β) → (α → m β)
 
-parameter f_continuous : ∀ n v,
-  ∀ (v1 v2 : α → nonterm β),
+def monotonic := ∀ n v v',
+  ∀ (v1 v2 : α → m β),
     (∀ x, v1 x ≤ v2 x) →
-    (∀ x, run_to (f v1 x) n v →
-          run_to (f v2 x) n v)
+    (∀ x, run_to (f v1 x) v n v' →
+          run_to (f v2 x) v n v')
 
- -- Hypothesis f_continuous : forall n v v1 x,
- --    runTo (f v1 x) n v
- --    -> forall (v2 : A -> computation B),
- --      (forall x, leq (proj1_sig (v1 x) n) (proj1_sig (v2 x) n))
- --      -> runTo (f v2 x) n v.
+end monotonic
+
+instance : monad nonterm :=
+{ pure := @nonterm.pure
+, bind := @nonterm.bind
+, bind_assoc := @nonterm.bind_assoc
+, pure_bind := @nonterm.pure_bind
+, id_map := @nonterm.id_map }
+
+instance : has_mono.{u} nonterm :=
+{ le := by apply_instance
+, to_monad := by apply_instance
+, result_t := λ α, α
+, input_t  := ulift unit
+, run_to := λ α x y z, nonterm.run_to x y
+, run_to_imp_run_to_of_le := by { introv _ h, cases x, cases y, apply h } }
+
+namespace nonterm
+
+section fix
+
+parameters {α : Type v}
+parameters {β : Type v}
+
+parameter f : (α → nonterm β) → (α → nonterm β)
+parameter f_monotonic : monotonic f
 
 def fix_aux : ℕ → α → nonterm β
  | 0 := f (λ _, diverge)
  | (succ n) := f (fix_aux n)
 
-include f_continuous
--- Lemma Fix'_ok : forall steps n x v, proj1_sig (Fix' n x) steps = Some v
---     -> forall n', n' >= n
---       -> proj1_sig (Fix' n' x) steps = Some v.
---     unfold runTo in *; induction n; crush;
---       match goal with
---         | [ H : _ >= _ |- _ ] => inversion H; crush; eauto
---       end.
---   Qed.
-def fix_consistent (steps n : ℕ) (x : α) (y : β)
+include f_monotonic
+
+lemma fix_consistent (steps n : ℕ) (x : α) (y : β)
   (h : run_to (fix_aux n x) steps y )
   (n' : ℕ)
   (hn : n ≤ n')
@@ -206,7 +267,8 @@ begin
     induction n' with n',
     { simp [fix_aux], apply h },
     { simp [fix_aux], revert h,
-      apply f_continuous, intro,
+      apply f_monotonic, exact ⟨ () ⟩,
+      intro,
       apply le_bottom } },
   { have hn' := le_of_succ_le hn,
     simp [fix_aux] at h,
@@ -215,7 +277,8 @@ begin
     { have hnn' := le_of_succ_le_succ hn,
       simp [fix_aux] at *,
       revert h,
-      apply f_continuous,
+      apply f_monotonic,
+      exact ⟨ () ⟩,
       intros z i yy hh,
       apply ih_1 i n' z _ hh hnn' } }
 end
@@ -229,16 +292,205 @@ def fix (x : α) : nonterm β :=
     apply fix_consistent ; assumption,
   end }
 
-lemma unroll
-: fix = f fix := sorry
+lemma unroll_a (x : α)
+: fix x ≤ f fix x :=
+begin
+  intros i v,
+  dunfold nonterm.fix,
+  unfold run_to nonterm.run,
+  induction i with i,
+  { unfold fix_aux,
+    apply f_monotonic, exact ⟨ () ⟩,
+    intro, apply le_bottom, },
+  { unfold fix_aux,
+    apply f_monotonic, exact ⟨ () ⟩,
+    intros x j v hh,
+    unfold run_to fix nonterm.run,
+    cases le_total i j with Hij Hji,
+    { apply nonterm.consistent _ _ _ _ Hij, admit
+      /- unfold fix nonterm.run, apply hh -/ },
+    { admit } }
+end
+
+lemma unroll_b (x : α) (v : β)
+  (h : f fix x ~> v)
+: fix x ~> v :=
+begin
+  cases h with i h,
+  unfold yields, existsi (succ i),
+  unfold run_to fix nonterm.run fix_aux,
+  apply nonterm.consistent _ i,
+  { apply le_succ },
+  revert h, apply f_monotonic,
+  exact ⟨ () ⟩,
+  intros x j v,
+  unfold run_to fix nonterm.run,
+  induction j with j,
+  { intro h,
+    induction i with i,
+    { apply h },
+    unfold fix_aux, admit },
+  admit,
+end
 
 end fix
 
 end nonterm
 
-instance : monad nonterm :=
-{ pure := @nonterm.pure
-, bind := @nonterm.bind
-, bind_assoc := @nonterm.bind_assoc
-, pure_bind := @nonterm.pure_bind
-, id_map := @nonterm.id_map }
+section monotonic
+
+parameters {α : Type u} {β γ φ : Type v}
+open nonterm
+
+section
+
+parameters f' : (α → nonterm β) → α → nonterm β
+parameters g' : (α → nonterm β) → α → β → nonterm β
+parameters Hf' : monotonic (λ rec x, f' rec x)
+parameters Hg' : ∀ y, monotonic (λ rec x, g' rec x y)
+include Hf' Hg'
+
+lemma bind_monotonic
+: monotonic (λ rec x, f' rec x >>= g' rec x) :=
+begin
+  intros i₀ i y v1 v2 Hlt x,
+  simp [has_mono.run_to,nonterm.run_to_bind],
+  apply exists_imp_exists,
+  intros v',
+  apply and.imp,
+  { apply Hf' ⟨ () ⟩, apply Hlt },
+  { apply Hg' _ ⟨ () ⟩, apply Hlt }
+end
+end
+
+section
+
+parameters {m : Type v → Type w}
+parameters f  : α → m γ
+parameters hf : has_mono m
+include hf
+
+lemma pure_monotonic
+: monotonic (λ rec, f) :=
+by { introv Hlt x H, apply H }
+
+end
+section
+
+parameters f  : α → nonterm γ
+parameters g  : (α → nonterm β) → α → γ → nonterm β
+parameters Hg  : ∀ y, monotonic (λ rec x, g rec x y)
+
+include Hg
+
+lemma bind_monotonic'
+: monotonic (λ rec x, f x >>= g rec x) :=
+begin
+  intros i₀ i y v1 v2 Hlt x,
+  simp [has_mono.run_to,nonterm.run_to_bind],
+  apply exists_imp_exists,
+  intros v',
+  apply and.imp_right,
+  apply Hg _ ⟨ () ⟩, apply Hlt
+end
+end
+
+parameter {m : Type v → Type u}
+parameter [has_mono m]
+
+section
+
+parameters {f' : α → α}
+
+lemma rec_monotonic
+: monotonic (λ rec x, (rec (f' x) : nonterm β)) :=
+begin
+  intros i₀ i y v1 v2 Hlt x,
+  apply run_to_imp_run_to_of_le, apply Hlt
+end
+end
+
+section
+
+parameter {p : α → Prop}
+parameter [decidable_pred p]
+parameter {t : (α → m β) → α → m β}
+parameter {f : (α → m β) → α → m β}
+
+open plift
+
+parameter Ht : monotonic t
+parameter Hf : monotonic f
+include Ht Hf
+
+lemma ite_monotonic
+: monotonic (λ (rec : α → m β) x, ite (p x) (t rec x) (f rec x)) :=
+begin
+  intros i₀ i y v1 v2 Hlt x,
+  simp,
+  by_cases p x with h,
+  { simp [if_pos h], apply Ht, apply Hlt },
+  { simp [if_neg h], apply Hf, apply Hlt },
+end
+
+end
+
+end monotonic
+
+class has_fix (m : Type u → Type v) extends has_mono m :=
+  (mfix : ∀ {α β} (f : (α → m β) → α → m β), monotonic f → α → m β)
+  (pre_fixpoint : ∀ {α β} (f : (α → m β) → α → m β) (h : monotonic f) (x : α),
+      mfix f h x ≤ f (mfix f h) x)
+  (bind_monotonic :
+   ∀ {α β} (f' : (α → m β) → α → m β)
+           (g' : (α → m β) → α → β → m β),
+     monotonic (λ rec x, f' rec x) →
+     (∀ y, monotonic (λ rec x, g' rec x y)) →
+     monotonic (λ rec x, f' rec x >>= g' rec x))
+  (bind_monotonic' :
+   ∀ {α β γ} (f : α → m γ)
+             (g : (α → m β) → α → γ → m β),
+     (∀ y, monotonic (λ rec x, g rec x y)) →
+     monotonic (λ rec x, f x >>= g rec x))
+
+instance : has_fix nonterm :=
+  { to_has_mono := by apply_instance
+  , mfix := @nonterm.fix
+  , pre_fixpoint := @nonterm.unroll_a
+  , bind_monotonic  := @bind_monotonic
+  , bind_monotonic' := @bind_monotonic' }
+
+section setoid
+
+parameter {α : Type u}
+
+def same_result (x y : nonterm α) : Prop :=
+∀ i, x ~> i ↔ y ~> i
+
+local infix ` ≺ `:50 := same_result
+
+variables {x y z : nonterm α}
+
+lemma res_refl
+: x ≺ x := by { intro, refl }
+
+lemma res_symmetry
+  (h : x ≺ y)
+: y ≺ x := by { intro, simp [h i] }
+
+lemma res_trans
+  (h₀ : x ≺ y)
+  (h₁ : y ≺ z)
+: x ≺ z := by { intro, simp [h₀ i,h₁ i] }
+
+instance : setoid (nonterm α) :=
+ { r := same_result
+ , iseqv := mk_equivalence _ @res_refl @res_symmetry @res_trans  }
+
+end setoid
+
+def partial (α : Type u) := quot (@same_result α)
+
+class monad_fix (m : Type u → Type v) extends has_fix m :=
+  (unroll_mfix : ∀ {α β} (f : (α → m β) → α → m β) (h : monotonic f) (x : α),
+      f (mfix f h) x = mfix f h x)

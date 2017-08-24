@@ -3,13 +3,13 @@ import util.data.option
 import util.data.nat
 import util.logic
 
-universes u v w
+universes u u' v w
 
 structure nonterm (α : Type u) :=
   (run : ℕ → option α)
   (consistent : ∀ i j x, i ≤ j → run i = some x → run j = some x)
 
-open nat
+open nat function
 
 namespace nonterm
 
@@ -124,6 +124,7 @@ protected def le (x y : nonterm α) : Prop :=
 instance : has_le (nonterm α) :=
 ⟨ nonterm.le ⟩
 
+@[refl]
 protected lemma le_refl (x : nonterm α)
 : x ≤ x :=
 begin
@@ -131,6 +132,7 @@ begin
   intros i j H, apply H,
 end
 
+@[trans]
 protected lemma le_trans (x y z : nonterm α)
   (h₀ : x ≤ y)
   (h₁ : y ≤ z)
@@ -209,18 +211,33 @@ has_mono.le _
 
 section monotonic
 
-parameters {m : Type v → Type w}
-parameters [has_mono m]
-parameters {α : Type u}
-parameters {β : Type v}
+variable {m : Type v → Type w}
+variable [has_mono m]
+variable {α : Type u}
+variable {β : Type v}
 
-parameter f : (α → m β) → (α → m β)
+section mono1
+
+variable f : (α → m β) → (α → m β)
 
 def monotonic := ∀ n v v',
   ∀ (v1 v2 : α → m β),
     (∀ x, v1 x ≤ v2 x) →
     (∀ x, run_to (f v1 x) v n v' →
           run_to (f v2 x) v n v')
+
+end mono1
+
+variable {γ : Type u'}
+
+@[inline]
+def uncurry' (f : α → β → γ) : α × β → γ :=
+λ (x : α × β), f x.1 x.2
+
+variable f : (α → γ → m β) → α → γ → m β
+
+def monotonic2 :=
+monotonic (λ rec, uncurry' $ f $ curry rec)
 
 end monotonic
 
@@ -243,7 +260,7 @@ namespace nonterm
 
 section fix
 
-parameters {α : Type v}
+parameters {α : Type u}
 parameters {β : Type v}
 
 parameter f : (α → nonterm β) → (α → nonterm β)
@@ -350,7 +367,7 @@ parameters Hf' : monotonic (λ rec x, f' rec x)
 parameters Hg' : ∀ y, monotonic (λ rec x, g' rec x y)
 include Hf' Hg'
 
-lemma bind_monotonic
+protected lemma bind_monotonic
 : monotonic (λ rec x, f' rec x >>= g' rec x) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
@@ -383,7 +400,7 @@ parameters Hg  : ∀ y, monotonic (λ rec x, g rec x y)
 
 include Hg
 
-lemma bind_monotonic'
+protected lemma bind_monotonic'
 : monotonic (λ rec x, f x >>= g rec x) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
@@ -403,7 +420,7 @@ section
 parameters {f' : α → α}
 
 lemma rec_monotonic
-: monotonic (λ rec x, (rec (f' x) : nonterm β)) :=
+: monotonic (λ rec x, (rec (f' x) : m β)) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
   apply run_to_imp_run_to_of_le, apply Hlt
@@ -438,20 +455,38 @@ end
 end monotonic
 
 class has_fix (m : Type u → Type v) extends has_mono m :=
-  (mfix : ∀ {α β} (f : (α → m β) → α → m β), monotonic f → α → m β)
+  (mfix : ∀ {α : Type v} {β : Type u} (f : (α → m β) → α → m β), monotonic f → α → m β)
   (pre_fixpoint : ∀ {α β} (f : (α → m β) → α → m β) (h : monotonic f) (x : α),
       mfix f h x ≤ f (mfix f h) x)
   (bind_monotonic :
-   ∀ {α β} (f' : (α → m β) → α → m β)
+   ∀ {α : Type v} {β} (f' : (α → m β) → α → m β)
            (g' : (α → m β) → α → β → m β),
      monotonic (λ rec x, f' rec x) →
      (∀ y, monotonic (λ rec x, g' rec x y)) →
      monotonic (λ rec x, f' rec x >>= g' rec x))
   (bind_monotonic' :
-   ∀ {α β γ} (f : α → m γ)
+   ∀ {α : Type v} {β γ} (f : α → m γ)
              (g : (α → m β) → α → γ → m β),
      (∀ y, monotonic (λ rec x, g rec x y)) →
      monotonic (λ rec x, f x >>= g rec x))
+
+export has_fix (mfix)
+
+section monotonic
+
+variable {m : Type v → Type (max u u')}
+variable [has_fix m]
+variable {α : Type u}
+variable {β : Type v}
+variable {γ : Type u'}
+
+variable f : (α → γ → m β) → α → γ → m β
+variable h : monotonic2 f
+
+def mfix2 (x : α) (y : γ) : m β :=
+mfix (λ rec, uncurry' $ f $ curry rec) h (x, y)
+
+end monotonic
 
 instance : has_fix nonterm :=
   { to_has_mono := by apply_instance
@@ -459,6 +494,8 @@ instance : has_fix nonterm :=
   , pre_fixpoint := @nonterm.unroll_a
   , bind_monotonic  := @bind_monotonic
   , bind_monotonic' := @bind_monotonic' }
+
+export has_fix (mfix pre_fixpoint bind_monotonic bind_monotonic')
 
 section setoid
 
@@ -471,6 +508,7 @@ local infix ` ≺ `:50 := same_result
 
 variables {x y z : nonterm α}
 
+@[refl]
 lemma res_refl
 : x ≺ x := by { intro, refl }
 
@@ -478,6 +516,7 @@ lemma res_symmetry
   (h : x ≺ y)
 : y ≺ x := by { intro, simp [h i] }
 
+@[trans]
 lemma res_trans
   (h₀ : x ≺ y)
   (h₁ : y ≺ z)

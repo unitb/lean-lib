@@ -300,7 +300,7 @@ begin
       apply ih_1 i n' z _ hh hnn' } }
 end
 
-def fix (x : α) : nonterm β :=
+protected def fix (x : α) : nonterm β :=
 { run := λ i, (fix_aux i x).run i
 , consistent :=
   begin
@@ -310,7 +310,7 @@ def fix (x : α) : nonterm β :=
   end }
 
 lemma unroll_a (x : α)
-: fix x ≤ f fix x :=
+: nonterm.fix x ≤ f nonterm.fix x :=
 begin
   intros i v,
   dunfold nonterm.fix,
@@ -322,7 +322,7 @@ begin
   { unfold fix_aux,
     apply f_monotonic, exact ⟨ () ⟩,
     intros x j v hh,
-    unfold run_to fix nonterm.run,
+    dunfold run_to nonterm.fix nonterm.run,
     cases le_total i j with Hij Hji,
     { apply nonterm.consistent _ _ _ _ Hij, admit
       /- unfold fix nonterm.run, apply hh -/ },
@@ -335,13 +335,13 @@ lemma unroll_b (x : α) (v : β)
 begin
   cases h with i h,
   unfold yields, existsi (succ i),
-  unfold run_to fix nonterm.run fix_aux,
+  dunfold run_to fix nonterm.run fix_aux,
   apply nonterm.consistent _ i,
   { apply le_succ },
   revert h, apply f_monotonic,
   exact ⟨ () ⟩,
   intros x j v,
-  unfold run_to fix nonterm.run,
+  dunfold run_to fix nonterm.run,
   induction j with j,
   { intro h,
     induction i with i,
@@ -440,19 +440,64 @@ parameter Ht : monotonic t
 parameter Hf : monotonic f
 include Ht Hf
 
-lemma ite_monotonic
-: monotonic (λ (rec : α → m β) x, ite (p x) (t rec x) (f rec x)) :=
+lemma dite_monotonic
+: monotonic (λ (rec : α → m β) x, dite (p x) (λ _, t rec x) (λ _, f rec x)) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
   simp,
   by_cases p x with h,
-  { simp [if_pos h], apply Ht, apply Hlt },
-  { simp [if_neg h], apply Hf, apply Hlt },
+  { simp [dif_pos h], apply Ht, apply Hlt },
+  { simp [dif_neg h], apply Hf, apply Hlt },
+end
+
+lemma ite_monotonic
+: monotonic (λ (rec : α → m β) x, ite (p x) (t rec x) (f rec x)) :=
+begin
+  have h := dite_monotonic,
+  simp [dif_eq_if] at h,
+  apply h,
 end
 
 end
 
 end monotonic
+
+section tactic
+
+open tactic
+
+meta def parse_monotonic : expr → tactic unit
+ | `(monotonic %%f) := return ()
+ | `(monotonic2 %%f) := return ()
+ | `(auto_param %%e₀ %%e₁) := `[unfold auto_param] >> target >>= parse_monotonic
+ | _ := fail "expecting monotonic"
+
+meta def prove_monotonicity : tactic unit := do
+target >>= parse_monotonic,
+t ← target >>= instantiate_mvars,
+solve1
+( `[apply rec_monotonic]
+<|>
+  `[apply pure_monotonic]
+<|>
+  (do `[apply ite_monotonic],
+      solve1 (prove_monotonicity),
+      solve1 (prove_monotonicity))
+<|>
+  (do `[apply dite_monotonic],
+      solve1 prove_monotonicity,
+      solve1 prove_monotonicity)
+<|>
+  (do `[apply has_fix.bind_monotonic'],
+      solve1 (intro1 >> prove_monotonicity))
+<|>
+  (do `[apply has_fix.bind_monotonic],
+      solve1 prove_monotonicity,
+      solve1 (intro1 >> prove_monotonicity))
+<|>
+  fail (to_fmt "can't prove: " ++ to_fmt t))
+
+end tactic
 
 class has_fix (m : Type u → Type v) extends has_mono m :=
   (mfix : ∀ {α : Type v} {β : Type u} (f : (α → m β) → α → m β), monotonic f → α → m β)
@@ -474,6 +519,19 @@ export has_fix (mfix)
 
 section monotonic
 
+variable {m : Type v → Type u}
+variable [has_fix m]
+variable {α : Type u}
+variable {β : Type v}
+
+variable f : (α → m β) → α → m β
+
+def fix (h : monotonic f . prove_monotonicity) : α → m β :=
+mfix f h
+
+end monotonic
+section monotonic2
+
 variable {m : Type v → Type (max u u')}
 variable [has_fix m]
 variable {α : Type u}
@@ -481,12 +539,11 @@ variable {β : Type v}
 variable {γ : Type u'}
 
 variable f : (α → γ → m β) → α → γ → m β
-variable h : monotonic2 f
 
-def mfix2 (x : α) (y : γ) : m β :=
+def fix2 (h : monotonic2 f . prove_monotonicity) (x : α) (y : γ) : m β :=
 mfix (λ rec, uncurry' $ f $ curry rec) h (x, y)
 
-end monotonic
+end monotonic2
 
 instance : has_fix nonterm :=
   { to_has_mono := by apply_instance

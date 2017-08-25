@@ -517,19 +517,6 @@ class has_fix (m : Type u → Type v) extends has_mono m :=
 
 export has_fix (mfix)
 
-section monotonic
-
-variable {m : Type v → Type u}
-variable [has_fix m]
-variable {α : Type u}
-variable {β : Type v}
-
-variable f : (α → m β) → α → m β
-
-def fix (h : monotonic f . prove_monotonicity) : α → m β :=
-mfix f h
-
-end monotonic
 section monotonic2
 
 variable {m : Type v → Type (max u u')}
@@ -540,10 +527,13 @@ variable {γ : Type u'}
 
 variable f : (α → γ → m β) → α → γ → m β
 
-def fix2 (h : monotonic2 f . prove_monotonicity) (x : α) (y : γ) : m β :=
+def mfix2 (h : monotonic2 f) (x : α) (y : γ) : m β :=
 mfix (λ rec, uncurry' $ f $ curry rec) h (x, y)
 
 end monotonic2
+
+notation `fix`  f := mfix  f (by prove_monotonicity)
+notation `fix2` f := mfix2 f (by prove_monotonicity)
 
 instance : has_fix nonterm :=
   { to_has_mono := by apply_instance

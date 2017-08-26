@@ -1,4 +1,6 @@
 
+import logic.basic
+
 universe variables u u' u₀ u₁ u₂
 variables  {α : Sort u} {β : Sort u'}
 
@@ -187,45 +189,17 @@ lemma or_not_and (p q : Prop)
 : p ∨ (¬ p ∧ q) ↔ p ∨ q :=
 by simp [distrib_right_or,iff_true_intro (classical.em p)]
 
-lemma not_or_of_not_and_not {p q : Prop} : ¬ (p ∨ q) → ¬ p ∧ ¬ q :=
-begin
-  intro h,
-  split ; intro h' ; apply h,
-  { left, apply h' },
-  { right, apply h' },
-end
-
-lemma not_and_not_of_not_or {p q : Prop} : ¬ p ∧ ¬ q → ¬ (p ∨ q) :=
-begin
-  intro h, cases h with hnp hnq,
-  intro hpq,
-  cases hpq with hp hq,
-  { apply hnp hp },
-  { apply hnq hq },
-end
-
 lemma not_or_iff_not_and_not {p q : Prop} : ¬ (p ∨ q) ↔ ¬ p ∧ ¬ q :=
-⟨not_or_of_not_and_not,not_and_not_of_not_or⟩
+⟨not_and_not_of_not_or,not_or_of_not_and_not⟩
 
-lemma not_and_of_not_or_not {p q : Prop} : ¬ (p ∧ q) → ¬ p ∨ ¬ q :=
-begin
-  intros h,
-  cases classical.em p with hp hnp,
-  { apply or.inr, intro hq, apply h, exact ⟨hp,hq⟩ },
-  { apply or.inl hnp, }
-end
+namespace classical
 
-lemma not_or_not_of_not_and {p q : Prop} : ¬ p ∨ ¬ q → ¬ (p ∧ q) :=
-begin
-  intro h,
-  cases h with hnp hnq
-  ; intro hpq ; cases hpq with hp hq,
-  { apply hnp hp },
-  { apply hnq hq },
-end
+local attribute [instance] prop_decidable
 
 lemma not_and_iff_not_or_not {p q : Prop} : ¬ (p ∧ q) ↔ ¬ p ∨ ¬ q :=
-⟨not_and_of_not_or_not,not_or_not_of_not_and⟩
+⟨not_or_not_of_not_and,not_and_of_not_or_not⟩
+
+end classical
 
 lemma not_not_iff_self {p : Prop} : ¬ ¬ p ↔ p :=
 begin

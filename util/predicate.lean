@@ -317,7 +317,7 @@ lemma p_not_p_and (p q : pred' β)
 : - (p && q) = -p || -q :=
 begin
   apply funext, intro x,
-  simp [not_and_iff_not_or_not],
+  simp [classical.not_and_iff_not_or_not],
 end
 
 lemma p_not_p_or (p q : pred' β)
@@ -530,11 +530,6 @@ begin
   apply funext, intro i,
   rw ← iff_eq_eq,
   simp,
-  split
-  ; intro h
-  ; cases h with x y
-  ; cases y with y h
-  ; exact ⟨y,x,h⟩,
 end
 
 lemma p_and_over_p_exists_left {t} (p : pred' β) (q : t → pred' β)

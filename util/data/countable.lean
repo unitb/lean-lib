@@ -36,7 +36,7 @@ infix ` ⊑ `:70 := is_suffix
 
 instance {α} : has_le (stream α) := { le := is_suffix }
 
-section weak_order
+section partial_order
 
 variable {α : Type}
 variables s s₀ s₁ s₂ : stream α
@@ -58,7 +58,7 @@ begin
   rw [← stream.drop_drop,← h₁,h₀],
 end
 
-end weak_order
+end partial_order
 
 theorem head_rounds : ∀ i j, stream.head (rounds i j) = j :=
 begin

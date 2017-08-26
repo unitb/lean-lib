@@ -4,7 +4,7 @@ universe variables u
 section
 
 parameters {α : Type u}
-parameters [weak_order α]
+parameters [partial_order α]
 parameters x y : α
 
 lemma indirect_eq_left_iff

@@ -14,18 +14,6 @@ lemma ne_empty_of_exists_mem {α} {s : set α}
 : s ≠ ∅ :=
 exists.elim h (@ne_empty_of_mem _ s)
 
-lemma exists_mem_of_ne_empty {α} {s : set α}
-  (h : s ≠ ∅)
-: ∃ x : α, x ∈ s :=
-begin
-  apply classical.by_contradiction,
-  intro h',
-  have h'' := forall_not_of_not_exists h',
-  apply h,
-  apply set.eq_empty_of_forall_not_mem,
-  apply h''
-end
-
 variables {α : Type u₀} {β : Type u₀}
 variables {s : set α}
 variables {f : α → β}

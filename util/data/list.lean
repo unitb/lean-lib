@@ -1,4 +1,6 @@
 
+import data.list
+
 namespace list
 
 universe variable u

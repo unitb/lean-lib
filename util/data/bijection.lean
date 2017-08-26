@@ -1201,11 +1201,10 @@ bijection.mk' (λ x, (x.1,x.2)) (λ x, ⟨x.1,x.2⟩)
 begin
   intros x y,
   cases x, cases y, simp,
-  split
-  ; intros H
-  ; injection H with H₀ H₁
-  ; subst fst
-  ; cases H₁ ; refl,
+  split,
+  { intros H, cases H, subst fst, subst snd },
+  { intros H, injection H with H₀ H₁,
+    cases H₁, cases H₀, split ; refl }
 end
 
 instance infinite_sigma {t : Type u₀} (T : t → Type u₁)

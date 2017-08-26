@@ -7,13 +7,13 @@ open nat
 
 universe variables u
 
-class has_minimum (α : Type u) extends weak_order α :=
+class has_minimum (α : Type u) extends partial_order α :=
   (minimum : set α → α)
   (minimum_mem : ∀ s, s ≠ ∅ → minimum s ∈ s)
   (minimum_le : ∀ s x, x ∈ s → minimum s ≤ x)
   (le_minimum_of_forall_le : ∀ s x, s ≠ ∅ → (∀ y, y ∈ s → x ≤ y) → x ≤ minimum s)
 
-class has_maximum (α : Type u) extends weak_order α :=
+class has_maximum (α : Type u) extends partial_order α :=
   (maximum : set α → α)
   (maximum_mem : ∀ s, s ≠ ∅ → maximum s ∈ s)
   (maximum_ge : ∀ s x, x ∈ s → x ≤ maximum s)
@@ -75,7 +75,7 @@ end minimum
 section has_minimum
 
 parameters {α : Type u}
-parameters [weak_order α]
+parameters [partial_order α]
 parameters minimum : set α → α
 local notation `↓` binders ` | ` r:(scoped P, has_minimum.minimum P) := r
 parameters minimum_mem : ∀ (s : set α), s ≠ ∅ → minimum s ∈ s
@@ -114,7 +114,7 @@ end
 end lemmas
 
 def has_minimum_of_le_minimum_iff : has_minimum α :=
-{ (_ : weak_order α) with
+{ (_ : partial_order α) with
   minimum := minimum
 , minimum_mem := @minimum_mem
 , minimum_le := @minimum_le

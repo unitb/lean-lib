@@ -1,4 +1,6 @@
 
+import data.list
+
 import util.data.fin
 import util.data.order
 
@@ -155,11 +157,9 @@ begin
   unfold fin.sum fin.foldl,
   simp [array.foldl_eq,array.rev_list_eq_cons],
   unfold array.read array.data array.pop,
-  rw list.append_foldr,
-  unfold list.foldr,
   symmetry,
-  apply list.foldr_hom (has_add.add (f 0)) has_add.add has_add.add 0 _ _,
-  intros, ac_refl
+  rw list.foldr_hom (has_add.add (f 0)), simp,
+  intros, simp
 end
 
 lemma fin.sum_succ' {n : ℕ}

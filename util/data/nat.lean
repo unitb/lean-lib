@@ -1,4 +1,6 @@
 
+import data.num.lemmas
+
 namespace nat
 
 lemma eq_zero_of_le {n : ℕ}
@@ -213,7 +215,7 @@ begin
   { simp at h, cases not_lt_zero _ h },
   { cases (lt_or_ge x n) with h' h',
     { rw [div_eq_of_lt h'], apply zero_lt_succ },
-    { rw [div_eq_sub_div hn h',nat.add_one_eq_succ],
+    { rw [div_eq_sub_div hn h',nat.add_one],
       apply succ_lt_succ,
       apply ih_1,
       apply @nat.lt_of_add_lt_add_left n,
@@ -230,7 +232,7 @@ begin
   induction y with y,
   { simp [div_eq_of_lt h] },
   { rw [mul_succ,div_eq_sub_div h₀],
-    { simp [nat.add_sub_cancel_left,add_one_eq_succ],
+    { simp [nat.add_sub_cancel_left,add_one],
       apply congr_arg,
       apply eq.trans _ ih_1,
       simp },

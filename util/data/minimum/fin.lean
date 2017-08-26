@@ -84,7 +84,7 @@ end fin
 local attribute [instance] classical.prop_decidable
 
 noncomputable instance {n} : has_minimum (fin $ succ n) :=
-{ (_ : weak_order (fin $ succ n)) with
+{ (_ : partial_order (fin $ succ n)) with
   minimum := λ s, fin.minimum s
 , minimum_le := λ s x h, fin.minimum_le s h
 , le_minimum_of_forall_le := λ s, fin.le_minimum_of_forall_le s

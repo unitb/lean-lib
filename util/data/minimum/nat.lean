@@ -172,7 +172,7 @@ end nat
 local attribute [instance] classical.prop_decidable
 
 noncomputable instance : has_minimum ℕ :=
-{ (_ : weak_order ℕ) with
+{ (_ : partial_order ℕ) with
   minimum := λ s, nat.minimum s
 , minimum_le := λ s, nat.minimum_le s
 , le_minimum_of_forall_le := λ s, nat.le_minimum_of_forall_le s

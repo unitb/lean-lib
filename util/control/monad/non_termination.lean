@@ -161,7 +161,7 @@ begin
     apply h₁, apply h₂ },
 end
 
-instance : weak_order (nonterm α) :=
+instance : partial_order (nonterm α) :=
 { le := nonterm.le
 , le_refl := nonterm.le_refl
 , le_trans := nonterm.le_trans
@@ -197,7 +197,7 @@ end nonterm
 
 class has_mono (m : Type u → Type v)
 extends monad m :=
-  (le : ∀ {α}, weak_order (m α))
+  (le : ∀ {α}, partial_order (m α))
   (input_t  : Type v)
   (result_t : Type u → Type v)
   (run_to : ∀ {α}, m α → ℕ → input_t → result_t α → Prop)
@@ -206,7 +206,7 @@ extends monad m :=
 
 export has_mono (run_to input_t result_t run_to_imp_run_to_of_le)
 
-instance fix_weak_order {m α} [has_mono m] : weak_order (m α) :=
+instance fix_partial_order {m α} [has_mono m] : partial_order (m α) :=
 has_mono.le _
 
 section monotonic

@@ -21,17 +21,12 @@ inhabited.mk ⟨n,lt_succ_self _⟩
 
 instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
   { le := has_le.le
-  , lt := has_lt.lt
   , le_refl  := assume x, by simp [fin.le_def]
   , le_trans := assume x y z, by { simp [fin.le_def], apply le_trans }
   , le_antisymm := assume x y, by { simp [fin.le_def,fin.veq_def], apply le_antisymm }
   , le_total := assume x y, by { simp [fin.le_def], apply le_total }
-  , le_iff_lt_or_eq := assume x y,
-         by { rw [fin.le_def,fin.lt_def,fin.veq_def], apply le_iff_lt_or_eq }
-  , lt_irrefl := assume x, by { simp [fin.lt_def], apply lt_irrefl }
   , decidable_eq := fin.decidable_eq _
-  , decidable_le := fin.decidable_le
-  , decidable_lt := fin.decidable_lt }
+  , decidable_le := fin.decidable_le }
 
 lemma fin.zero_def (n : ℕ)
 : (0 : fin (succ n)).val = 0 :=

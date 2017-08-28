@@ -3,9 +3,9 @@ import data.list
 
 namespace list
 
-universe variable u
+universes u v
 
-variables {α : Type u}
+variables {α : Type u} {β : Type v}
 variables x : α
 variables xs ys : list α
 
@@ -92,6 +92,25 @@ begin
 end
 
 -- def maximum
+
+section
+
+variable {f : β → α → β}
+variable x₀ : β
+
+lemma foldl_eq_foldr'
+: foldl f x₀ xs = foldr (flip f) x₀ (reverse xs) :=
+begin
+  revert x₀,
+  induction xs
+  ; intros x₀,
+  case nil
+  { refl },
+  case cons x xs
+  { simp [flip,ih_1], }
+end
+
+end
 
 section
 

@@ -297,12 +297,13 @@ begin
   unfold fin.shift fin.max, simp [fin.val_shift_zero],
 end
 
+lemma fin.val_of_nat_eq_mod (m n : ℕ)
+: (@fin.of_nat m n).val = n % succ m :=
+by refl
+
 lemma fin.val_of_nat {m n : ℕ} (h : n < nat.succ m)
 : (@fin.of_nat m n).val = n :=
-begin
-  unfold fin.of_nat fin.val,
-  rw mod_eq_of_lt h
-end
+by rw [fin.val_of_nat_eq_mod,mod_eq_of_lt h]
 
 def fin.foldl {n : ℕ}
   (f : α → β → β) (x : β) (a : fin n → α) : β :=

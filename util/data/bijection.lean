@@ -3,6 +3,8 @@ import util.data.array
 import util.data.nat
 import util.data.sigma
 
+import data.prod
+
 universe variables u₀ u₁ u₂ u₃ u₄
 
 section bijection
@@ -123,9 +125,6 @@ def bij.sum.swap : bijection (α ⊕ β) (β ⊕ α) :=
    bijection.mk sum.swap sum.swap
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
    (by intro x ; cases x with x x ; unfold sum.swap ; refl)
-
-def prod.swap : α × β → β × α
-  | (x,y) := (y,x)
 
 def bij.prod.swap : bijection (α × β) (β × α) :=
    bijection.mk prod.swap prod.swap

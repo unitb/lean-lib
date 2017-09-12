@@ -361,7 +361,6 @@ lemma p_exists_p_imp {t} (p : t → pred' β) (q : pred' β) :
 begin
   apply funext, intro,
   simp,
-  rw exists_imp_iff_forall_imp,
 end
 
 lemma p_or_comm (p q : pred' β) : p || q = q || p :=
@@ -379,13 +378,6 @@ begin apply funext, intro x, simp end
 lemma p_and_p_imp (p q r : pred' β) : p && q ⟶ r = p ⟶ (q ⟶ r) :=
 begin
   apply funext, intro x, simp,
-  rw ← iff_eq_eq,
-  split
-  ; intros h h' ; intros
-  ; apply h
-  ; try { split }
-  ; try { cases h' }
-  ; assumption
 end
 
 @[simp]
@@ -545,14 +537,8 @@ lemma shunting (p q r : pred' β)
 begin
   apply funext, intro i,
   simp, rw ← iff_eq_eq,
-  split ; intros h₀ h₁,
-  { cases h₁ with h₁ h₂,
-    cases h₀ h₁ with h₃ h₃,
-    { cases h₂ h₃ },
-    { apply h₃ } },
-  { cases classical.em (q i) with h₂ h₂,
-    { left, apply h₂ },
-    { right, apply h₀, exact ⟨h₁,h₂⟩ } }
+  split ; intros h₀ h₁ ;
+  begin [smt] by_cases q i end,
 end
 
 lemma p_not_p_imp (p q : pred' β)
@@ -596,7 +582,7 @@ lemma p_exists_entails_p_exists {t : Type u'} (p q : t → pred' β)
 : (∀ x, p x ⟹ q x) → (∃∃ x, p x) ⟹ (∃∃ x, q x) :=
 begin
   intros h i,
-  simp,
+  simp [- exists_imp_distrib],
   apply exists_imp_exists,
   intro,
   apply h

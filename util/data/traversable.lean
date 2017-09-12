@@ -117,7 +117,8 @@ begin
   have H := @traversable.map_traverse t _ G _ α β γ (map up ∘ g) f x,
   rw [← down_map,functor.map_comp],
   simp [H],
-  tactic.congr,
+  apply congr_arg,
+  apply congr_fun,
   apply  funext, intro,
   simp [function.comp, functor.map_comp_rev,map],
 end
@@ -156,54 +157,58 @@ calc
 
 end traversable
 
-namespace identity
+section identity
 
-open function
+open function has_map
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
 variables {α β γ : Type u}
 
-def traverse (g : α → f (ulift.{u} β)) : identity α → f (ulift.{u} (identity β))
+def identity.traverse (g : α → f (ulift.{u} β)) : identity α → f (ulift.{u} (identity β))
  | ⟨ x ⟩ := (λ x : ulift.{u} β, up ⟨ down x ⟩) <$> g x
 
-lemma traverse_mk (g : α → f (ulift.{u} β)) (x : α)
-: traverse g ⟨ x ⟩ = (up ∘ mk ∘ down) <$> (g x) :=
+instance : has_traverse identity :=
+⟨ @identity.traverse ⟩
+
+lemma identity.traverse_mk (g : α → f (ulift.{u} β)) (x : α)
+: identity.traverse g ⟨ x ⟩ = (up ∘ identity.mk ∘ down) <$> (g x) :=
 rfl
 
-lemma traverse_mk' (g : α → f (ulift.{u} β))
-: traverse g ∘ mk = has_map.map (up ∘ mk ∘ down) ∘ g :=
+lemma identity.traverse_mk' (g : α → f (ulift.{u} β))
+: identity.traverse g ∘ identity.mk = map (up ∘ identity.mk ∘ down) ∘ g :=
 rfl
 
-lemma id_traverse (x : identity α)
-: traverse (identity.mk ∘ up) x = identity.mk (up.{u} x) :=
-by { cases x, unfold traverse, refl }
+lemma identity.id_traverse (x : identity α)
+: identity.traverse (identity.mk ∘ up) x = identity.mk (up.{u} x) :=
+by { cases x, unfold identity.traverse, refl }
 
-lemma traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ)) : ∀ (x : identity α),
-        traverse (compose.mk ∘ has_map.map (h ∘ down) ∘ g) x =
-        compose.mk ((traverse h ∘ down) <$> traverse g x)
+lemma identity.traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ))
+: ∀ (x : identity α),
+        identity.traverse (compose.mk ∘ map (h ∘ down) ∘ g) x =
+        compose.mk ((identity.traverse h ∘ down) <$> identity.traverse g x)
   | ⟨ x ⟩ :=
 begin
-  unfold traverse comp,
+  unfold identity.traverse comp,
   rw [compose.fmap_mk],
   apply congr_arg,
   rw [← functor.map_comp,← functor.map_comp],
   refl,
 end
 
-lemma map_traverse
+lemma identity.map_traverse
    (g : α → f' (ulift.{u} β)) (f : β → γ)
    (x : identity α)
-: has_map.map (map f) <$> traverse g x = traverse (has_map.map (has_map.map f) ∘ g) x :=
+: map (map f) <$> identity.traverse g x = identity.traverse (map (map f) ∘ g) x :=
 sorry
 
 variable {eta : ∀ {α}, f α → f' α}
 variable morph : applicative_morphism @eta
 include morph
 
-lemma morphism {α β : Type u}
+lemma identity.morphism {α β : Type u}
   (F : α → f (ulift.{u} β)) (x : identity α)
-: eta (traverse F x) = traverse (eta ∘ F) x :=
+: eta (identity.traverse F x) = identity.traverse (eta ∘ F) x :=
 sorry
 
 end identity
@@ -216,59 +221,59 @@ instance : traversable identity :=
 , map_traverse := @identity.map_traverse
 , morphism := @identity.morphism }
 
-namespace option
+section option
 
-open function
+open function has_map
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
 variables {α β γ : Type u}
 
-def traverse (g : α → f (ulift.{u} β)) : option α → f (ulift.{u} (option β))
+def option.traverse (g : α → f (ulift.{u} β)) : option α → f (ulift.{u} (option β))
  | none := pure (up none)
- | (some x) := (map some) <$> g x
+ | (some x) := map some <$> g x
 
-lemma traverse_mk (g : α → f (ulift.{u} β)) (x : α)
-: traverse g (some x) = map some <$> (g x) :=
+lemma option.traverse_mk (g : α → f (ulift.{u} β)) (x : α)
+: option.traverse g (some x) = map some <$> (g x) :=
 rfl
 
-lemma traverse_mk' (g : α → f (ulift.{u} β))
-: traverse g ∘ some = has_map.map (map some) ∘ g :=
+lemma option.traverse_mk' (g : α → f (ulift.{u} β))
+: option.traverse g ∘ some = map (map some) ∘ g :=
 rfl
 
-lemma id_traverse (x : option α)
-: traverse (identity.mk ∘ up) x = ⟨ up x ⟩ :=
-by { cases x ; unfold traverse ; refl }
+lemma option.id_traverse (x : option α)
+: option.traverse (identity.mk ∘ up) x = ⟨ up x ⟩ :=
+by { cases x ; unfold option.traverse ; refl }
 
-lemma traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ))
+lemma option.traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ))
 : ∀ (x : option α),
-        traverse (compose.mk ∘ has_map.map (h ∘ down) ∘ g) x =
-        compose.mk ((traverse h ∘ down) <$> traverse g x)
+        option.traverse (compose.mk ∘ map (h ∘ down) ∘ g) x =
+        compose.mk ((option.traverse h ∘ down) <$> option.traverse g x)
   | none :=
 begin
-  unfold traverse, rw applicative.map_pure,
+  unfold option.traverse, rw applicative.map_pure,
   refl,
 end
   | (some x) :=
 begin
-  unfold traverse comp,
+  unfold option.traverse comp,
   rw [compose.fmap_mk],
   apply congr_arg,
   rw [← functor.map_comp,← functor.map_comp],
   refl
 end
 
-lemma map_traverse (g : α -> f' (ulift.{u} β)) (f : β → γ)
+lemma option.map_traverse (g : α -> f' (ulift.{u} β)) (f : β → γ)
   (x : option α)
-: map (map f) <$> traverse g x = traverse (map (map f) ∘ g) x :=
-by { cases x ; simp [traverse,comp,functor.map_comp_rev,applicative.map_pure] ; refl }
+: map (map f) <$> option.traverse g x = option.traverse (map (map f) ∘ g) x :=
+by { cases x ; simp [option.traverse,comp,functor.map_comp_rev,applicative.map_pure] ; refl }
 
 variable {eta : Π {α : Type u}, f α → f' α}
 variable morph : applicative_morphism @eta
 include morph
 
-lemma morphism {α β : Type u} (g : α → f (ulift.{u} β)) (x : option α)
-: eta (traverse g x) = traverse (eta ∘ g) x :=
+lemma option.morphism {α β : Type u} (g : α → f (ulift.{u} β)) (x : option α)
+: eta (option.traverse g x) = option.traverse (eta ∘ g) x :=
 sorry
 
 end option
@@ -281,28 +286,30 @@ instance : traversable option :=
 , map_traverse := @option.map_traverse
 , morphism := @option.morphism }
 
-namespace list
+section list
 
 variables {f f' : Type u → Type u}
 variables [applicative f] [applicative f']
 variables {α β γ : Type u}
 
-open applicative
+open applicative has_map
+open list (cons)
 
-def traverse (g : α → f (ulift.{u} β)) : list α → f (ulift.{u} (list β))
+def list.traverse (g : α → f (ulift.{u} β)) : list α → f (ulift.{u} (list β))
  | [] := pure $ up []
- | (x :: xs) := lift₂ cons <$> g x <*> traverse xs
+ | (x :: xs) := lift₂ cons <$> g x <*> list.traverse xs
 
-lemma traverse_cons
+lemma list.traverse_cons
   (g : α → f (ulift.{u} β))
   (x : f' (ulift.{u} α))
   (xs : f' (ulift.{u} (list α)))
-: has_map.map (traverse g) <$> (lift₂ cons <$> x <*> xs) =
-  lift₂ (lift₂ (lift₂ cons)) <$> (has_map.map g <$> x) <*> (has_map.map (traverse g) <$> xs) :=
+: map (list.traverse g) <$> (lift₂ cons <$> x <*> xs) =
+  lift₂ (lift₂ (lift₂ cons)) <$> (map g <$> x) <*> (map (list.traverse g) <$> xs) :=
 begin
   rw [applicative.map_seq_assoc,← functor.map_comp],
-  have H : (comp (has_map.map (traverse g)) ∘ lift₂ cons) =
-           (lift₂ (λ x xs, lift₂ cons <$> g x <*> traverse g xs) : ulift _ → ulift _ → ulift _),
+  have H : (comp (map (list.traverse g)) ∘ lift₂ cons) =
+           (lift₂ (λ x xs, lift₂ cons <$> g x <*> list.traverse g xs)
+             : ulift _ → ulift _ → ulift _),
   { apply funext, intro x,
     apply funext, intro xs,
     refl },
@@ -310,56 +317,54 @@ begin
   refl
 end
 
-lemma id_traverse (xs : list α)
-: traverse (identity.mk ∘ up) xs = ⟨ up xs ⟩ :=
+lemma list.id_traverse (xs : list α)
+: list.traverse (identity.mk ∘ up) xs = ⟨ up xs ⟩ :=
 begin
-  induction xs with x xs IH ; unfold traverse,
+  induction xs with x xs IH ; unfold list.traverse,
   { refl },
   { simp [IH,identity.fmap_mk,identity.seq_mk,lift₂], refl },
 end
 
-lemma traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ))
+lemma list.traverse_comp (g : α → f (ulift.{u} β)) (h : β → f' (ulift.{u} γ))
 : ∀ (x : list α),
-        traverse (compose.mk ∘ has_map.map (h ∘ down) ∘ g) x =
-        compose.mk ((traverse h ∘ down) <$> traverse g x)
+        list.traverse (compose.mk ∘ map (h ∘ down) ∘ g) x =
+        compose.mk ((list.traverse h ∘ down) <$> list.traverse g x)
   | [] :=
 begin
-  unfold traverse, rw applicative.map_pure,
+  unfold list.traverse, rw applicative.map_pure,
   simp [function.comp,traverse,up_down],
   refl
 end
   | (x :: xs) :=
 begin
-  unfold traverse comp,
-  rw [compose.fmap_mk,traverse_comp,compose.seq_mk],
+  unfold list.traverse comp,
+  rw [compose.fmap_mk,list.traverse_comp,compose.seq_mk],
   apply congr_arg,
   rw [functor.map_comp_rev],
   admit
 end
 
-lemma map_traverse {α β γ : Type u} (g : α → f' (ulift.{u} β)) (f : β → γ)
+lemma list.map_traverse {α β γ : Type u} (g : α → f' (ulift.{u} β)) (f : β → γ)
   (x : list α)
-: has_map.map (map f) <$> traverse g x = traverse (has_map.map (has_map.map f) ∘ g) x :=
+: map (map f) <$> list.traverse g x = list.traverse (map (map f) ∘ g) x :=
 begin
   induction x with x xs ih,
-  { simp [traverse,map_pure,comp,has_map.map] },
-  { simp [traverse], rw ← ih, admit }
+  { simp [list.traverse,map_pure,comp,map] },
+  { simp [list.traverse], rw ← ih, admit }
 end
 
 variable {eta : Π {α : Type u}, f α → f' α}
 variable morph : applicative_morphism @eta
 include morph
 
-lemma morphism {α β : Type u} (g : α → f (ulift.{u} β)) (x : list α)
+lemma list.morphism {α β : Type u} (g : α → f (ulift.{u} β)) (x : list α)
 : eta (list.traverse g x) = list.traverse (eta ∘ g) x :=
 sorry
 
 end list
 
 instance : traversable list :=
-{ map := @list.map
-, id_map := @list.map_id
-, map_comp := by { introv, simp }
+{ to_functor := _
 , traverse' := @list.traverse
 , id_traverse := @list.id_traverse
 , traverse_comp := @list.traverse_comp

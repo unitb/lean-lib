@@ -37,8 +37,8 @@ protected def bind (x : nonterm α) (f : α → nonterm β) : nonterm β :=
     destruct x.run i,
     { intro h₂, rw h₂ at h', contradiction },
     { intros z h₂,
-      simp [h₂,bind,option_bind] at h',
-      simp [x.consistent _ _ _ h h₂,bind,option_bind],
+      simp [h₂,bind,option.bind] at h',
+      simp [x.consistent _ _ _ h h₂,bind,option.bind],
       apply (f z).consistent _ _ _ h h' }
   end }
 
@@ -63,7 +63,7 @@ end
 lemma pure_bind (x : α) (f : α → nonterm β)
 : pure x >>= f = f x :=
 begin
-  unfold pure bind nonterm.bind has_pure.pure nonterm.pure nonterm.run option_bind,
+  unfold pure bind nonterm.bind has_pure.pure nonterm.pure nonterm.run option.bind,
   destruct (f x),
   introv h, simp [h],
 end
@@ -76,8 +76,8 @@ begin
   tactic.congr,
   apply funext, intro i,
   destruct (run i),
-  { intro h, simp [h,option_bind], },
-  { intros x h, simp [h,option_bind] }
+  { intro h, simp [h,option.bind], },
+  { intros x h, simp [h,option.bind] }
 end
 
 def diverge : nonterm α :=
@@ -371,7 +371,7 @@ protected lemma bind_monotonic
 : monotonic (λ rec x, f' rec x >>= g' rec x) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
-  simp [has_mono.run_to,nonterm.run_to_bind],
+  simp only [has_mono.run_to,nonterm.run_to_bind],
   apply exists_imp_exists,
   intros v',
   apply and.imp,
@@ -404,7 +404,7 @@ protected lemma bind_monotonic'
 : monotonic (λ rec x, f x >>= g rec x) :=
 begin
   intros i₀ i y v1 v2 Hlt x,
-  simp [has_mono.run_to,nonterm.run_to_bind],
+  simp only [has_mono.run_to,nonterm.run_to_bind],
   apply exists_imp_exists,
   intros v',
   apply and.imp_right,

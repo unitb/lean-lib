@@ -144,7 +144,7 @@ begin
   { unfold solutions,
     apply classical.some_spec',
     simp,
-    intro, apply and.right, },
+    introv h h', apply h', },
   case succ j
   { unfold solutions,
     apply classical.some_spec',

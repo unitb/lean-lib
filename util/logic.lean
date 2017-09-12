@@ -85,26 +85,6 @@ begin
     apply H _ H', },
 end
 
-lemma exists_swap
-  (P : α → β → Prop)
-: (∃ x y, P x y) ↔ (∃ y x, P x y) :=
-begin
-  split
-  ; intros H
-  ; cases H with x H
-  ; cases H with y H
-  ; exact ⟨_,_,H⟩
-end
-
-lemma forall_swap
-  (P : α → β → Prop)
-: (∀ x y, P x y) ↔ (∀ y x, P x y) :=
-begin
-  split
-  ; intros H x y
-  ; apply H
-end
-
 lemma and_exists
    (P : Prop)
    (Q : α → Prop)
@@ -121,18 +101,10 @@ lemma exists_and
    (P : α → Prop)
    (Q : Prop)
 : (∃ x, P x) ∧ Q ↔ (∃ x, P x ∧ Q) :=
-by simp [and_exists]
+by { rw [and_comm,and_exists], simp }
 
 lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
 by refl
-
-lemma and.imp_left {p p' q : Prop}
-  (hp : p → p')
-: p ∧ q → p' ∧ q := and.imp hp id
-
-lemma and.imp_right {p q q' : Prop}
-  (hp : q → q')
-: p ∧ q → p ∧ q' := and.imp id hp
 
 lemma imp_mono {p p' q q' : Prop}
    (hp : p' → p)
@@ -190,14 +162,14 @@ lemma or_not_and (p q : Prop)
 by simp [distrib_right_or,iff_true_intro (classical.em p)]
 
 lemma not_or_iff_not_and_not {p q : Prop} : ¬ (p ∨ q) ↔ ¬ p ∧ ¬ q :=
-⟨not_and_not_of_not_or,not_or_of_not_and_not⟩
+not_or_distrib
 
 namespace classical
 
 local attribute [instance] prop_decidable
 
 lemma not_and_iff_not_or_not {p q : Prop} : ¬ (p ∧ q) ↔ ¬ p ∨ ¬ q :=
-⟨not_or_not_of_not_and,not_and_of_not_or_not⟩
+not_and_distrib
 
 end classical
 
@@ -324,13 +296,9 @@ begin
   { rw [eq_false_intro hnp,false_or,not_false_iff,true_imp], }
 end
 
-lemma imp_iff_not_or (p q : Prop)
-: p → q ↔ ¬ p ∨ q :=
-by rw [or_iff_not_imp,not_not_iff_self]
-
 lemma not_imp_iff_and_not (p q : Prop)
 : ¬ (p → q) ↔ p ∧ ¬ q :=
-by rw [imp_iff_not_or,not_or_iff_not_and_not,not_not_iff_self]
+by { apply @not_imp _ _ _, apply classical.prop_decidable }
 
 lemma exists_one_point_right (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)

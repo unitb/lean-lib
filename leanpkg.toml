@@ -1,6 +1,7 @@
 [package]
 name = "lean-lib"
 version = "0.1"
+lean_version = "master"
 
 [dependencies]
-mathlib = {git = "https://github.com/leanprover/mathlib", rev = "7c72de2be1a07dcd00d343d720162c105d48107b"}
+mathlib = {git = "https://github.com/leanprover/mathlib", rev = "bf58bf4451f26b88c776586865e6840cd1495f64"}

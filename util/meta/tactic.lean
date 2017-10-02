@@ -38,4 +38,40 @@ meta def funext : parse ident_ * → tactic unit
  | [] := return ()
  | (x :: xs) := funext1 x >> funext xs
 
+open list
+
+meta def clear_except (xs : parse ident *) : tactic unit :=
+do r  ← list.mmap get_local xs >>= revert_lst,
+   local_context >>= mmap (try ∘ tactic.clear),
+   intron r
+
+section
+variables x y z : ℕ
+include x y z
+example : ℕ :=
+begin
+  clear_except x,
+  (do xs ← tactic.local_context, x ← get_local `x, assert (xs = [x]), return ()),
+  exact x
+end
+
+end
+
 end tactic.interactive
+
+universes u v
+
+variables {α β : Type u}
+variables {γ : Type v}
+
+variables (f : α → γ) (g : β → γ)
+variables h₀ : α = β
+variables h₁ : ∀ (x : α) (y : β), x == y → f x = g y
+include h₀ h₁
+lemma hfunext : f == g :=
+begin
+  subst β,
+  apply heq_of_eq,
+  funext i, apply h₁,
+  refl,
+end

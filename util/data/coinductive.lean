@@ -1,6 +1,8 @@
 import util.meta.tactic
 import util.logic
 
+import data.stream
+
 universes u v w
 
 open nat function
@@ -21,20 +23,20 @@ inductive cofix' : ℕ → Type (max u v)
 
 variables {β}
 
-def index' : Π {n}, cofix' β (succ n) → α
+def head' : Π {n}, cofix' β (succ n) → α
  | n (cofix'.intro i _) := i
 
-def children' : Π {n} (x : cofix' β (succ n)), (β (index' x) → cofix' β n)
+def children' : Π {n} (x : cofix' β (succ n)), (β (head' x) → cofix' β n)
  | n (cofix'.intro _ f) := f
 
 def agree
 : ∀ {n : ℕ}, cofix' β n → cofix' β (n+1) → Prop
  | 0 continue _ := true
  | n (cofix'.intro x y) (cofix'.intro x' y') :=
-   ∃ h : x = x', ∀ i : β x', agree (y $ cast (by rw h) i) (y' i)
+   ∃ h : x = x', ∀ i j : β _, i == j → agree (y i) (y' j)
 
 lemma agree_def {n : ℕ} (x : cofix' β (succ n)) (y : cofix' β (succ n+1))
-  (h₀ : index' x = index' y)
+  (h₀ : head' x = head' y)
   (h₁ : ∀ (i : β _) (j : β _), i == j → agree (children' x i) (children' y j))
 : agree x y :=
 begin
@@ -44,7 +46,6 @@ begin
   existsi rfl,
   unfold children' at h₁,
   intro, apply h₁,
-  apply cast_heq,
 end
 
 lemma agree_children {n : ℕ} (x : cofix' β (succ n)) (y : cofix' β (succ n+1))
@@ -58,6 +59,7 @@ begin
   cases h₁ with h h₁, subst a_2,
   unfold children',
   cases h₀, apply h₁,
+  assumption,
 end
 
 def truncate {α : Type u} {β : α → Type v}
@@ -81,10 +83,11 @@ begin
   ; cases x ; cases y,
   { intro h', refl },
   { simp [agree,truncate,exists_imp_iff_forall_imp],
-    introv h, cases x,
-    congr, funext y, unfold comp,
+    introv h₀ h₁,
+    subst a_3, congr,
+    funext y, unfold comp,
     apply ih_1,
-    apply h }
+    apply h₁, refl }
 end
 
 variables {X : Type w}
@@ -103,8 +106,8 @@ begin
   trivial,
   cases h : f i with y g,
   simp [s_corec,h,s_corec._match_1,agree] at ⊢ ih_1,
-  existsi rfl,
-  intro, rw cast_eq,
+  introv h',
+  cases h',
   apply ih_1,
 end
 
@@ -112,13 +115,13 @@ protected def corec (i : X) : cofix β :=
 { approx := s_corec f i
 , consistent := P_corec _ _ }
 
-lemma index_succ' {n} (x : cofix β)
-: index' (x.approx (succ n)) = index' (x.approx 1) :=
+lemma head_succ' (n) (x : cofix β)
+: head' (x.approx (succ n)) = head' (x.approx 1) :=
 begin
   cases x, simp,
   cases h₀ : approx (succ n) with _ i₀ f₀,
   cases h₁ : approx 1 with _ i₁ f₁,
-  simp [index'],
+  simp [head'],
   induction n with n,
   { rw h₁ at h₀, cases h₀, trivial },
   { have H := consistent (succ n),
@@ -129,16 +132,17 @@ begin
     unfold agree at H,
     cases H with h H, cases h,
     congr, funext j, unfold comp,
-    simp [truncate_eq_of_agree _ _ (H j),cast_eq], }
+    rw truncate_eq_of_agree,
+    apply H, refl }
 end
 
-def index : cofix β → α
- | ⟨ x, _ ⟩ := index' (x 1)
+def head : cofix β → α
+ | ⟨ x, _ ⟩ := head' (x 1)
 
-def children : Π (x : cofix β), (β (index x) → cofix β)
+def children : Π (x : cofix β), (β (head x) → cofix β)
  | ⟨ x, P ⟩ i :=
-have H : _, from λ n : ℕ, @index_succ' _ _ n {approx := x, consistent := P},
-{ approx := λ n, children' (x _) (cast (congr_arg _ $ by simp [index,H]) i)
+let H := λ n : ℕ, @head_succ' _ _ n {approx := x, consistent := P} in
+{ approx := λ n, children' (x _) (cast (congr_arg _ $ by simp [head,H]) i)
 , consistent :=
   begin
     intro,
@@ -150,11 +154,179 @@ have H : _, from λ n : ℕ, @index_succ' _ _ n {approx := x, consistent := P},
     apply cast_heq,
   end }
 
-protected def cases {r : Type w}
-  (f : ∀ (i : α), (β i → cofix β) → r) (x : cofix β) : r :=
-f (index x) (children x)
+protected def s_mk (x : α) (ch : β x → cofix β) : Π n, cofix' β n
+ | 0 :=  cofix'.continue _
+ | (succ n) := cofix'.intro x (λ i, (ch i).approx n)
 
-protected def cases_on {r : Type w} (x : cofix β) (f : ∀ (i : α), (β i → cofix β) → r) : r :=
+protected def P_mk  (x : α) (ch : β x → cofix β)
+: ∀ (n : ℕ), agree (coind.s_mk x ch n) (coind.s_mk x ch (n + 1))
+ | 0 := by unfold coind.s_mk
+ | (succ n) := by { unfold coind.s_mk agree,
+                    existsi rfl,
+                    introv h, cases h,
+                    apply (ch i).consistent }
+
+protected def mk (x : α) (ch : β x → cofix β) : cofix β :=
+{ approx := coind.s_mk x ch
+, consistent := coind.P_mk x ch }
+
+@[simp]
+lemma children_mk (x : α) (ch : β x → cofix β)
+: children (coind.mk x ch) = ch :=
+begin
+  funext i,
+  dsimp [coind.mk,children],
+  cases h : ch i,
+  congr,
+  funext n,
+  dsimp [coind.s_mk,children',cast_eq],
+  rw h,
+end
+
+lemma mk_head_children (x : cofix β)
+: x = coind.mk (head x) (children x) :=
+begin
+  cases x,
+  unfold coind.mk,
+  congr,
+  funext n,
+  induction n with n,
+  { unfold coind.s_mk, cases approx 0, refl },
+  unfold coind.s_mk,
+  cases h : approx (succ n) with _ hd ch,
+  simp [children],
+  congr,
+  { unfold head,
+    change approx with ({ cofix . approx := approx, consistent := consistent}).approx,
+    rw ← head_succ' n,
+    change _ = (head' $ approx (succ n)),
+    rw h, refl },
+  { change ch with children' (cofix'.intro hd ch),
+    clear ih_1,
+    apply hfunext,
+    { unfold head, rw [← h,head_succ' n ⟨approx,consistent⟩] },
+    introv h',
+    congr, rw h,
+    transitivity y, apply h',
+    symmetry, apply cast_heq, },
+end
+
+protected def cases {r : cofix β → Sort w}
+  (f : ∀ (i : α) (c : β i → cofix β), r (coind.mk i c)) (x : cofix β) : r x :=
+suffices r (coind.mk (head x) (children x)),
+  by { rw [mk_head_children x], exact this },
+f (head x) (children x)
+
+protected def cases_on {r : cofix β → Sort w}
+    (x : cofix β) (f : ∀ (i : α) (c : β i → cofix β), r (coind.mk i c)) : r x :=
 coind.cases f x
 
+@[simp]
+lemma head_mk (x : α) (ch : β x → cofix β)
+: head (coind.mk x ch) = x :=
+rfl
+
+inductive path : cofix β → list (Σ i, β i) → Type (max u v)
+ | nil (x : cofix β) : path x []
+ | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
+   : path (ch i) xs → path (coind.mk y ch) (⟨ y, i ⟩ :: xs)
+
+def select : ∀ {x : cofix β} {ps}, path x ps → cofix β
+ | ._ ._ (path.nil x) := x
+ | ._ ._ (path.child xs i ch ps) := select ps
+
+inductive nested (x : cofix β) : cofix β → list (Σ i, β i) → Prop
+ | rfl {} : nested x []
+ | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
+   : nested (ch i) xs → nested (coind.mk y ch) (⟨ y, i ⟩ :: xs)
+
+lemma ext (x y : cofix β)
+  (H : ∀ (ps) (Hx : path x ps) (Hy : path y ps), head (select Hx) = head (select Hy))
+: x = y :=
+sorry
+
+section bisim
+  variable (R : cofix β → cofix β → Prop)
+  local infix ~ := R
+
+  def is_bisimulation :=
+      ∀ ⦃s₁ s₂⦄, s₁ ~ s₂ →
+        head s₁ = head s₂ ∧
+        (∀ i j : β (head _), i == j → children s₁ i ~ children s₂ j)
+
+  theorem nth_of_bisim (bisim : is_bisimulation R) :
+     ∀ {s₁ s₂} ps (p₁ : path s₁ ps) (p₂ : path s₂ ps),
+       s₁ ~ s₂ →
+         head (select p₁) = head (select p₂) ∧
+         ∀ i j, i == j →
+                children (select p₁) i ~ children (select p₂) j :=
+  begin
+    intros _ _ _,
+    revert s₁ s₂,
+    induction ps,
+    { introv h₀,
+      have h₁ := bisim h₀,
+      cases p₁, cases p₂, simp [select],
+      apply h₁, },
+    { introv h₀,
+      cases p₁, cases p₂,
+      unfold select,
+      apply ih_1 a_2 a,
+      have h₁ := (bisim h₀).right i i heq.rfl,
+      have h₂ := @children_mk _ β,
+      dunfold coind.mk at h₂,
+      simp [h₂] at h₁, apply h₁, }
+  end
+
+  -- If two streams are bisimilar, then they are equal
+  theorem eq_of_bisim (bisim : is_bisimulation R) : ∀ {s₁ s₂}, s₁ ~ s₂ → s₁ = s₂ :=
+  begin
+    introv Hr, apply ext,
+    introv,
+    have H := nth_of_bisim R bisim ps Hx Hy Hr,
+    apply H.left
+  end
+end bisim
+
+section coinduction
+
+variables β
+def R (s₁ s₂ : cofix β) :=
+   head s₁ = head s₂ ∧
+            ∀ (γ : cofix β → Type u)
+              -- (φ : ∀ x : cofix β, γ x)
+              (φ : Π x : cofix β, Type v)
+              (γ : Π x : cofix β, φ x → Type u)
+              (fr : ∀ (x : cofix β) i, γ x i)
+              -- (I : Π x : cofix β, β (head x))
+              i j i' j',
+              i  == j →
+              i' == j' →
+              -- (fr' : ∀ x : cofix β, γ' x),
+              -- fr s₁ = fr' s₂ →
+              (∀ i₂ j₂, i₂ == j₂ → fr s₁ i₂ == fr s₂ j₂) →
+              fr (children s₁ i) i' == fr (children s₂ j) j'
+
+lemma R_is_bisimulation : is_bisimulation (R β) :=
+sorry
+
+variables {β}
+
+lemma coinduction {s₁ s₂ : cofix β}
+  (hh : head s₁ = head s₂)
+  (ht : ∀ (γ : Type u) (fr : cofix β → γ),
+          fr s₁ = fr s₂ →
+          ∀ i j, i == j →
+                 fr (children s₁ i) = fr (children s₂ j))
+: s₁ = s₂ :=
+eq_of_bisim
+  (R β) (R_is_bisimulation β)
+  (and.intro hh $
+   begin introv h₀ h₁ h₂ h₃, subst γ', cases h₁,
+         apply heq_of_eq, apply ht,
+         { apply eq_of_heq h₂ },
+         { assumption }
+   end)
+
+end coinduction
 end coind

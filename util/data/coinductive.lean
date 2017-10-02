@@ -293,19 +293,17 @@ section coinduction
 variables β
 def R (s₁ s₂ : cofix β) :=
    head s₁ = head s₂ ∧
-            ∀ (γ : cofix β → Type u)
+            ∀ -- (γ : cofix β → Type u)
               -- (φ : ∀ x : cofix β, γ x)
               (φ : Π x : cofix β, Type v)
               (γ : Π x : cofix β, φ x → Type u)
-              (fr : ∀ (x : cofix β) i, γ x i)
+              (fr : ∀ (x : cofix β) i, γ x i),
               -- (I : Π x : cofix β, β (head x))
-              i j i' j',
-              i  == j →
-              i' == j' →
-              -- (fr' : ∀ x : cofix β, γ' x),
-              -- fr s₁ = fr' s₂ →
               (∀ i₂ j₂, i₂ == j₂ → fr s₁ i₂ == fr s₂ j₂) →
-              fr (children s₁ i) i' == fr (children s₂ j) j'
+              ∀ i j i' j',
+                i  == j →
+                i' == j' →
+                fr (children s₁ i) i' == fr (children s₂ j) j'
 
 lemma R_is_bisimulation : is_bisimulation (R β) :=
 sorry
@@ -322,11 +320,7 @@ lemma coinduction {s₁ s₂ : cofix β}
 eq_of_bisim
   (R β) (R_is_bisimulation β)
   (and.intro hh $
-   begin introv h₀ h₁ h₂ h₃, subst γ', cases h₁,
-         apply heq_of_eq, apply ht,
-         { apply eq_of_heq h₂ },
-         { assumption }
-   end)
+   sorry)
 
 end coinduction
 end coind

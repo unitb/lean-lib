@@ -432,7 +432,7 @@ meta def parse_pos_num : expr → option pos_num
  | _ := none
 
 meta def parse_num : expr → option num
- | `(has_zero.zero %%t) := some num.zero
+ | `(@has_zero.zero _ %%t) := some num.zero
  | e := num.pos <$> parse_pos_num e
 
 def znum.to_pos : num → znum
@@ -512,7 +512,6 @@ solve1 pr,
 tactic.rewrite_target h,
 tactic.clear h
 
-#check congr
 meta def apply_computation_rule {α} [has_reflect α]
   (parse : expr → option α)
   (e e' : expr)

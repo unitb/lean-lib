@@ -370,37 +370,3 @@ instance : traversable list :=
 , traverse_comp := @list.traverse_comp
 , map_traverse := @list.map_traverse
 , morphism := @list.morphism }
-
-class foldable (f : Type u → Type v) : Type (max (u+1) (u'+1) v) :=
-(foldr : Π {α : Type u} {r : Type u'}, (α → r → r) → f α → r → r)
-
-def foldr' {f : Type u → Type v} [i : foldable f] {r : Type u'} {α : Type u} (g : α → r → r)
-: f α → r → r :=
-@foldable.foldr f i _ _ g
-
-def foldr {f : Type u → Type v} [i : foldable f] {r : Type u'} {α : Type u} (g : α → r → r)
-: r → f α → r :=
-flip (@foldable.foldr f i _ _ g)
-
-def to_list {f : Type u → Type v} [i : foldable f] {α : Type u} : f α → list α :=
-@foldr f i _ _ list.cons []
-
-def to_set' {f : Type u → Type v} [i : foldable f] {α : Type u} {r : Type u'}
-  [has_insert α r]
-  [has_emptyc r]
-: f α → r :=
-@foldr f i _ _ insert ∅
-
-def to_set {f : Type u → Type v} [i : foldable f] {α : Type u}
-: f α → set α :=
-@to_set' f i _ _ _ _
-
-def fold_map {f : Type u → Type v} [i : foldable f] {m : Type u'} [monoid m] {α : Type u}
-  (g : α → m)
-: f α → m :=
-@foldr f i _ _ (has_mul.mul ∘ g) 1
-
-def fold_map_add {f : Type u → Type v} [i : foldable f] {m : Type u'} [add_monoid m] {α : Type u}
-  (g : α → m)
-: f α → m :=
-@foldr f i _ _ (has_add.add ∘ g) 0

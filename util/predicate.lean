@@ -588,6 +588,25 @@ begin
   apply h
 end
 
+lemma p_exists_over_p_or {t} (p q : t → pred' β)
+: (∃∃ x, p x) || (∃∃ x, q x) = (∃∃ x, p x || q x) :=
+begin
+  apply mutual_entails,
+  apply p_or_entails_of_entails,
+  { apply p_exists_entails_p_exists,
+    intro, apply p_or_intro_left },
+  { apply p_exists_entails_p_exists,
+    intro, apply p_or_intro_right },
+  { apply p_exists_elim,
+    intro,
+    apply p_or_entails_of_entails,
+    { apply entails_p_or_of_entails_left,
+      apply p_exists_intro, },
+    { apply entails_p_or_of_entails_right,
+      apply p_exists_intro, }, }
+end
+
+
 lemma p_exists_entails_p_exists' {t : Type u₀} {t' : Type u₁}
   (p : t → pred' β)
   (q : t' → pred' β)

@@ -49,6 +49,30 @@ protected lemma run_to_bind (i : ℕ) (x : nonterm α) (f : α → nonterm β) (
 : run_to (x >>= f) i v ↔ (∃ v', run_to x i v' ∧ run_to (f v') i v) :=
 sorry
 
+protected lemma pure_yields (v : α)
+: pure v ~> v :=
+begin
+  unfold yields,
+  existsi 0,
+  unfold run_to, refl
+end
+
+protected lemma yields_bind {x : nonterm α} {f : α → nonterm β} (v' : α) (v : β)
+  (H₀ : x ~> v')
+  (H₁ : f v' ~> v)
+: (x >>= f) ~> v :=
+begin
+  simp [bind,nonterm.bind,yields,run_to] at *,
+  cases H₀ with i H₀,
+  cases H₁ with j H₁,
+  existsi max i j,
+  have H₂ := x.consistent i (max i j) v' (le_max_left _ _) H₀,
+  simp [H₂,option.bind],
+  apply (f v').consistent _ _ v _ H₁,
+  apply le_max_right
+end
+
+
 lemma id_map (x : nonterm α)
 : x >>= pure ∘ id = x :=
 begin

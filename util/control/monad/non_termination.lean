@@ -49,7 +49,7 @@ protected lemma run_to_bind (i : ℕ) (x : nonterm α) (f : α → nonterm β) (
 : run_to (x >>= f) i v ↔ (∃ v', run_to x i v' ∧ run_to (f v') i v) :=
 sorry
 
-protected lemma pure_yields (v : α)
+lemma pure_yields (v : α)
 : pure v ~> v :=
 begin
   unfold yields,
@@ -57,7 +57,7 @@ begin
   unfold run_to, refl
 end
 
-protected lemma yields_bind {x : nonterm α} {f : α → nonterm β} (v' : α) (v : β)
+lemma yields_bind {x : nonterm α} {f : α → nonterm β} (v' : α) (v : β)
   (H₀ : x ~> v')
   (H₁ : f v' ~> v)
 : (x >>= f) ~> v :=

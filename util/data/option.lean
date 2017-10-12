@@ -56,3 +56,12 @@ end
 lemma coe_eq_some (x : α)
 : ↑x = some x :=
 rfl
+
+lemma is_some_of_eq_some {α : Type u}
+  (x : α) {y : option α}
+  (h : some x = y)
+: y.is_some :=
+begin
+  rw [← h,option.is_some],
+  exact rfl
+end

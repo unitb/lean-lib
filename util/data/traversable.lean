@@ -28,13 +28,14 @@ section functions
 
 variables {t : Type u → Type u}
 variables {m : Type u → Type v} [applicative m]
-variables {f : Type u → Type u} [applicative f]
 variables {α β : Type u}
 
 def traverse [has_traverse.{v} t]
   (f : α → m β)
 : t α → m (t β) :=
 map down ∘ traverse'.{v} (λ x : α, up <$> (f x))
+
+variables {f : Type u → Type u} [applicative f]
 
 def sequence [has_traverse.{u u u} t]
 : t (f α) → f (t α) :=
@@ -288,9 +289,9 @@ instance : traversable option :=
 
 section list
 
-variables {f f' : Type u → Type u}
-variables [applicative f] [applicative f']
-variables {α β γ : Type u}
+variables {f : Type u → Type v}
+variables [applicative f]
+variables {α β : Type u}
 
 open applicative has_map
 open list (cons)
@@ -298,6 +299,17 @@ open list (cons)
 def list.traverse (g : α → f (ulift.{u} β)) : list α → f (ulift.{u} (list β))
  | [] := pure $ up []
  | (x :: xs) := lift₂ cons <$> g x <*> list.traverse xs
+
+end list
+
+section list
+
+variables {f f' : Type u → Type u}
+variables [applicative f] [applicative f']
+variables {α β γ : Type u}
+
+open applicative has_map
+open list (cons)
 
 lemma list.traverse_cons
   (g : α → f (ulift.{u} β))
@@ -362,6 +374,9 @@ lemma list.morphism {α β : Type u} (g : α → f (ulift.{u} β)) (x : list α)
 sorry
 
 end list
+
+instance : has_traverse.{v u u} list :=
+{ traverse' := @list.traverse }
 
 instance : traversable list :=
 { to_functor := _

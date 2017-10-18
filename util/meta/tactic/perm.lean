@@ -47,11 +47,13 @@ else do
   x' ← pp x, ys' ← pp ys,
   (y,ys₀,ys₁) ← find x ys <|> fail (x' ++ " not found in " ++ ys'),
   left_p ← mk_perm_proof xs (ys₀ ++ ys₁),
+     -- make a proof of xs ~ ys₀ ++ ys₁
   left ← to_expr ``(list.perm.skip %%x %%left_p),
   zs₀ ← list_literal ys₀,
   zs₁ ← list_literal ys₁,
-  right_p ← to_expr ``(list.perm.perm_cons_app %%y %%zs₀),
-  right ← to_expr ``(list.perm.perm_app_left %%zs₁ %%right_p),
+  -- right_p ← to_expr ``(list.perm_cons_app %%y %%zs₀),
+  right ← to_expr ``(list.perm.symm $ @list.perm_middle _ %%y %%zs₀ %%zs₁),
+     -- make a proof of y :: ys₀ ++ ys₁ ~ ys₀ ++ y :: ys₁
   to_expr ``(list.perm.trans %%left %%right)
 
 /-- prove a goal of the form `perm [a,b,c] [c,a,b]` -/

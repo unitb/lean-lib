@@ -3,6 +3,8 @@ import util.data.array
 import util.data.nat
 import util.data.sigma
 
+import tactic.finish
+
 import data.prod
 
 universe variables u₀ u₁ u₂ u₃ u₄
@@ -255,7 +257,7 @@ begin
   { apply congr_arg,
     apply fin.eq_of_veq, unfold fin.val,
     rw [nat.add_mul_mod_self_right _ _ _,nat.mod_eq_of_lt Px], },
-  { rw [nat.add_mul_div_self_right _ Px] },
+  { simp [nat.add_mul_div_right _ _ (nat.zero_lt_succ _),nat.div_eq_of_lt Px], },
 end
 begin
   intros x,
@@ -1200,10 +1202,6 @@ bijection.mk' (λ x, (x.1,x.2)) (λ x, ⟨x.1,x.2⟩)
 begin
   intros x y,
   cases x, cases y, simp,
-  split,
-  { intros H, cases H, subst fst, subst snd },
-  { intros H, injection H with H₀ H₁,
-    cases H₁, cases H₀, split ; refl }
 end
 
 instance infinite_sigma {t : Type u₀} (T : t → Type u₁)

@@ -67,8 +67,8 @@ begin
 end
 lemma one_le_bit1 (a : α) (h : 0 ≤ a) : 1 ≤ bit1 a :=
 begin
-  simp [bit1],
-  apply le_add_of_nonneg_right,
+  simp only [bit1],
+  apply le_add_of_nonneg_left,
   apply zero_le_bit0 _ h,
 end
 lemma one_le_one : 1 ≤ (1 : α) := by refl
@@ -234,14 +234,14 @@ lemma one_le_denote (x : pos_num)
 : 1 ≤ @denote pos_num α _ x :=
 begin
   induction x ; try { refl }
-  ; simp [denote,pos_num.denote,bit0,bit1],
+  ; simp only [denote,pos_num.denote,bit0,bit1],
   case pos_num.bit1
-  { transitivity (1 + (1 + 1) : α),
-    { apply le_add_of_nonneg_right,
+  { transitivity ((1 + 1) + 1 : α),
+    { apply le_add_of_nonneg_left,
       transitivity (1 : α),
       apply le_add_of_nonneg_left,
       all_goals { apply zero_le_one } },
-    apply add_le_add_left,
+    apply add_le_add_right,
     apply add_le_add ; assumption },
   case pos_num.bit0
   { transitivity (1 + 1 : α),

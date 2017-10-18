@@ -161,11 +161,7 @@ begin
     have Hmp : m - p ≠ 0,
     { apply ne_of_gt,
       apply nat.sub_pos_of_lt h₀ },
-    have Hnp : n - p ≠ 0,
-    { apply ne_of_gt,
-      apply nat.sub_pos_of_lt,
-      apply nat.lt_trans h₀ h₁  },
-    apply pred_lt_pred Hmp Hnp,
+    apply pred_lt_pred Hmp,
     apply IH,
     apply le_trans _ h₀,
     apply le_succ }
@@ -239,7 +235,7 @@ begin
     { simp, apply le_add_right } }
 end
 
-protected lemma add_mul_div_self_right {a} b {n : ℕ} (h : a < n)
+protected lemma add_mul_div_self_right {a : ℕ} (b : ℕ) {n : ℕ} (h : a < n)
 : (a + b * n) / n = b :=
 by rw [add_comm,mul_comm,nat.mul_add_div_self_left _ _ _ h]
 

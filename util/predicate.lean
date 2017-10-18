@@ -659,8 +659,8 @@ lemma p_exists_range_subtype {α : Type u}
   (p : α → Prop) (q : α → pred' β)
 : (∃∃ i, (λ _, p i) && q i) = (∃∃ j : subtype p, q j) :=
 begin
-  apply funext, intro i, simp,
-  rw exists_range_subtype
+  apply funext, intro i,
+  simp [exists_range_subtype],
 end
 
 lemma p_or_iff_not_imp (p q : pred' β)

@@ -58,20 +58,3 @@ end
 end
 
 end tactic.interactive
-
-universes u v
-
-variables {α β : Type u}
-variables {γ : Type v}
-
-variables (f : α → γ) (g : β → γ)
-variables h₀ : α = β
-variables h₁ : ∀ (x : α) (y : β), x == y → f x = g y
-include h₀ h₁
-lemma hfunext : f == g :=
-begin
-  subst β,
-  apply heq_of_eq,
-  funext i, apply h₁,
-  refl,
-end

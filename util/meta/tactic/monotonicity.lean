@@ -3,26 +3,6 @@ import util.logic
 
 variables {a b c p : Prop}
 
-lemma and.mono_right
-  (h : a → (b → c))
-: a ∧ b → a ∧ c :=
-sorry
-
-lemma and.mono_left
-  (h : a → (b → c))
-: b ∧ a → c ∧ a :=
-sorry
-
-lemma or.mono_right
-  (h : ¬ a → (b → c))
-: a ∨ b → a ∨ c :=
-sorry
-
-lemma or.mono_left
-  (h : ¬ a → (b → c))
-: b ∨ a → c ∨ a :=
-sorry
-
 namespace tactic.interactive
 
 open lean lean.parser  interactive
@@ -78,10 +58,10 @@ do g ← target >>= instantiate_mvars,
             intro id)
     | `( (%%t₀ ∨ %%e₀) → (%%t₁ ∨ %%e₁) ) :=
         (do is_def_eq t₀ t₁,
-            `[apply or.mono_right],
+            `[apply classical.or.mono_right],
             intro id)
     <|> (do is_def_eq e₀ e₁,
-            `[apply or.mono_left],
+            `[apply classical.or.mono_left],
             intro id)
     | `( (¬ %%e₀) → (¬ %%e₁) ) :=
         (`[apply mt])

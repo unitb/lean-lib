@@ -1,8 +1,8 @@
 
 import logic.basic
 
-universe variables u u' u₀ u₁ u₂
-variables  {α : Sort u} {β : Sort u'}
+universe variables u u' u₀ u₁ u₂ v
+variables  {α α' : Sort u} {β : Sort u'}
 
 lemma forall_imp_forall {p q : α → Prop}
    (h : ∀ a, (p a → q a))
@@ -164,9 +164,34 @@ by simp [distrib_right_or,iff_true_intro (classical.em p)]
 lemma not_or_iff_not_and_not {p q : Prop} : ¬ (p ∨ q) ↔ ¬ p ∧ ¬ q :=
 not_or_distrib
 
+lemma and.mono_right
+  (h : a → (b → c))
+: a ∧ b → a ∧ c :=
+assume ⟨ha,hb⟩, ⟨ha, h ha hb⟩
+
+lemma and.mono_left
+  (h : a → (b → c))
+: b ∧ a → c ∧ a :=
+assume ⟨ha,hb⟩, ⟨h hb ha, hb⟩
+
 namespace classical
 
 local attribute [instance] prop_decidable
+
+lemma or.mono_right
+  (h : ¬ a → (b → c))
+: a ∨ b → a ∨ c :=
+or.rec or.inl $
+assume h' : b,
+if ha : a
+then or.inl ha
+else or.inr (h ha h')
+
+lemma or.mono_left
+  (h : ¬ a → (b → c))
+: b ∨ a → c ∨ a :=
+assume h' : b ∨ a,
+or.symm $ or.mono_right h h'.symm
 
 lemma not_and_iff_not_or_not {p q : Prop} : ¬ (p ∧ q) ↔ ¬ p ∨ ¬ q :=
 not_and_distrib
@@ -391,4 +416,19 @@ begin
   { subst z, apply or.intro_right _ h₀ },
   { apply or.intro_right,
     apply tc.trans _ _ _ h₀ h₁, }
+end
+
+variables {γ : Sort v}
+
+variables (f : α → γ) (g : α' → γ)
+variables h₀ : α = α'
+variables h₁ : ∀ (x : α) (y : α'), x == y → f x = g y
+include h₀ h₁
+lemma hfunext : f == g :=
+begin
+  subst α',
+  apply heq_of_eq,
+  apply funext, intro i,
+  apply h₁,
+  refl,
 end

@@ -134,4 +134,15 @@ end
 
 end
 
+lemma append_cons {α : Type u} (xs : list α) (x : α) (ys : list α)
+: xs ++ x :: ys = (xs ++ [x]) ++ ys :=
+by simp
+
+instance {α : Type*} : monoid (list α) :=
+{ mul := append
+, one := []
+, one_mul := by simp [has_mul.mul]
+, mul_one := by simp [has_mul.mul]
+, mul_assoc := by simp [has_mul.mul] }
+
 end list

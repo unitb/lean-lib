@@ -57,7 +57,7 @@ end
 
 end
 
-meta def match_head (e : expr) : expr → tactic unit
+private meta def match_head (e : expr) : expr → tactic unit
 | e' :=
     unify e e'
 <|> match e' with

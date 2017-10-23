@@ -86,6 +86,12 @@ begin
   xassumption,
 end
 
+meta def auto : tactic unit :=
+xassumption ; xassumption ; assumption
+
+example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
+by auto
+
 example {α : Type} {p : α → Prop} (h₀ : ∀ x, p x) (y : α) : p y :=
 begin
   xassumption,

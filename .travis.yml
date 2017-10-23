@@ -87,6 +87,7 @@ script:
 - echo $LEAN_PATH
 - leanpkg configure
 - leanpkg build
+- leanpkg test
 notifications:
   slack:
     rooms:

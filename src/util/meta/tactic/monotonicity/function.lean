@@ -125,45 +125,6 @@ meta def match_prefix (unif : bool)
 <|> return ([],x :: xs,y :: ys)
 | xs ys := return ([],xs,ys)
 
-meta class elaborable (α : Type) (β : inout Type) :=
-  (elaborate : α → tactic β)
-
-export elaborable (elaborate)
-
-meta instance : elaborable pexpr expr :=
-⟨ to_expr ⟩
-
-meta instance elaborable_list {α α'} [elaborable α α'] : elaborable (list α) (list α') :=
-⟨ mmap (elaborate _) ⟩
-
-meta def mono_function.elaborate : mono_function ff → tactic mono_function
-| (mono_function.non_assoc x y z) :=
-mono_function.non_assoc <$> elaborate _ x
-                        <*> elaborate _ y
-                        <*> elaborate _ z
-| (mono_function.assoc x y z) :=
-mono_function.assoc <$> elaborate _ x
-                    <*> traverse (elaborate _) y
-                    <*> traverse (elaborate _) z
-| (mono_function.assoc_comm x y) :=
-mono_function.assoc_comm <$> elaborate _ x
-                         <*> elaborate _ y
-
-
-meta instance elaborable_mono_function : elaborable (mono_function ff) mono_function :=
-⟨ mono_function.elaborate ⟩
-
-meta instance prod_elaborable {α α' β β' : Type} [elaborable α α']  [elaborable β β']
-: elaborable (α × β) (α' × β') :=
-⟨ λ i, prod.rec_on i (λ x y, prod.mk <$> elaborate _ x <*> elaborate _ y) ⟩
-
-run_cmd
-do xs ← mmap to_expr [``(1),``(2),``(3)],
-   ys ← mmap to_expr [``(1),``(2),``(4)],
-   x ← match_prefix ff xs ys,
-   p ← elaborate _ ([``(1),``(2)] , [``(3)], [``(4)]),
-   guard $ x = p
-
 /--
 `(prefix,left,right,suffix) ← match_assoc unif l r` finds the
 longest prefix and suffix common to `l` and `r` and
@@ -173,13 +134,6 @@ meta def match_assoc (unif : bool) (l : list expr) (r : list expr)
 do (pre,l₁,r₁) ← match_prefix unif l r,
    (suf,l₂,r₂) ← match_prefix unif (reverse l₁) (reverse r₁),
    return (pre,reverse l₂,reverse r₂,reverse suf)
-
-run_cmd
-do xs ← mmap to_expr [``(1),``(2),``(3),``(6),``(7)],
-   ys ← mmap to_expr [``(1),``(2),``(4),``(5),``(6),``(7)],
-   x ← match_assoc ff xs ys,
-   p ← elaborate _ ([``(1), ``(2)], [``(3)], ([``(4), ``(5)], [``(6), ``(7)])),
-   guard (x = p)
 
 meta def check_ac : expr → tactic (bool × bool × option (expr × expr) × expr)
  | (expr.app (expr.app f x) y) :=
@@ -192,12 +146,6 @@ meta def check_ac : expr → tactic (bool × bool × option (expr × expr) × ex
                   <*> instantiate_mvars v),
       return (a.is_some,c.is_some,i,f)
  | _ := return (ff,ff,none,expr.var 1)
-
-run_cmd
-do x ← to_expr ``(7 + 3 : ℕ) >>= check_ac,
-   trace x,
-   x ← pp x.2.2.1,
-   guard $ x.to_string = "(some (add_monoid_to_is_left_id, 0))"
 
 open dlist has_map
 
@@ -274,13 +222,6 @@ meta def parse_mono_function' (l r : pexpr) :=
 do l' ← to_expr l,
    r' ← to_expr r,
    parse_mono_function l' r'
-
-run_cmd
-do parse_mono_function' ``(1 + 3 + 2 + 6) ``(4 + 2 + 1 + 5) >>= trace,
-   parse_mono_function' ``([1] ++ [3] ++ [2] ++ [6]) ``([4] ++ [2] ++ ([1] ++ [5]))
-     >>= trace,
-   parse_mono_function' ``([1] ++ [3] ++ [2] ++ [2]) ``([1] ++ [5] ++ ([4] ++ [2]))
-     >>= trace
 
 meta def monotonicity_goal : expr → tactic (expr × expr × mono_ctx)
  | `(%%e₀ → %%e₁) :=
@@ -416,6 +357,8 @@ do (l,r,g) ← target >>= instantiate_mvars >>= monotonicity_goal,
    solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]]),
    solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]])
 
+end tactic.interactive
+
 @[monotonic]
 lemma add_mono {α : Type} {x y z : α} [ordered_semiring α]
   (h : x ≤ y)
@@ -433,155 +376,3 @@ lemma sub_mono_right {α : Type} {x y z : α} [ordered_comm_group α]
   (h : y ≤ x)
 : z - x ≤ z - y :=
 sub_le_sub_left h _
-
-lemma bar
-  (h : 3 + 6 ≤ 4 + 5)
-: 1 + 3 + 2 + 6 ≤ 4 + 2 + 1 + 5 :=
-begin
-  monotonicity1,
-  apply h
-end
-
-lemma bar'
-  (h : 3 ≤ (4 : ℤ))
-  (h' : 5 ≤ (6 : ℤ))
-: (1 + 3 + 2) - 6 ≤ (4 + 2 + 1 : ℤ) - 5 :=
-begin
-  transitivity (1 + 3 + 2 - 5 : ℤ),
-  monotonicity1,
-  apply h',
-  monotonicity1,
-  monotonicity1,
-  apply h
-end
-
-@[simp]
-def list.le {α : Type*} [has_le α] : list α → list α → Prop
- | (x::xs) (y::ys) := x ≤ y ∧ list.le xs ys
- | [] [] := true
- | _ _ := false
-
-@[simp]
-instance {α : Type*} [has_le α] : has_le (list α) :=
-⟨ list.le ⟩
-
-@[refl]
-lemma list.le_refl {α : Type*} [preorder α] {xs : list α}
-: xs ≤ xs :=
-begin
-  induction xs with x xs,
-  { trivial },
-  { simp [has_le.le,list.le],
-    split, apply le_refl, apply ih_1 }
-end
-
-@[trans]
-lemma list.le_trans {α : Type*} [preorder α]
-  {xs zs : list α} (ys : list α)
-  (h  : xs ≤ ys)
-  (h' : ys ≤ zs)
-: xs ≤ zs :=
-begin
-  revert ys zs,
-  induction xs with x xs
-  ; intros ys zs h h'
-  ; cases ys with y ys
-  ; cases zs with z zs
-  ; try { cases h ; cases h' ; done },
-  { refl },
-  { simp [has_le.le,list.le],
-    split,
-    apply le_trans h.left h'.left,
-    apply ih_1 _ h.right h'.right, }
-end
-
-@[monotonic]
-lemma list_le_mono_left {α : Type*} [preorder α] {xs ys zs : list α}
-  (h : xs ≤ ys)
-: xs ++ zs ≤ ys ++ zs :=
-begin
-  revert ys,
-  induction xs with x xs ; intros ys h,
-  { cases ys, refl, cases h },
-  { cases ys with y ys, cases h, simp [has_le.le,list.le] at *,
-    revert h, apply and.imp_right,
-    apply ih_1 }
-end
-
-@[monotonic]
-lemma list_le_mono_right {α : Type*} [preorder α] {xs ys zs : list α}
-  (h : xs ≤ ys)
-: zs ++ xs ≤ zs ++ ys :=
-begin
-  revert ys zs,
-  induction xs with x xs ; intros ys zs h,
-  { cases ys, { simp }, cases h  },
-  { cases ys with y ys, cases h, simp [has_le.le,list.le] at *,
-    rw [list.append_cons _ x,list.append_cons _ y],
-    apply list.le_trans (zs ++ [y] ++ xs),
-    { apply list_le_mono_left,
-      induction zs with z zs,
-      { simp [has_le.le,list.le], apply h.left },
-      { simp [has_le.le,list.le], split, apply le_refl,
-        apply ih_1_1, } },
-    { apply ih_1 h.right, } }
-end
-
-lemma bar_bar'
-  (h : [] ++ [3] ++ [2] ≤ [1] ++ [5] ++ [4])
-: [] ++ [3] ++ [2] ++ [2] ≤ [1] ++ [5] ++ ([4] ++ [2]) :=
-begin
-  monotonicity1,
-  apply h
-end
-
-lemma bar_bar''
-  (h : [3] ++ [2] ++ [2] ≤ [5] ++ [4] ++ [])
-: [1] ++ ([3] ++ [2]) ++ [2] ≤ [1] ++ [5] ++ ([4] ++ []) :=
-begin
-  monotonicity1,
-  apply h,
-end
-
-lemma bar_bar
-  (h : [3] ++ [2] ≤ [5] ++ [4])
-: [1] ++ [3] ++ [2] ++ [2] ≤ [1] ++ [5] ++ ([4] ++ [2]) :=
-begin
-  monotonicity1,
-  apply h
-end
-
-def P (x : ℕ) := 7 ≤ x
-def Q (x : ℕ) := x ≤ 7
-
-@[monotonic]
-lemma P_mono {x y : ℕ}
-  (h : x ≤ y)
-: P x → P y :=
-by { intro h', apply le_trans h' h }
-
-@[monotonic]
-lemma Q_mono {x y : ℕ}
-  (h : y ≤ x)
-: Q x → Q y :=
-by apply le_trans h
-
-example (x y z : ℕ)
-  (h : x ≤ y)
-: P (x + z) → P (z + y) :=
-begin
-  monotonicity1,
-  monotonicity1,
-  apply h,
-end
-
-example (x y z : ℕ)
-  (h : y ≤ x)
-: Q (x + z) → Q (z + y) :=
-begin
-  monotonicity1,
-  monotonicity1,
-  apply h,
-end
-
-end tactic.interactive

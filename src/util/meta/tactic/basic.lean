@@ -45,18 +45,6 @@ do r  ← list.mmap get_local xs >>= revert_lst,
    local_context >>= mmap (try ∘ tactic.clear),
    intron r
 
-section
-variables x y z : ℕ
-include x y z
-example : ℕ :=
-begin
-  clear_except x,
-  (do xs ← tactic.local_context, x ← get_local `x, assert (xs = [x]), return ()),
-  exact x
-end
-
-end
-
 private meta def match_head (e : expr) : expr → tactic unit
 | e' :=
     unify e e'
@@ -80,21 +68,7 @@ do { ctx ← local_context,
      tactic.apply H }
 <|> fail "assumption tactic failed"
 
-example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
-begin
-  xassumption,
-  xassumption,
-end
-
 meta def auto : tactic unit :=
 xassumption ; xassumption ; assumption
-
-example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
-by auto
-
-example {α : Type} {p : α → Prop} (h₀ : ∀ x, p x) (y : α) : p y :=
-begin
-  xassumption,
-end
 
 end tactic.interactive

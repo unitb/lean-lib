@@ -260,3 +260,34 @@ begin
   introv_mono h₀ h₁,
   auto,
 end
+
+example (x y z k m n : ℤ)
+  (h₀ : z ≤ 0)
+  (h₁ : y ≤ x)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+begin
+  monotonicity1,
+  monotonicity1,
+  monotonicity1,
+  auto
+end
+
+example (x y z k m n : ℕ)
+  (h₀ : z ≥ 0)
+  (h₁ : x ≤ y)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+begin
+  monotonicity1,
+  monotonicity1,
+  monotonicity1,
+  auto
+end
+
+example (x y z k m n : ℕ)
+  (h₁ : x ≤ y)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+begin
+  monotonicity1,
+  success_if_fail { monotonicity1 },
+  admit,
+end

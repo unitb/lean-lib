@@ -4,6 +4,7 @@ import data.dlist
 import util.algebra.group
 import util.data.list
 import util.data.traversable
+import util.meta.tactic.basic
 
 variables {a b c p : Prop}
 
@@ -243,13 +244,32 @@ meta def monotonicity_goal : expr → tactic (expr × expr × mono_ctx)
             , rel_def := rel })
  | _ := fail "invalid monotonicity goal"
 
-private meta def match_head (p : expr) : expr → expr → tactic expr
- | e t :=
-(unify t p >> instantiate_mvars e)
+meta def as_goal (e : expr) (tac : itactic) : itactic :=
+do gs ← get_goals,
+   set_goals [e],
+   tac,
+   set_goals gs
+
+meta def unify_with_instance (e : expr) : tactic unit :=
+as_goal e $
+apply_instance
+<|>
+apply_opt_param
+<|>
+apply_auto_param
+<|>
+auto
+<|>
+return ()
+
+
+private meta def match_head (p : expr) : list expr → expr → expr → tactic expr
+ | vs e t :=
+(unify t p >> mmap unify_with_instance vs.tail >> instantiate_mvars e)
 <|>
 do (expr.pi _ _ d b) ← return t | failed,
    v ← mk_meta_var d,
-   match_head (expr.app e v) (b.instantiate_var v)
+   match_head (v::vs) (expr.app e v) (b.instantiate_var v)
 
 meta def bin_op_left (f : expr)  : option expr → expr → expr
 | none e := e
@@ -310,25 +330,23 @@ match ctx.function with
               (mk_fun_app ctx.function ctx.right)
 end
 
--- meta def mk_associative_pattern : option expr → option expr → expr := _
-
 meta def match_rule (pat : expr) (r : name) : tactic expr :=
 do  r' ← mk_const r,
     t  ← infer_type r',
-    match_head pat r' t
+    match_head pat [] r' t
 
-meta def find_lemma (pat : expr) : list name → tactic expr
- | [] := failed
+meta def find_lemma (pat : expr) : list name → tactic (list expr)
+ | [] := return []
  | (r :: rs) :=
- do match_rule pat r <|> find_lemma rs
+ do (cons <$> match_rule pat r <|> pure id) <*> find_lemma rs
 
-meta def match_chaining_rules (ls : list name) (x₀ x₁ : expr) : tactic expr :=
+meta def match_chaining_rules (ls : list name) (x₀ x₁ : expr) : tactic (list expr) :=
 do x' ← to_expr ``(%%x₁ → %%x₀),
    r₀ ← find_lemma x' ls,
    r₁ ← find_lemma x₁ ls,
-   return (expr.app r₀ r₁)
+   return (expr.app <$> r₀ <*> r₁)
 
-meta def find_rule (ls : list name) : mono_law → tactic (expr)
+meta def find_rule (ls : list name) : mono_law → tactic (list expr)
  | (mono_law.assoc (x₀,x₁) (y₀,y₁)) :=
 (match_chaining_rules ls x₀ x₁)
 <|> (match_chaining_rules ls y₀ y₁)
@@ -347,32 +365,82 @@ lemma apply_rel {α : Sort u} (R : α → α → Sort v) {x y : α}
 : R x' y' :=
 by { rw [← hx,← hy], apply h }
 
+meta def one_line (e : expr) : tactic format :=
+do lbl ← pp e,
+   asm ← infer_type e >>= pp,
+   return format!"\t{asm}\n"
+
+meta def side_conditions (e : expr) : tactic format :=
+do let vs := list_meta_vars e,
+   ts ← mmap one_line vs.tail,
+   let r := e.get_app_fn.const_name,
+   return format!"{r}:\n{format.join ts}"
+
 meta def monotonicity1 : tactic unit :=
 do (l,r,g) ← target >>= instantiate_mvars >>= monotonicity_goal,
    ns ← attribute.get_instances `monotonic,
    p ← mk_pattern g,
-   rule ← find_rule ns p,
-   x ← to_expr ``(apply_rel %%(g.rel_def) %%l %%r %%rule),
-   tactic.apply x,
-   solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]]),
-   solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]])
+   rules ← find_rule ns p <|> fail "no applicable rules found",
+   when (rules = []) (fail "no applicable rules found"),
+   err ← format.join <$> mmap side_conditions rules,
+   focus1 $ any_of rules (λ rule, do
+     x ← to_expr ``(apply_rel %%(g.rel_def) %%l %%r %%rule),
+     tactic.apply x,
+     solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]]),
+     solve1 (refl <|> ac_refl <|> `[simp only [is_associative.assoc]]),
+     n ← num_goals,
+     repeat_exactly (n-1) (solve1 $ apply_instance <|> auto))
+   <|> fail (to_fmt "Side condition for rules cannot be proved: \n" ++ err)
 
 end tactic.interactive
 
+variables {α : Type*}
+
 @[monotonic]
-lemma add_mono {α : Type} {x y z : α} [ordered_semiring α]
+lemma add_mono {x y z : α} [ordered_semiring α]
   (h : x ≤ y)
 : x + z ≤ y + z :=
 add_le_add_right h _
 
 @[monotonic]
-lemma sub_mono_left {α : Type} {x y z : α} [ordered_comm_group α]
+lemma sub_mono_left {x y z : α} [ordered_comm_group α]
   (h : x ≤ y)
 : x - z ≤ y - z :=
 sub_le_sub_right h _
 
 @[monotonic]
-lemma sub_mono_right {α : Type} {x y z : α} [ordered_comm_group α]
+lemma sub_mono_right {x y z : α} [ordered_comm_group α]
   (h : y ≤ x)
 : z - x ≤ z - y :=
 sub_le_sub_left h _
+
+@[monotonic]
+lemma mul_mono_nonneg {x y z : α} [ordered_semiring α]
+  (h' : 0 ≤ z)
+  (h : x ≤ y)
+: x * z ≤ y * z :=
+by apply mul_le_mul_of_nonneg_right ; assumption
+
+lemma gt_of_mul_lt_mul_neg_right {a b c : α}  [linear_ordered_ring α]
+  (h : a * c < b * c) (hc : c ≤ 0) : a > b :=
+have nhc : -c ≥ 0, from neg_nonneg_of_nonpos hc,
+have h2 : -(b * c) < -(a * c), from neg_lt_neg h,
+have h3 : b * (-c) < a * (-c), from calc
+     b * (-c) = - (b * c)    : by rewrite neg_mul_eq_mul_neg
+          ... < - (a * c)    : h2
+          ... = a * (-c)     : by rewrite neg_mul_eq_mul_neg,
+lt_of_mul_lt_mul_right h3 nhc
+
+@[monotonic]
+lemma mul_mono_nonpos {x y z : α} [linear_ordered_ring α]
+  [decidable_rel ((≤) : α → α → Prop)]
+  (h' : 0 ≥ z)
+  (h : y ≤ x)
+: x * z ≤ y * z :=
+begin
+  by_contradiction h'',
+  revert h,
+  apply not_le_of_lt,
+  apply gt_of_mul_lt_mul_neg_right _ h',
+  apply lt_of_not_ge h'',
+end

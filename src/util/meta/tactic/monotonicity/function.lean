@@ -11,7 +11,7 @@ variables {a b c p : Prop}
 namespace tactic.interactive
 
 open lean lean.parser  interactive
-open interactive.types -- expr
+open interactive.types
 open tactic
 
 local postfix `?`:9001 := optional
@@ -59,25 +59,43 @@ do fn  ← pp ctx.function,
 meta instance has_to_tactic_format_mono_ctx : has_to_tactic_format mono_ctx :=
 { to_tactic_format := mono_ctx.to_tactic_format }
 
--- meta instance : has_reflect mono_function :=
--- by mk_has_reflect_instance
+meta def as_goal (e : expr) (tac : itactic) : itactic :=
+do gs ← get_goals,
+   set_goals [e],
+   tac,
+   set_goals gs
 
-meta def parse_imp' : list expr → expr → tactic (expr × list expr)
- | xs e :=
-   do `(%%e₀ → %%e₁) ← return e | return (e,xs),
-      if (¬ e₁.has_var) then
-        parse_imp' (e₀ :: xs) e₁
-      else
-        return (e,xs)
+meta def unify_with_instance (e : expr) : tactic unit :=
+as_goal e $
+apply_instance
+<|>
+apply_opt_param
+<|>
+apply_auto_param
+<|>
+auto
+<|>
+return ()
 
-meta def parse_imp := parse_imp' []
+private meta def match_head (p : expr)
+: list expr → expr → expr → tactic expr
+ | vs e t :=
+(unify t p >> mmap' unify_with_instance vs.tail >> instantiate_mvars e)
+<|>
+do (expr.pi _ _ d b) ← return t | failed,
+   v ← mk_meta_var d,
+   match_head (v::vs) (expr.app e v) (b.instantiate_var v)
 
-@[user_attribute]
-meta def monotonicity.attr : user_attribute :=
-{ name  := `monotonic
-, descr := "monotonicity of functions wrt relations: R₀ x y → R₁ (f x) (f y)" }
+meta def pi_head : expr → tactic expr
+| (expr.pi n _ t b) :=
+do v ← mk_meta_var t,
+   pi_head (b.instantiate_var v)
+| e := return e
 
-open list has_map
+def last_two {α : Type*} : list α → option (α × α)
+| [] := none
+| [x] := none
+| (x₀ :: x₁ :: xs) := last_two (x₁ :: xs) <|> some (x₀, x₁)
 
 meta def is_mvar : expr → bool
  | (expr.mvar _ _ _) := tt
@@ -88,6 +106,57 @@ if unif then do
 guard (¬ is_mvar e₀ ∧ ¬ is_mvar e₁),
 unify e₀ e₁
 else is_def_eq e₀ e₁
+
+open list has_map dlist monad (mmap₂')
+
+meta def find_one_difference (unif : bool)
+: list expr → list expr → tactic (list expr × expr × expr × list expr)
+ | (x :: xs) (y :: ys) :=
+   do c ← try_core (compare unif x y),
+      if c.is_some
+      then prod.map (cons x) id <$> find_one_difference xs ys
+      else do
+        guard (xs.length = ys.length),
+        mmap₂' (compare unif) xs ys,
+        return ([],x,y,xs)
+ | _ _ := failed
+
+meta def monotoncity.check_rel (xs : list expr) (l r : expr) : tactic unit :=
+do (_,x,y,_) ← find_one_difference ff l.get_app_args r.get_app_args <|> fail "bar",
+   when (¬ l.get_app_fn = r.get_app_fn)
+     (fail format!"{l} and {r} should be the f x and f y for some f"),
+   t ← infer_type (list.ilast xs),
+   (l',r') ← last_two t.get_app_args
+     <|> fail "expecting assumption {t} to be a relation R x y",
+   when (¬ x.is_local_constant) (fail format!"expecting a bound variable: {x}"),
+   when (¬ y.is_local_constant) (fail format!"expecting a bound variable: {y}"),
+   when ([l',r'] ≠ [x,y] ∧ [l',r'] ≠ [y,x])
+     (fail "assumption {t} should be relating variables {l'} and {r'}"),
+   return ()
+
+meta def monotoncity.check_imp (x₀ : expr) : list expr → tactic unit
+| (x₁ :: xs) := infer_type x₁ >>= monotoncity.check_rel xs.reverse x₀
+| _ := fail "monotoncity.check_imp"
+
+meta def monotoncity.check (lm_n : name) (prio : ℕ) (persistent : bool) : tactic unit :=
+do lm ← mk_const lm_n,
+   lm_t ← infer_type lm,
+   (xs,h) ← mk_local_pis lm_t,
+   x ← try_core (monotoncity.check_imp h xs.reverse),
+   match x with
+    | (some x) :=
+      (do (l,r) ← last_two h.get_app_args,
+          monotoncity.check_rel xs l r) <|> return x
+    | none :=
+      do (l,r) ← last_two h.get_app_args <|> fail format!"expecting: R x y\nactual: {h}",
+         monotoncity.check_rel xs l r
+   end
+
+@[user_attribute]
+meta def monotonicity.attr : user_attribute :=
+{ name  := `monotonic
+, descr := "monotonicity of functions wrt relations: R₀ x y → R₁ (f x) (f y)"
+, after_set := some monotoncity.check  }
 
 meta def delete_expr (unif : bool) (e : expr)
 : list expr → tactic (option (list expr))
@@ -148,8 +217,6 @@ meta def check_ac : expr → tactic (bool × bool × option (expr × expr) × ex
       return (a.is_some,c.is_some,i,f)
  | _ := return (ff,ff,none,expr.var 1)
 
-open dlist has_map
-
 meta def parse_assoc_chain' (f : expr) : expr → tactic (dlist expr)
  | e :=
  (do (expr.app (expr.app f' x) y) ← return e,
@@ -159,20 +226,6 @@ meta def parse_assoc_chain' (f : expr) : expr → tactic (dlist expr)
 
 meta def parse_assoc_chain (f : expr) : expr → tactic (list expr) :=
 map dlist.to_list ∘ parse_assoc_chain' f
-
-open monad (mmap₂')
-
-meta def find_one_difference (unif : bool)
-: list expr → list expr → tactic (list expr × expr × expr × list expr)
- | (x :: xs) (y :: ys) :=
-   do c ← try_core (compare unif x y),
-      if c.is_some
-      then prod.map (cons x) id <$> find_one_difference xs ys
-      else do
-        guard (xs.length = ys.length),
-        mmap₂' (compare unif) xs ys,
-        return ([],x,y,xs)
- | _ _ := failed
 
 meta def fold_assoc (op : expr) : option (expr × expr) → list expr → option expr
 | _ (x::xs) := some $ foldl (expr.app ∘ expr.app op) x xs
@@ -243,33 +296,6 @@ meta def monotonicity_goal : expr → tactic (expr × expr × mono_ctx)
             , to_rel := expr.app ∘ expr.app rel
             , rel_def := rel })
  | _ := fail "invalid monotonicity goal"
-
-meta def as_goal (e : expr) (tac : itactic) : itactic :=
-do gs ← get_goals,
-   set_goals [e],
-   tac,
-   set_goals gs
-
-meta def unify_with_instance (e : expr) : tactic unit :=
-as_goal e $
-apply_instance
-<|>
-apply_opt_param
-<|>
-apply_auto_param
-<|>
-auto
-<|>
-return ()
-
-
-private meta def match_head (p : expr) : list expr → expr → expr → tactic expr
- | vs e t :=
-(unify t p >> mmap unify_with_instance vs.tail >> instantiate_mvars e)
-<|>
-do (expr.pi _ _ d b) ← return t | failed,
-   v ← mk_meta_var d,
-   match_head (v::vs) (expr.app e v) (b.instantiate_var v)
 
 meta def bin_op_left (f : expr)  : option expr → expr → expr
 | none e := e

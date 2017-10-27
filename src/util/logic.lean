@@ -360,15 +360,16 @@ begin
   apply Hg,
 end
 
+@[simp]
 lemma exists_range_subtype {α : Type u}
   (p : α → Prop) (q : α → Prop)
-: (∃ i, p i ∧ q i) ↔ (∃ j : subtype p, q j) :=
+: (∃ j : subtype p, q j.val) ↔ (∃ i, p i ∧ q i) :=
 begin
   let f := λ (x : α) (h : p x ∧ q x), subtype.mk x h.left,
   let g := λ (x : subtype p) (h : q x), x.val,
-  apply exists_variable_change' _ _ f g,
-  { intros x h, apply h.right },
+  apply exists_variable_change' _ _ g f,
   { intros x h, exact ⟨x.property, h⟩  },
+  { intros x h, apply h.right },
 end
 
 lemma or_of_ite {c t f : Prop} [decidable c]

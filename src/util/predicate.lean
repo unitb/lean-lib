@@ -660,6 +660,7 @@ lemma p_exists_range_subtype {α : Type u}
 : (∃∃ i, (λ _, p i) && q i) = (∃∃ j : subtype p, q j) :=
 begin
   apply funext, intro i,
+  unfold_coe,
   simp [exists_range_subtype],
 end
 

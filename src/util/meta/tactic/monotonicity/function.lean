@@ -127,7 +127,7 @@ do (_,x,y,_) ← find_one_difference ff l.get_app_args r.get_app_args <|> fail "
      (fail format!"{l} and {r} should be the f x and f y for some f"),
    t ← infer_type (list.ilast xs),
    (l',r') ← last_two t.get_app_args
-     <|> fail "expecting assumption {t} to be a relation R x y",
+     <|> fail format!"expecting assumption {t} to be a relation R x y",
    when (¬ x.is_local_constant) (fail format!"expecting a bound variable: {x}"),
    when (¬ y.is_local_constant) (fail format!"expecting a bound variable: {y}"),
    when ([l',r'] ≠ [x,y] ∧ [l',r'] ≠ [y,x])

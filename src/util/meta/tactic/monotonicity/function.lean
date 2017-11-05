@@ -44,10 +44,18 @@ meta def mono_function.to_tactic_format : mono_function → tactic format
 meta instance : has_to_tactic_format mono_function :=
 { to_tactic_format := mono_function.to_tactic_format }
 
-meta structure mono_ctx :=
-  (to_rel : expr → expr → expr)
+meta structure mono_ctx' (rel : Type) :=
+  (to_rel : rel)
   (function : mono_function)
   (left right rel_def : expr)
+
+@[reducible]
+meta def mono_ctx := mono_ctx' (option (expr → expr → expr))
+@[reducible]
+meta def mono_ctx_ne := mono_ctx' (expr → expr → expr)
+
+meta instance : has_traverse mono_ctx' :=
+by derive_traverse
 
 meta def mono_ctx.to_tactic_format (ctx : mono_ctx) : tactic format :=
 do fn  ← pp ctx.function,
@@ -286,7 +294,17 @@ meta def monotonicity_goal : expr → tactic (expr × expr × mono_ctx)
      return (e₀, e₁,
             { function := f
             , left := l, right := r
-            , to_rel := expr.pi `x binder_info.default
+            , to_rel := some $ expr.pi `x binder_info.default
+            , rel_def := rel_def })
+ | `(%%e₀ = %%e₁) :=
+  do (l,r,f) ← parse_mono_function e₀ e₁,
+     t₀ ← infer_type e₀,
+     t₁ ← infer_type e₁,
+     rel_def ← to_expr ``(λ x₀ x₁, (x₀ : %%t₀) = (x₁ : %%t₁)),
+     return (e₀, e₁,
+            { function := f
+            , left := l, right := r
+            , to_rel := none
             , rel_def := rel_def })
  | (expr.app (expr.app rel e₀) e₁) :=
   do (l,r,f) ← parse_mono_function e₀ e₁,
@@ -314,11 +332,17 @@ meta def mk_fun_app : mono_function → expr → expr
  | (mono_function.assoc_comm f x) z := f.mk_app [z,x]
 
 meta inductive mono_law
+   /- `assoc (l₀,r₀) (r₁,l₁)` gives first how to find rules to prove
+      x+(y₀+z) R x+(y₁+z);
+      if that fails, helps prove (x+y₀)+z R (x+y₁)+z -/
  | assoc : expr × expr → expr × expr → mono_law
+   /- `congr r` gives the rule to prove `x = y → f x = f y` -/
+ | congr : expr → mono_law
  | other : expr → mono_law
 
 meta def mono_law.to_tactic_format : mono_law → tactic format
  | (mono_law.other e) := do e ← pp e, return format!"other {e}"
+ | (mono_law.congr r) := do e ← pp r, return format!"congr {e}"
  | (mono_law.assoc (x₀,x₁) (y₀,y₁)) :=
 do x₀ ← pp x₀,
    x₁ ← pp x₁,
@@ -329,31 +353,45 @@ do x₀ ← pp x₀,
 meta instance has_to_tactic_format_mono_law : has_to_tactic_format mono_law :=
 { to_tactic_format := mono_law.to_tactic_format }
 
-meta def mk_rel (ctx : mono_ctx) (f : expr → expr) : expr :=
+meta def mk_rel (ctx : mono_ctx_ne) (f : expr → expr) : expr :=
 ctx.to_rel (f ctx.left) (f ctx.right)
 
-meta def mk_pattern (ctx : mono_ctx) : option mono_law :=
+meta def mk_congr_args (fn : expr) (xs₀ xs₁ : list expr) (l r : expr) : tactic expr :=
+do p ← mk_app `eq [fn.mk_app $ xs₀ ++ l :: xs₁,fn.mk_app $ xs₀ ++ r :: xs₁],
+   prod.snd <$> solve_aux p
+     (do repeat_exactly (xs₁.length) (applyc `congr_fun),
+         applyc `congr_arg)
+
+meta def mk_congr_law (ctx : mono_ctx) : tactic expr :=
 match ctx.function with
- | (mono_function.assoc f (some x) (some y)) :=
-   mono_law.assoc
+ | (mono_function.assoc f x₀ x₁) := mk_congr_args f x₀.to_monad x₁.to_monad ctx.left ctx.right
+ | (mono_function.assoc_comm f x₀) := mk_congr_args f [x₀] [] ctx.left ctx.right
+ | (mono_function.non_assoc f x₀ x₁) := mk_congr_args f x₀ x₁ ctx.left ctx.right
+end
+
+meta def mk_pattern (ctx : mono_ctx) : tactic mono_law :=
+match (sequence ctx : option (mono_ctx' _)) with
+ | (some ctx) :=
+   match ctx.function with
+    | (mono_function.assoc f (some x) (some y)) :=
+      return $ mono_law.assoc
        ( mk_rel ctx (λ i, bin_op f x (bin_op f i y))
        , mk_rel ctx (λ i, bin_op f i y))
        ( mk_rel ctx (λ i, bin_op f (bin_op f x i) y)
        , mk_rel ctx (λ i, bin_op f x i))
- | (mono_function.assoc f (some x) none) :=
-   mono_law.other $
-   ctx.to_rel (mk_fun_app ctx.function ctx.left)
-              (mk_fun_app ctx.function ctx.right)
- | (mono_function.assoc f none (some y)) :=
-   mono_law.other $
-   ctx.to_rel (mk_fun_app ctx.function ctx.left)
-              (mk_fun_app ctx.function ctx.right)
- | (mono_function.assoc f none none) :=
-   none
- | _ :=
-   mono_law.other $
-   ctx.to_rel (mk_fun_app ctx.function ctx.left)
-              (mk_fun_app ctx.function ctx.right)
+    | (mono_function.assoc f (some x) none) :=
+      return $ mono_law.other $
+        mk_rel ctx (λ e, mk_fun_app ctx.function e)
+    | (mono_function.assoc f none (some y)) :=
+      return $ mono_law.other $
+        mk_rel ctx (λ e, mk_fun_app ctx.function e)
+    | (mono_function.assoc f none none) :=
+      none
+    | _ :=
+      return $ mono_law.other $
+         mk_rel ctx (λ e, mk_fun_app ctx.function e)
+   end
+ | none := mono_law.congr <$> mk_congr_law ctx
 end
 
 meta def match_rule (pat : expr) (r : name) : tactic expr :=
@@ -376,6 +414,7 @@ meta def find_rule (ls : list name) : mono_law → tactic (list expr)
  | (mono_law.assoc (x₀,x₁) (y₀,y₁)) :=
 (match_chaining_rules ls x₀ x₁)
 <|> (match_chaining_rules ls y₀ y₁)
+ | (mono_law.congr r) := return [r]
  | (mono_law.other p) := find_lemma p ls
 
 meta def list_meta_vars (e : expr) : list expr :=
@@ -417,6 +456,26 @@ do (l,r,g) ← target >>= instantiate_mvars >>= monotonicity_goal,
      n ← num_goals,
      repeat_exactly (n-1) (solve1 $ apply_instance <|> auto))
    <|> fail (to_fmt "Side condition for rules cannot be proved: \n" ++ err)
+
+open sum nat
+
+/-- (repeat_until_or_at_most n t u): repeat tactic `t` at most n times or until u succeeds -/
+meta def repeat_until_or_at_most : nat → tactic unit → tactic unit → tactic unit
+| 0        t _ := fail "too many applications"
+| (succ n) t u := u <|> (t >> repeat_until_or_at_most n t u)
+
+meta def repeat_until : tactic unit → tactic unit → tactic unit :=
+repeat_until_or_at_most 100000
+
+meta def monotonicity : parse (inl <$> texpr <|> (tk ":" *> inr <$> texpr))? → tactic unit
+ | none := repeat monotonicity1
+ | (some (inl h)) :=
+do h' ← i_to_expr h,
+   repeat_until monotonicity1 (tactic.apply h')
+ | (some (inr t)) :=
+do h ← i_to_expr t >>= assert `h,
+   tactic.swap,
+   repeat_until monotonicity1 (tactic.apply h)
 
 end tactic.interactive
 

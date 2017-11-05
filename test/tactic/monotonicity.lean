@@ -103,7 +103,7 @@ begin
     split, apply le_refl, apply ih_1 }
 end
 
-@[trans]
+-- @[trans]
 lemma list.le_trans {α : Type*} [preorder α]
   {xs zs : list α} (ys : list α)
   (h  : xs ≤ ys)
@@ -284,10 +284,60 @@ begin
 end
 
 example (x y z k m n : ℕ)
+  (h₀ : z ≥ 0)
+  (h₁ : x ≤ y)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+by  monotonicity h₁
+
+example (x y z k m n : ℕ)
+  (h₀ : z ≥ 0)
+  (h₁ : m + x + n ≤ y + n + m)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+by monotonicity h₁
+
+example (x y z k m n : ℕ)
+  (h₀ : z ≥ 0)
+  (h₁ : n + x + m ≤ y + n + m)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+begin
+  monotonicity : m + x + n ≤ y + n + m,
+  transitivity ; [ skip , apply h₁ ],
+  apply le_of_eq,
+  ac_refl,
+end
+
+example (x y z k m n : ℕ)
   (h₁ : x ≤ y)
 : (m + x + n) * z + k ≤ z * (y + n + m) + k :=
 begin
   monotonicity1,
-  success_if_fail { monotonicity1 },
+  success_if_fail { monotonicity1 }, -- can't prove 0 ≤ z
   admit,
+end
+
+example (x y z k m n : ℕ)
+  (h₁ : x ≤ y)
+: (m + x + n) * z + k ≤ z * (y + n + m) + k :=
+begin
+  monotonicity,
+  change (m + x + n) * z ≤ z * (y + n + m),
+  admit,
+end
+
+example (x y z k m n i j : ℕ)
+  (h₁ : x + i = y + j)
+: (m + x + n + i) * z + k = z * (j + n + m + y) + k :=
+begin
+  monotonicity1,
+  monotonicity1,
+  monotonicity1,
+  simp [h₁],
+end
+
+example (x y z k m n i j : ℕ)
+  (h₁ : x + i = y + j)
+: (m + x + n + i) * z + k = z * (j + n + m + y) + k :=
+begin
+  monotonicity,
+  simp [h₁],
 end

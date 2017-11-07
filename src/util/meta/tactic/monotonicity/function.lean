@@ -433,7 +433,8 @@ do (l,r) ← target >>= match_eq,
    e ← perm_ac fn a c l r, tactic.exact e
 
 meta def generalize_meta_vars : tactic (expr × list expr × expr) :=
-do tgt ← target,
+do tgt ← target >>= instantiate_mvars,
+   tactic.change tgt,
    let vs := tgt.list_meta_vars,
    ⟨(v,tgt'), _⟩ ← solve_aux tgt
      (do vs' ← mmap (λ v, tactic.generalize v `x >> intro1) vs.reverse,

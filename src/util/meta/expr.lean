@@ -21,4 +21,11 @@ meta def expr.traverse : expr elab → m (expr elab')
  | (elet n e₀ e₁ e₂) := elet n <$> f e₀ <*> f e₁ <*> f e₂
  | (macro mac es) := macro mac <$> traverse f es
 
+meta def expr.is_mvar : expr → bool
+ | (expr.mvar _ _ _) := tt
+ | _ := ff
+
+meta def expr.list_meta_vars (e : expr) : list expr :=
+e.fold [] (λ e' _ es, if expr.is_mvar e' ∧ ¬ e' ∈ es then e' :: es else es)
+
 end expr

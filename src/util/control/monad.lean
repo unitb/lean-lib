@@ -1,4 +1,4 @@
-
+import util.control.applicative
 
 universes u v
 
@@ -6,7 +6,7 @@ variable {m : Type u → Type v}
 variable [monad m]
 variables {α β γ : Type u}
 
-open has_map
+open has_map nat
 
 namespace monad
 
@@ -29,3 +29,13 @@ def mmap₂'  (f : α → β → m γ) : list α → list β → m punit
 | _ [] := pure punit.star
 
 end monad
+
+open applicative
+
+def monad.mrepeat : ℕ → m α → m (list α)
+ | 0 _ := return []
+ | (succ n) m := lift₂ (::) m (monad.mrepeat n m)
+
+def monad.mrepeat' : ℕ → m α → m punit
+ | 0 _ := return punit.star
+ | (succ n) m := m *> monad.mrepeat' n m

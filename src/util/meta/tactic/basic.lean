@@ -45,7 +45,7 @@ do r  ← list.mmap get_local xs >>= revert_lst,
    local_context >>= mmap (try ∘ tactic.clear),
    intron r
 
-private meta def match_head (e : expr) : expr → tactic unit
+meta def match_head (e : expr) : expr → tactic unit
 | e' :=
     unify e e'
 <|> match e' with
@@ -61,14 +61,14 @@ meta def find_matching_head : expr → list expr → tactic expr
   do t ← infer_type H,
      (match_head e t >> return H) <|> find_matching_head e Hs
 
-meta def xassumption : tactic unit :=
-do { ctx ← local_context,
+meta def xassumption (asms : option (list expr) := none) : tactic unit :=
+do { ctx ← asms.to_monad <|> local_context,
      t   ← target,
      H   ← find_matching_head t ctx,
      tactic.apply H }
 <|> fail "assumption tactic failed"
 
-meta def auto : tactic unit :=
-xassumption ; xassumption ; assumption
+meta def auto (asms : option (list expr) := none) : tactic unit :=
+xassumption asms ; xassumption asms ; xassumption asms ; done
 
 end tactic.interactive

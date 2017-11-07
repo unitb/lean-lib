@@ -35,25 +35,29 @@ meta instance prod_elaborable {α α' β β' : Type} [elaborable α α']  [elabo
 : elaborable (α × β) (α' × β') :=
 ⟨ λ i, prod.rec_on i (λ x y, prod.mk <$> elaborate _ x <*> elaborate _ y) ⟩
 
+meta def parse_mono_function' (l r : pexpr) :=
+do l' ← to_expr l,
+   r' ← to_expr r,
+   parse_mono_function { monotonicity_cfg . } l' r'
+
 run_cmd
 do xs ← mmap to_expr [``(1),``(2),``(3)],
    ys ← mmap to_expr [``(1),``(2),``(4)],
-   x ← match_prefix ff xs ys,
+   x ← match_prefix { unify := ff } xs ys,
    p ← elaborate _ ([``(1),``(2)] , [``(3)], [``(4)]),
    guard $ x = p
 
 run_cmd
 do xs ← mmap to_expr [``(1),``(2),``(3),``(6),``(7)],
    ys ← mmap to_expr [``(1),``(2),``(4),``(5),``(6),``(7)],
-   x ← match_assoc ff xs ys,
+   x ← match_assoc { unify := ff } xs ys,
    p ← elaborate _ ([``(1), ``(2)], [``(3)], ([``(4), ``(5)], [``(6), ``(7)])),
    guard (x = p)
 
 run_cmd
 do x ← to_expr ``(7 + 3 : ℕ) >>= check_ac,
-   tactic.trace x,
    x ← pp x.2.2.1,
-   guard $ x.to_string = "(some (add_monoid_to_is_left_id, 0))"
+   guard $ x.to_string = "(some (is_left_id.left_id has_add.add 0, (is_right_id.right_id has_add.add 0, 0)))"
 
 run_cmd
 do parse_mono_function' ``(1 + 3 + 2 + 6) ``(4 + 2 + 1 + 5) >>= tactic.trace,
@@ -340,4 +344,16 @@ example (x y z k m n i j : ℕ)
 begin
   monotonicity,
   simp [h₁],
+end
+
+example (x y : ℕ)
+  (h : x ≤ y)
+: true :=
+begin
+  (do v ← mk_mvar,
+      p ← to_expr ```(%%v + x ≤ y + %%v),
+      assert `h' p),
+  monotonicity h,
+  trivial,
+  exact 1,
 end

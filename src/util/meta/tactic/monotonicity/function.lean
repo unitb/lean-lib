@@ -46,7 +46,7 @@ meta def mono_function.to_tactic_format : mono_function → tactic format
   xs' ← pp xs,
   return format!"{fn'} _ {xs'}"
 
-meta instance : has_to_tactic_format mono_function :=
+meta instance has_to_tactic_format_mono_function : has_to_tactic_format mono_function :=
 { to_tactic_format := mono_function.to_tactic_format }
 
 meta structure mono_ctx' (rel : Type) :=
@@ -72,7 +72,7 @@ do fn  ← pp ctx.function,
 meta instance has_to_tactic_format_mono_ctx : has_to_tactic_format mono_ctx :=
 { to_tactic_format := mono_ctx.to_tactic_format }
 
-meta def as_goal (e : expr) (tac : itactic) : itactic :=
+meta def as_goal (e : expr) (tac : tactic unit) : tactic unit :=
 do gs ← get_goals,
    set_goals [e],
    tac,
@@ -447,7 +447,7 @@ do tgt ← target >>= instantiate_mvars,
 
 open monad
 
-meta def hide_meta_vars (tac : list expr → itactic) : tactic unit :=
+private meta def hide_meta_vars (tac : list expr → itactic) : tactic unit :=
 do (v,args,t) ← generalize_meta_vars,
    h ← assert `h t,
    solve1 (do
@@ -458,6 +458,9 @@ do (v,args,t) ← generalize_meta_vars,
      tactic.exact x),
    tactic.apply (h.mk_app args),
    tactic.clear h
+
+meta def hide_meta_vars' (tac : itactic) : itactic :=
+hide_meta_vars $ λ _, tac
 
 end config
 

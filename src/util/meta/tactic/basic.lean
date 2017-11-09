@@ -1,5 +1,5 @@
 
-namespace tactic.interactive
+namespace tactic
 
 open tactic
 open lean.parser
@@ -22,7 +22,7 @@ solve1 (do
    | (expr.elet n _ e b) := tactic.change (expr.instantiate_local n e b)
    | _ := fail $ to_string n ++ " is not a local definition"
   end,
-  tactic.intros, refl ),
+  tactic.intros, reflexivity ),
 rewrite_target h,
 tactic.clear h
 
@@ -32,7 +32,7 @@ meta def unfold_locals : parse ident * → tactic unit
 
 meta def funext1 (x : parse ident_ ?) : tactic unit := do
 `[apply funext],
-intro x
+interactive.intro x
 
 meta def funext : parse ident_ * → tactic unit
  | [] := return ()
@@ -71,4 +71,8 @@ do { ctx ← asms.to_monad <|> local_context,
 meta def auto (asms : option (list expr) := none) : tactic unit :=
 xassumption asms ; xassumption asms ; xassumption asms ; done
 
-end tactic.interactive
+end tactic
+
+open tactic
+run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
+                        ,`funext1,`tactic.funext,`clear_except]

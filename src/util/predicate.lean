@@ -2,6 +2,7 @@
 import util.logic
 import util.data.fin
 import util.category
+import util.meta.tactic
 
 namespace predicate
 
@@ -173,11 +174,13 @@ lemma p_or_p_imp_p_or {p p' q q' : pred' α} {τ}
 : ( p || q ) τ → ( p' || q' ) τ :=
 by apply or.imp hp hq
 
+@[monotonic]
 lemma p_and_p_imp_p_and_right' {p q q' : pred' α}
   (hq : q ⟹ q')
 : ( p && q ) ⟹ ( p && q' ) :=
 by { intro, apply and.imp id (hq _) }
 
+@[monotonic]
 lemma p_or_p_imp_p_or_right' {p q q' : pred' α}
   (hq : q ⟹ q')
 : ( p || q ) ⟹ ( p || q' ) :=
@@ -215,11 +218,14 @@ lemma p_imp_p_imp_p_imp_right {p q q' : pred' α} {τ}
 : ( p ⟶ q ) τ → ( p ⟶ q' ) τ :=
 p_imp_p_imp_p_imp id hq
 
+
+@[monotonic]
 lemma p_imp_entails_p_imp_left {p p' q : pred' α}
   (hp : p' ⟹ p)
 : ( p ⟶ q ) ⟹ ( p' ⟶ q ) :=
 p_imp_entails_p_imp hp (by refl)
 
+@[monotonic]
 lemma entails_imp_entails_left {p p' q : pred' α}
   (hp : p' ⟹ p)
 : ( p ⟹ q ) → ( p' ⟹ q ) :=
@@ -228,6 +234,7 @@ begin
   apply p_imp_entails_p_imp_left hp _ (h _),
 end
 
+@[monotonic]
 lemma p_imp_entails_p_imp_right {p q q' : pred' α}
   (hq : q ⟹ q')
 : ( p ⟶ q ) ⟹ ( p ⟶ q' ) :=
@@ -458,6 +465,7 @@ lemma p_and_entails_p_and_right {p q : pred' β} (x : pred' β)
 : x && p ⟹ x && q :=
 assume x, and.imp_right (h x)
 
+@[monotonic]
 lemma p_not_entails_p_not_right {p q : pred' β}
   (h : q ⟹ p)
 : - p ⟹ - q :=
@@ -491,6 +499,7 @@ begin
   apply h
 end
 
+@[monotonic]
 lemma ew_imp_ew {p q : pred' β}
   (H : p ⟹ q)
 : ⦃ p ⦄ → ⦃ q ⦄ :=

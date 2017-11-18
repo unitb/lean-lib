@@ -321,4 +321,13 @@ def lift₅ {m : Type u → Type v} [applicative m]
   (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) (ma₅ : m α₅) : m φ :=
 f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄ <*> ma₅
 
+open nat
+def replicate {m : Type u → Type v} [applicative m] {α} : ℕ → m α → m (list α)
+ | 0 _ := pure []
+ | (succ n) m := (::) <$> m <*> replicate n m
+
+def replicate' {m : Type u → Type v} [applicative m] {α} : ℕ → m α → m punit
+ | 0 _ := pure punit.star
+ | (succ n) m := m *> replicate' n m
+
 end applicative

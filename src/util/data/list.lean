@@ -3,9 +3,9 @@ import data.list
 
 namespace list
 
-universes u v
+universes u v w
 
-variables {α : Type u} {β : Type v}
+variables {α : Type u} {β : Type v} {γ : Type w}
 variables x : α
 variables xs ys : list α
 
@@ -144,5 +144,9 @@ instance {α : Type*} : monoid (list α) :=
 , one_mul := by simp [has_mul.mul]
 , mul_one := by simp [has_mul.mul]
 , mul_assoc := by simp [has_mul.mul] }
+
+def mapp (f : α → β → γ) : list (α × β) → list γ
+ | [ ] := [ ]
+ | ((x,y) :: xs) := f x y :: mapp xs
 
 end list

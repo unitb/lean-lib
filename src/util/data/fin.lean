@@ -28,7 +28,7 @@ instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
   , le_total := assume x y, by { simp [fin.le_def], apply le_total }
   , decidable_eq := fin.decidable_eq _
   , decidable_le := fin.decidable_le
-  , lt_iff_le_not_le := by { introv _, simp [fin.lt_def,fin.le_def,lt_iff_le_not_le], } }
+  , lt_iff_le_not_le := by { introv _, simp only [fin.lt_def,fin.le_def,lt_iff_le_not_le], } }
 
 lemma fin.zero_def (n : ℕ)
 : (0 : fin (succ n)).val = 0 :=
@@ -309,7 +309,7 @@ by rw [fin.val_of_nat_eq_mod,mod_eq_of_lt h]
 
 def fin.foldl {n : ℕ}
   (f : α → β → β) (x : β) (a : fin n → α) : β :=
-(array.mk a).foldl x f
+array.foldl (d_array.mk a) x f
 
 def fin.sum (n : ℕ)
   [has_add α] [has_zero α]

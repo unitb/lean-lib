@@ -660,7 +660,7 @@ lemma p_exists_range_subtype {α : Type u}
 : (∃∃ i, (λ _, p i) && q i) = (∃∃ j : subtype p, q j) :=
 begin
   apply funext, intro i,
-  unfold_coe,
+  unfold_coes,
   simp [exists_range_subtype],
 end
 
@@ -696,7 +696,7 @@ end
 
 instance entails_category {α} : category (@p_entails α) :=
   { ident := by { intro, refl }
-  , comp  := by { intros _ _ _, apply flip (entails_trans _) }
+  , comp  := by { intros _ _ _, exact flip (entails_trans _) }
   , assoc := by { intros, refl }
   , left_ident  := by { intros, refl }
   , right_ident := by { intros, refl } }

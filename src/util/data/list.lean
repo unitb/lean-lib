@@ -76,22 +76,20 @@ lemma front_last_eq
   (Hx : ilast xs = ilast ys)
 : xs = ys :=
 begin
-  revert xs ys,
-  apply   rec_concat _ _,
-  { apply   rec_concat _ _,
+  revert xs ys, intro,
+  eapply   rec_concat _ _ xs,
+  { intro, apply   rec_concat _ _ ys,
     contradiction,
     intros y ys h₀ h₁,
     contradiction, },
-  { intros x xs,
-    apply rec_concat _ _,
+  { intros x xs ys,
+    apply rec_concat _ _ ys,
     intro, contradiction,
     intros y ys h₀ h₁,
     rw [front_concat,front_concat,ilast_concat,ilast_concat],
     intros h₂ h₃,
     rw [h₂,h₃], }
 end
-
--- def maximum
 
 section
 

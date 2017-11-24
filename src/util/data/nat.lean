@@ -43,14 +43,14 @@ theorem mul_plus_mod (k p q : ℕ) (h : q < p) : (k * p + q) % p = q :=
 begin
   induction k with k,
   { rw [mod_def,if_neg], simp,
-    simp, intro h', apply not_lt_of_ge h'^.left h },
+    simp, intro h', cases not_lt_of_ge h' h },
   { rw [mod_def,if_pos,succ_mul],
     simp [nat.add_sub_cancel_left],
     simp at ih_1,
     apply ih_1,
     { split,
       { apply lt_of_le_of_lt (zero_le _), apply h },
-      { simp [succ_mul], apply nat.le_add_right  } } }
+      { simp [succ_mul], apply zero_le  } } }
 end
 
 theorem succ_mod' {n p : ℕ} (h : succ (n % p) < p) : succ n % p = succ (n % p) :=

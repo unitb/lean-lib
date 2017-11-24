@@ -24,6 +24,7 @@ meta def match_exists : expr → tactic (name × expr × expr)
 meta def match_forall : expr → tactic (name × expr × expr)
  | (expr.pi n _ d b) := return (n,d,b)
  | e := fail $ format! "expecting a universal {e}"
+-- #check forall_imp_forall _ _
 
 /-- for goals of the form `f x → f x'` for certain monotonic or antimonotonic f,
     bring the context of `x` into the assumptions.
@@ -43,7 +44,10 @@ do g ← target >>= instantiate_mvars,
          intro id
     | `( (∀ x : %%t₀, %%e₀) → (∀ x : %%t₁, %%e₁) ) :=
         (do is_def_eq t₀ t₁,
-            `[apply forall_imp_forall _],
+            h' ← assert `h (expr.pi `x binder_info.default t₀ (e₀.imp $ e₁.lift_vars 0 1)),
+            swap,
+            h ← intro1,
+            tactic.refine ``(@forall_imp_forall _ _ _ %%h' %%h),
             intro id)
     <|> (do (guard (¬ e₀.has_var ∧ ¬ e₁.has_var)
                    <|> fail (format! "type of bound variables don't match: {t₀} ≠ {t₁}")),

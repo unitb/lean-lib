@@ -88,14 +88,14 @@ begin
 end
 
 @[simp]
-def list.le {α : Type*} [has_le α] : list α → list α → Prop
- | (x::xs) (y::ys) := x ≤ y ∧ list.le xs ys
+def list.le' {α : Type*} [has_le α] : list α → list α → Prop
+ | (x::xs) (y::ys) := x ≤ y ∧ list.le' xs ys
  | [] [] := true
  | _ _ := false
 
 @[simp]
-instance {α : Type*} [has_le α] : has_le (list α) :=
-⟨ list.le ⟩
+instance list_has_le {α : Type*} [has_le α] : has_le (list α) :=
+⟨ list.le' ⟩
 
 @[refl]
 lemma list.le_refl {α : Type*} [preorder α] {xs : list α}

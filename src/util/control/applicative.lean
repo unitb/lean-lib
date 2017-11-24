@@ -297,28 +297,46 @@ namespace applicative
 def lift {m : Type u → Type v} [functor m] {α φ : Type u} (f : α → φ) (ma : m α) : m φ :=
 f <$> ma
 
-def lift₂ {m : Type u → Type v} [applicative m]
+variables {m : Type u → Type v} [applicative m]
+def lift₂
   {α₁ α₂ φ : Type u}
   (f : α₁ → α₂ → φ)
   (ma₁ : m α₁) (ma₂: m α₂) : m φ :=
 f <$> ma₁ <*> ma₂
 
-def lift₃ {m : Type u → Type v} [applicative m]
+def lift₃
   {α₁ α₂ α₃ φ : Type u}
   (f : α₁ → α₂ → α₃ → φ)
   (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) : m φ :=
 f <$> ma₁ <*> ma₂ <*> ma₃
 
-def lift₄ {m : Type u → Type v} [applicative m]
+def lift₄
   {α₁ α₂ α₃ α₄ φ : Type u}
   (f : α₁ → α₂ → α₃ → α₄ → φ)
   (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) : m φ :=
 f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄
 
-def lift₅ {m : Type u → Type v} [applicative m]
+def lift₅
   {α₁ α₂ α₃ α₄ α₅ φ : Type u}
   (f : α₁ → α₂ → α₃ → α₄ → α₅ → φ)
   (ma₁ : m α₁) (ma₂: m α₂) (ma₃ : m α₃) (ma₄ : m α₄) (ma₅ : m α₅) : m φ :=
 f <$> ma₁ <*> ma₂ <*> ma₃ <*> ma₄ <*> ma₅
+
+open nat
+variables {α : Type u}
+variables {β : Type v}
+variables {γ : Type w}
+
+def replicate : ℕ → m α → m (list α)
+ | 0 _ := pure []
+ | (succ n) m := (::) <$> m <*> replicate n m
+
+def replicate' : ℕ → m α → m punit
+ | 0 _ := pure punit.star
+ | (succ n) m := m *> replicate' n m
+
+def mmapp (f : γ → β → m α) : list (γ × β) → m (list α)
+ | [ ] := pure [ ]
+ | ((x,y) :: xs) := (::) <$> f x y <*> mmapp xs
 
 end applicative

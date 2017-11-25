@@ -26,8 +26,6 @@ by { norm_num }
 example : (210485987642382937847263 : ℚ) ≠ (11048512347462382937847262 : ℚ) :=
 by { norm_num }
 
-local infix ^ := pow_nat
-
 example (x : ℕ) : ℕ :=
 let n : ℕ := by apply_normed (2^32 - 71) in n
 

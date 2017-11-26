@@ -72,8 +72,8 @@ def p_forall {t : Type u} {β : Type u'} (P : t → pred' β) : pred' β :=
 notation `∃∃` binders `, ` r:(scoped P, p_exists P) := r
 notation `∀∀` binders `, ` r:(scoped P, p_forall P) := r
 
-infixl ` || ` := p_or
-infixl ` && ` := p_and
+infixl ` ⋁ `:65 := p_or
+infixl ` ⋀ `:70 := p_and
 infixr ` ⟶ `:60 := p_impl
 infix ` ⟹ `:60 := p_entails
 notation `⦃ `:max act ` ⦄`:0 := ew act
@@ -82,7 +82,7 @@ instance : has_neg (α → Prop) := has_neg.mk p_not
 
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : β → α)
-: (p && q) ∘ f = (p ∘ f) && (q ∘ f) :=
+: (p ⋀ q) ∘ f = (p ∘ f) ⋀ (q ∘ f) :=
 rfl
 
 @[simp]
@@ -118,7 +118,7 @@ end
 
 @[simp]
 lemma True_p_and (p : pred' α)
-: True && p = p :=
+: True ⋀ p = p :=
 begin
   apply funext, intro x,
   simp,
@@ -126,7 +126,7 @@ end
 
 @[simp]
 lemma p_and_True (p : pred' α)
-: p && True = p :=
+: p ⋀ True = p :=
 begin
   apply funext, intro x,
   simp,
@@ -134,7 +134,7 @@ end
 
 @[simp]
 lemma True_p_or (p : pred' α)
-: True || p = True :=
+: True ⋁ p = True :=
 begin
   apply funext, intro x,
   simp,
@@ -142,7 +142,7 @@ end
 
 @[simp]
 lemma p_or_False (p : pred' α)
-: p || False = p :=
+: p ⋁ False = p :=
 begin
   apply funext, intro x,
   simp,
@@ -151,7 +151,7 @@ end
 
 @[simp]
 lemma False_p_or (p : pred' α)
-: False || p = p :=
+: False ⋁ p = p :=
 begin
   apply funext, intro x,
   simp,
@@ -165,35 +165,35 @@ assume _, id
 lemma p_or_p_imp_p_or' {p p' q q' : pred' α}
   (hp : p ⟹ p')
   (hq : q ⟹ q')
-: (p || q)  ⟹  (p' || q')  :=
+: (p ⋁ q)  ⟹  (p' ⋁ q')  :=
 by { intro, apply or.imp (hp _) (hq _) }
 
 lemma p_or_p_imp_p_or {p p' q q' : pred' α} {τ}
   (hp : (p ⟶ p') τ)
   (hq : (q ⟶ q') τ)
-: ( p || q ) τ → ( p' || q' ) τ :=
+: ( p ⋁ q ) τ → ( p' ⋁ q' ) τ :=
 by apply or.imp hp hq
 
 @[monotonic]
 lemma p_and_p_imp_p_and_right' {p q q' : pred' α}
   (hq : q ⟹ q')
-: ( p && q ) ⟹ ( p && q' ) :=
+: ( p ⋀ q ) ⟹ ( p ⋀ q' ) :=
 by { intro, apply and.imp id (hq _) }
 
 @[monotonic]
 lemma p_or_p_imp_p_or_right' {p q q' : pred' α}
   (hq : q ⟹ q')
-: ( p || q ) ⟹ ( p || q' ) :=
+: ( p ⋁ q ) ⟹ ( p ⋁ q' ) :=
 by { intro, apply or.imp id (hq _) }
 
 lemma p_or_p_imp_p_or_right {p q q' : pred' α} {τ}
   (hq : (q ⟶ q') τ)
-: ( p || q ) τ → ( p || q' ) τ :=
+: ( p ⋁ q ) τ → ( p ⋁ q' ) τ :=
 by apply or.imp id hq
 
 lemma p_or_p_imp_p_or_left {p p' q : pred' α} {τ}
   (hp : (p ⟶ p') τ)
-: ( p || q ) τ → ( p' || q ) τ :=
+: ( p ⋁ q ) τ → ( p' ⋁ q ) τ :=
 by apply or.imp hp id
 
 lemma p_imp_p_imp_p_imp {p p' q q' : pred' α} {τ}
@@ -225,7 +225,6 @@ lemma p_imp_entails_p_imp_left {p p' q : pred' α}
 : ( p ⟶ q ) ⟹ ( p' ⟶ q ) :=
 p_imp_entails_p_imp hp (by refl)
 
-@[monotonic]
 lemma entails_imp_entails_left {p p' q : pred' α}
   (hp : p' ⟹ p)
 : ( p ⟹ q ) → ( p' ⟹ q ) :=
@@ -242,7 +241,7 @@ p_imp_entails_p_imp (by refl) hq
 
 @[simp]
 lemma p_or_self (p : pred' β) :
-p || p = p :=
+p ⋁ p = p :=
 by { apply funext, intro, simp }
 
 lemma p_not_p_not_iff_self (p : pred' β) :
@@ -253,25 +252,25 @@ begin
 end
 
 lemma p_and_over_or_left (p q r : pred' β)
-: p && (q || r) = (p && q) || (p && r) :=
+: p ⋀ (q ⋁ r) = (p ⋀ q) ⋁ (p ⋀ r) :=
 begin
   apply funext, intro x, simp [distrib_left_and],
 end
 
 lemma p_and_over_or_right (p q r : pred' β)
-: (q || r) && p = (q && p) || (r && p) :=
+: (q ⋁ r) ⋀ p = (q ⋀ p) ⋁ (r ⋀ p) :=
 begin
   apply funext, intro x, simp [distrib_left_and],
 end
 
 lemma p_or_over_and_left (p q r : pred' β)
-: p || (q && r) = (p || q) && (p || r) :=
+: p ⋁ (q ⋀ r) = (p ⋁ q) ⋀ (p ⋁ r) :=
 begin
   apply funext, intro x, simp [distrib_right_or],
 end
 
 lemma p_or_over_and_right (p q r : pred' β)
-: (q && r) || p = (q || p) && (r || p) :=
+: (q ⋀ r) ⋁ p = (q ⋁ p) ⋀ (r ⋁ p) :=
 begin
   apply funext, intro x, simp [distrib_right_or],
 end
@@ -294,7 +293,7 @@ lemma False_entails (p : pred' β)
 assume x, false.elim
 
 lemma p_and_p_not_self (p : pred' β)
-: p && -p = False :=
+: p ⋀ -p = False :=
 begin
   apply mutual_entails _ (False_entails _),
   intros x P,
@@ -303,7 +302,7 @@ end
 
 @[simp]
 lemma p_or_p_not_self (p : pred' β)
-: p || -p = True :=
+: p ⋁ -p = True :=
 begin
   apply mutual_entails,
   { simp },
@@ -311,31 +310,31 @@ begin
 end
 
 lemma p_and_p_or_p_not_self (p q : pred' β)
-: p && (q || -p) = p && q :=
+: p ⋀ (q ⋁ -p) = p ⋀ q :=
 by simp [p_and_over_or_left,p_and_p_not_self]
 
 lemma p_not_and_self (p : pred' β)
-: -p && p = False :=
+: -p ⋀ p = False :=
 begin
   apply funext, intro x, simp,
 end
 
 lemma p_not_p_and (p q : pred' β)
-: - (p && q) = -p || -q :=
+: - (p ⋀ q) = -p ⋁ -q :=
 begin
   apply funext, intro x,
   simp [classical.not_and_iff_not_or_not],
 end
 
 lemma p_not_p_or (p q : pred' β)
-: - (p || q) = -p && -q :=
+: - (p ⋁ q) = -p ⋀ -q :=
 begin
   apply funext, intro x,
   simp [not_or_iff_not_and_not],
 end
 
 lemma p_not_and_self_or (p q : pred' β) :
-- p && (p || q) = -p && q :=
+- p ⋀ (p ⋁ q) = -p ⋀ q :=
 by rw [p_and_over_or_left,p_not_and_self,False_p_or]
 
 @[simp]
@@ -370,73 +369,73 @@ begin
   simp,
 end
 
-lemma p_or_comm (p q : pred' β) : p || q = q || p :=
+lemma p_or_comm (p q : pred' β) : p ⋁ q = q ⋁ p :=
 begin apply funext, intro x, simp end
 
-lemma p_or_assoc (p q r : pred' β) : p || (q || r) = p || q || r :=
+lemma p_or_assoc (p q r : pred' β) : p ⋁ (q ⋁ r) = p ⋁ q ⋁ r :=
 begin apply funext, intro x, simp end
 
-lemma p_and_comm (p q : pred' β) : p && q = q && p :=
+lemma p_and_comm (p q : pred' β) : p ⋀ q = q ⋀ p :=
 begin apply funext, intro x, simp end
 
-lemma p_and_assoc (p q r : pred' β) : p && (q && r) = p && q && r :=
+lemma p_and_assoc (p q r : pred' β) : p ⋀ (q ⋀ r) = p ⋀ q ⋀ r :=
 begin apply funext, intro x, simp end
 
-lemma p_and_p_imp (p q r : pred' β) : p && q ⟶ r = p ⟶ (q ⟶ r) :=
+lemma p_and_p_imp (p q r : pred' β) : p ⋀ q ⟶ r = p ⟶ (q ⟶ r) :=
 begin
   apply funext, intro x, simp,
 end
 
 @[simp]
 lemma p_or_intro_left (p q : pred' β)
-: p ⟹ p || q :=
+: p ⟹ p ⋁ q :=
 assume _, or.intro_left _
 
 @[simp]
 lemma p_or_intro_right (p q : pred' β)
-: q ⟹ p || q :=
+: q ⟹ p ⋁ q :=
 assume _, or.intro_right _
 
 lemma p_or_entails_of_entails {p q r : pred' β}
   (h₀ : p ⟹ r)
   (h₁ : q ⟹ r)
-: p || q ⟹ r :=
+: p ⋁ q ⟹ r :=
 assume _, or.rec (h₀ _) (h₁ _)
 
 lemma entails_p_or_of_entails_left {p q r : pred' β}
   (h₀ : p ⟹ q)
-: p ⟹ q || r :=
+: p ⟹ q ⋁ r :=
 assume x, (or.intro_left _) ∘ (h₀ x)
 
 lemma entails_p_or_of_entails_right {p q r : pred' β}
   (h₀ : p ⟹ r)
-: p ⟹ q || r :=
+: p ⟹ q ⋁ r :=
 assume x, (or.intro_right _) ∘ (h₀ x)
 
 lemma entails_p_and_of_entails {p q r : pred' β}
   (h₀ : p ⟹ q)
   (h₁ : p ⟹ r)
-: p ⟹ q && r :=
+: p ⟹ q ⋀ r :=
 assume x Hp, ⟨h₀ _ Hp,h₁ _ Hp⟩
 
 lemma p_and_entails_of_entails_left {p q r : pred' β}
   (h₁ : p ⟹ r)
-: p && q ⟹ r :=
+: p ⋀ q ⟹ r :=
 assume x Hp, h₁ _ Hp.left
 
 lemma p_and_entails_of_entails_right {p q r : pred' β}
   (h₁ : q ⟹ r)
-: p && q ⟹ r :=
+: p ⋀ q ⟹ r :=
 assume x Hp, h₁ _ Hp.right
 
 @[simp]
 lemma p_and_elim_left (p q : pred' β)
-: p && q ⟹ p :=
+: p ⋀ q ⟹ p :=
 assume x, and.left
 
 @[simp]
 lemma p_and_elim_right (p q : pred' β)
-: p && q ⟹ q :=
+: p ⋀ q ⟹ q :=
 assume x, and.right
 
 @[trans]
@@ -455,14 +454,16 @@ lemma comp_entails_comp {p q : pred' β} (f : α → β)
 : p ∘ f ⟹ q ∘ f :=
 assume x, H (f x)
 
+@[monotonic]
 lemma p_and_entails_p_and_left (p q x : pred' β)
   (h : p ⟹ q)
-: p && x ⟹ q && x :=
+: p ⋀ x ⟹ q ⋀ x :=
 assume x, and.imp_left (h x)
 
+@[monotonic]
 lemma p_and_entails_p_and_right {p q : pred' β} (x : pred' β)
   (h : p ⟹ q)
-: x && p ⟹ x && q :=
+: x ⋀ p ⟹ x ⋀ q :=
 assume x, and.imp_right (h x)
 
 @[monotonic]
@@ -477,7 +478,7 @@ lemma entails_of_eq (p q : pred' β)
 by simp [h]
 
 lemma p_and_entails_p_or (p q : pred' β)
-: p && q ⟹ p || q :=
+: p ⋀ q ⟹ p ⋁ q :=
 assume x, or.intro_left _ ∘ and.left
 
 lemma True_p_imp (p : pred' β)
@@ -507,7 +508,7 @@ forall_imp_forall H
 
 lemma p_or_over_p_exists_left {t} (p : t → pred' β) (q : pred' β) {w : t → pred' β}
   (h : ⦃ ∃∃ x : t, w x ⦄)
-: q || (∃∃ x, p x) = (∃∃ x, q || p x) :=
+: q ⋁ (∃∃ x, p x) = (∃∃ x, q ⋁ p x) :=
 begin
   apply funext, intro,
   have _inst : nonempty t := nonempty_of_exists (h x),
@@ -526,7 +527,7 @@ begin
 end
 
 lemma p_and_over_p_exists_right {t} (p : t → pred' β) (q : pred' β)
-: (∃∃ x, p x) && q = (∃∃ x, p x && q) :=
+: (∃∃ x, p x) ⋀ q = (∃∃ x, p x ⋀ q) :=
 begin
   apply funext, intro i,
   rw ← iff_eq_eq,
@@ -534,7 +535,7 @@ begin
 end
 
 lemma p_and_over_p_exists_left {t} (p : pred' β) (q : t → pred' β)
-: p && (∃∃ x, q x) = (∃∃ x, p && q x) :=
+: p ⋀ (∃∃ x, q x) = (∃∃ x, p ⋀ q x) :=
 begin
   rw [p_and_comm,p_and_over_p_exists_right],
   apply p_exists_congr,
@@ -542,7 +543,7 @@ begin
 end
 
 lemma shunting (p q r : pred' β)
-: p ⟶ q || r = (p && - q) ⟶ r :=
+: p ⟶ q ⋁ r = (p ⋀ - q) ⟶ r :=
 begin
   apply funext, intro i,
   simp, rw ← iff_eq_eq,
@@ -551,13 +552,14 @@ begin
 end
 
 lemma p_not_p_imp (p q : pred' β)
-: (-p) ⟶ q = p || q :=
+: (-p) ⟶ q = p ⋁ q :=
 begin
   rw [← True_p_and (-p),← shunting,True_p_imp],
 end
 
+@[monotonic]
 lemma p_or_entails_p_or_right (p q x : pred' β)
-: p ⟹ q → x || p ⟹ x || q :=
+: p ⟹ q → x ⋁ p ⟹ x ⋁ q :=
 begin
   intros h i, simp,
   apply or.imp_left (h _),
@@ -566,11 +568,11 @@ end
 lemma p_or_entails_p_or {p p' q q' : pred' β}
   (H₀ : p  ⟹ q )
   (H₁ : p' ⟹ q')
-: p || p' ⟹ q || q' :=
+: p ⋁ p' ⟹ q ⋁ q' :=
 assume i, or.imp (H₀ _) (H₁ _)
 
 lemma p_or_not_and (p q : pred' β)
-: p || (- p && q) = p || q :=
+: p ⋁ (- p ⋀ q) = p ⋁ q :=
 begin
   apply funext, intro,
   simp,
@@ -598,7 +600,7 @@ begin
 end
 
 lemma p_exists_over_p_or {t} (p q : t → pred' β)
-: (∃∃ x, p x) || (∃∃ x, q x) = (∃∃ x, p x || q x) :=
+: (∃∃ x, p x) ⋁ (∃∃ x, q x) = (∃∃ x, p x ⋁ q x) :=
 begin
   apply mutual_entails,
   apply p_or_entails_of_entails,
@@ -666,7 +668,7 @@ end
 
 lemma p_exists_range_subtype {α : Type u}
   (p : α → Prop) (q : α → pred' β)
-: (∃∃ i, (λ _, p i) && q i) = (∃∃ j : subtype p, q j) :=
+: (∃∃ i, (λ _, p i) ⋀ q i) = (∃∃ j : subtype p, q j) :=
 begin
   apply funext, intro i,
   unfold_coes,
@@ -674,7 +676,7 @@ begin
 end
 
 lemma p_or_iff_not_imp (p q : pred' β)
-: p || q = - p ⟶ q :=
+: p ⋁ q = - p ⟶ q :=
 begin
   apply funext, intro i,
   simp [or_iff_not_imp],
@@ -688,7 +690,7 @@ begin
 end
 
 lemma p_forall_split_one {n : ℕ} (p : fin (nat.succ n) → pred' β)
-: (∀∀ i, p i) = p fin.max && (∀∀ i, restr p i) :=
+: (∀∀ i, p i) = p fin.max ⋀ (∀∀ i, restr p i) :=
 begin
   apply funext, intro,
   simp [forall_split_one],
@@ -696,7 +698,7 @@ begin
 end
 
 lemma p_exists_split_one {n : ℕ} (p : fin (nat.succ n) → pred' β)
-: (∃∃ i, p i) = p fin.max || (∃∃ i, restr p i) :=
+: (∃∃ i, p i) = p fin.max ⋁ (∃∃ i, restr p i) :=
 begin
   apply funext, intro,
   simp [exists_split_one],

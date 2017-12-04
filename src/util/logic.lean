@@ -336,7 +336,7 @@ begin
   { exact ⟨_,h⟩ }
 end
 
-lemma exists_variable_change' {α : Type u} {β : Type u'}
+lemma exists_variable_change'
   (p : α → Prop) (q : β → Prop)
   (f : ∀ x : α, p x → β) (g : ∀ x : β, q x → α)
   (Hf : ∀ x (h: p x), q (f x h))
@@ -348,7 +348,7 @@ begin
   { apply exists_imp_exists'' g Hg, },
 end
 
-lemma exists_variable_change {α : Type u} {β : Type u'}
+lemma exists_variable_change
   (p : α → Prop) (q : β → Prop)
   (f : α → β) (g : β → α)
   (Hf : ∀ x, p x → q (f x))
@@ -361,12 +361,12 @@ begin
 end
 
 @[simp]
-lemma exists_range_subtype {α : Type u}
+lemma exists_range_subtype {α : Sort u}
   (p : α → Prop) (q : α → Prop)
 : (∃ j : subtype p, q j.val) ↔ (∃ i, p i ∧ q i) :=
 begin
   let f := λ (x : α) (h : p x ∧ q x), subtype.mk x h.left,
-  let g := λ (x : subtype p) (h : q x), x.val,
+  let g := λ (x : subtype p) (h : q (x.val)), x.val,
   apply exists_variable_change' _ _ g f,
   { intros x h, exact ⟨x.property, h⟩  },
   { intros x h, apply h.right },

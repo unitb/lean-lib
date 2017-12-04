@@ -339,4 +339,8 @@ def mmapp (f : γ → β → m α) : list (γ × β) → m (list α)
  | [ ] := pure [ ]
  | ((x,y) :: xs) := (::) <$> f x y <*> mmapp xs
 
+def mmapp' (f : γ → β → m α) : list (γ × β) → m punit
+ | [ ] := pure punit.star
+ | ((x,y) :: xs) := f x y *> mmapp' xs
+
 end applicative

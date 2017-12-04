@@ -133,7 +133,7 @@ meta def find_one_difference
         guard (xs.length = ys.length),
         mmap₂' compare xs ys,
         return ([],x,y,xs)
- | _ _ := failed
+ | xs ys := fail format!"find_one_difference: {xs}, {ys}"
 
 meta def delete_expr (e : expr)
 : list expr → tactic (option (list expr))
@@ -464,6 +464,13 @@ hide_meta_vars $ λ _, tac
 
 end config
 
+meta def solve_mvar (v : expr) (tac : tactic unit) : tactic unit :=
+do gs ← get_goals,
+   set_goals [v],
+   target >>= instantiate_mvars >>= tactic.change,
+   tac, done,
+   set_goals gs
+
 /-- transforms a goal of the form `f x ≼ f y` into `x ≤ y` using lemmas
     marked as `monotonic`.
 
@@ -480,21 +487,27 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg,
    when (rules = []) (fail "no applicable rules found"),
    err ← format.join <$> mmap side_conditions rules,
    focus1 $ any_of rules (λ rule, do
-     x ← to_expr ``(apply_rel %%(g.rel_def) %%l %%r %%rule),
-     tactic.apply x,
-     solve1 (try (any_of id_rs rewrite_target) >>
+     t₀ ← mk_meta_var `(Prop),
+     v₀ ← mk_meta_var t₀,
+     t₁ ← mk_meta_var `(Prop),
+     v₁ ← mk_meta_var t₁,
+     tactic.refine $ ``(apply_rel %%(g.rel_def) %%l %%r %%rule %%v₀ %%v₁),
+     solve_mvar v₀ (try (any_of id_rs rewrite_target) >>
              ( done <|>
                refl <|>
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
-     solve1 (try (any_of id_rs rewrite_target) >>
+     solve_mvar v₁ (try (any_of id_rs rewrite_target) >>
              ( done <|>
                refl <|>
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
      repeat_exactly (n-1) (try $ solve1 $ apply_instance <|> auto (some asms)))
-   <|> fail (to_fmt "Side condition for rules cannot be proved: \n" ++ err)
+
+meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
+: tactic unit :=
+repeat_exactly n (monotonicity1 cfg)
 
 open sum nat
 
@@ -523,19 +536,26 @@ meta def monotonicity : parse (inl <$> texpr <|> (tk ":" *> inr <$> texpr))? →
  | none := repeat monotonicity1
  | (some (inl h)) :=
 do h' ← i_to_expr h,
-   repeat_until monotonicity1 (tactic.apply h')
+   repeat_until monotonicity1 (tactic.refine $ to_pexpr h')
  | (some (inr t)) :=
 do h ← i_to_expr t >>= assert `h,
    tactic.swap,
-   repeat_until monotonicity1 (tactic.apply h)
+   repeat_until monotonicity1 (tactic.refine $ to_pexpr h)
+
+meta def match_imp : expr → tactic (expr × expr)
+ | `(%%e₀ → %%e₁) :=
+   do guard (¬ e₁.has_var),
+      return (e₀,e₁)
+ | _ := failed
 
 meta def monotoncity.check_rel (xs : list expr) (l r : expr) : tactic unit :=
 do (_,x,y,_) ← find_one_difference { monotonicity_cfg . }
-               l.get_app_args r.get_app_args,
+               l.get_app_args r.get_app_args <|> fail "foo bar",
    when (¬ l.get_app_fn = r.get_app_fn)
      (fail format!"{l} and {r} should be the f x and f y for some f"),
    t ← infer_type (list.ilast xs),
    (l',r') ← last_two t.get_app_args
+     <|> match_imp t
      <|> fail format!"expecting assumption {t} to be a relation R x y",
    when (¬ x.is_local_constant) (fail format!"expecting a bound variable: {x}"),
    when (¬ y.is_local_constant) (fail format!"expecting a bound variable: {y}"),
@@ -619,3 +639,10 @@ begin
   apply gt_of_mul_lt_mul_neg_right _ h',
   apply lt_of_not_ge h'',
 end
+
+attribute [monotonic] or.imp_left
+attribute [monotonic] and.imp_right
+instance : is_associative _ (∨) := ⟨ by simp ⟩
+instance : is_associative _ (∧) := ⟨ by simp ⟩
+instance : is_commutative _ (∨) := ⟨ by simp ⟩
+instance : is_commutative _ (∧) := ⟨ by simp ⟩

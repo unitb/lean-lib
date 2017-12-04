@@ -1,4 +1,6 @@
 
+import util.control.applicative
+
 namespace tactic
 
 open tactic
@@ -30,9 +32,17 @@ meta def unfold_locals : parse ident * → tactic unit
  | [] := return ()
  | (n::ns) := unfold_local n >> unfold_locals ns
 
-meta def funext1 (x : parse ident_ ?) : tactic unit := do
-`[apply funext],
-interactive.intro x
+@[user_attribute]
+meta def funext_attribte : user_attribute :=
+{ name := `extensionality
+, descr := "lemmas usable by `funext` tactic" }
+
+attribute [extensionality] funext
+
+meta def funext1 (x : parse ident_ ?) : tactic unit :=
+do ls ← attribute.get_instances `extensionality,
+   ls.any_of (λ l, applyc l) <|> fail "no applicable extensionality rule found",
+   interactive.intro x
 
 meta def funext : parse ident_ * → tactic unit
  | [] := return ()
@@ -70,9 +80,33 @@ do { ctx ← asms.to_monad <|> local_context,
 
 meta def auto (asms : option (list expr) := none) : tactic unit :=
 xassumption asms ; xassumption asms ; xassumption asms ; done
+open tactic.interactive
+open applicative (lift₂)
+
+meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
+do interactive.rw ⟨[rw_rule.mk p ff r ],none⟩ loc
+
+meta def distrib1
+  (arg : rw_rule)
+  (loc : loc) : tactic unit :=
+do let op := arg.rule,
+   let p := arg.1,
+   if arg.symm then
+   ( rw_aux p ``(is_left_distrib.left_distrib _ %%op) loc <|>
+     rw_aux p ``(is_right_distrib.right_distrib _ %%op) loc)
+   else
+   ( rw_aux p ``(is_left_distrib.left_distrib %%op) loc <|>
+     rw_aux p ``(is_right_distrib.right_distrib %%op) loc),
+   return ()
+
+meta def distributivity
+  (args : parse $ rw_rules)
+  (l : parse location) : tactic unit :=
+mmap' (λ e, distrib1 e l) args.rules
 
 end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
-                        ,`funext1,`tactic.funext,`clear_except]
+                        ,`funext1,`tactic.funext,`clear_except
+                        ,`distributivity]

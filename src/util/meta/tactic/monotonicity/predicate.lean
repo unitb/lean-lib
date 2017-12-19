@@ -91,7 +91,14 @@ do g ← target,
             else return ())
     <|> (do expr.is_not e₀,
             expr.is_not e₁,
-            intro_mono none >> intros_mono_dep)
+            intro_mono none,
+            intros_mono_dep)
+    <|> (do match_or e₀,
+            match_or e₁,
+            return ())
+    <|> (do match_and e₀,
+            match_and e₁,
+            return ())
     <|> monotonicity1 >> intros_mono_dep
     <|> return ()
     | _ :=  monotonicity1 >> intros_mono_dep

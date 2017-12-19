@@ -247,10 +247,10 @@ begin
   apply h ; assumption,
 end
 
-example {α β : Type} (p : α → β → Prop) (r : α → Prop) (s : β → Prop)
-  (h : ∀ x y, r x → ¬ r x → p x y → r x)
-: (∃ x, ∀ y : β, r x ∧ (¬ r x ∨ r x))
-→ (∃ i, ∀ j, r i ∧ (¬ p i j ∨ r i)) :=
+example {α β : Type} (p : α → β → Prop) (q r : α → Prop) (s : β → Prop)
+  (h : ∀ x y, r x → ¬ q x → p x y → r x)
+: (∃ x, ∀ y : β, r x ∧ (¬ r x ∨ q x))
+→ (∃ i, ∀ j, r i ∧ (¬ p i j ∨ q i)) :=
 begin
   introv_mono h₀ h₁,
   apply h ; assumption,

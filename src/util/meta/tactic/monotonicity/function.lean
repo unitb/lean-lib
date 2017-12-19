@@ -480,7 +480,7 @@ do gs ← get_goals,
 meta def monotonicity1 (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=
 hide_meta_vars $ λ asms,
-do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg,
+do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> fail "monotonic context not found",
    ns ← attribute.get_instances `monotonic,
    p ← mk_pattern g,
    rules ← find_rule asms ns p <|> fail "no applicable rules found",
@@ -553,7 +553,7 @@ meta def match_imp : expr → tactic (expr × expr)
 
 meta def monotoncity.check_rel (xs : list expr) (l r : expr) : tactic unit :=
 do (_,x,y,_) ← find_one_difference { monotonicity_cfg . }
-               l.get_app_args r.get_app_args <|> fail "foo bar",
+               l.get_app_args r.get_app_args,
    when (¬ l.get_app_fn = r.get_app_fn)
      (fail format!"{l} and {r} should be the f x and f y for some f"),
    t ← infer_type (list.ilast xs),

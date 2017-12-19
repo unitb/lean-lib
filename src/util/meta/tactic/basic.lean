@@ -1,4 +1,5 @@
 
+import data.stream
 import util.control.applicative
 
 namespace tactic
@@ -10,6 +11,16 @@ open interactive.types
 
 local postfix `?`:9001 := optional
 local postfix *:9001 := many
+
+meta def local_def_value (e : expr) : tactic expr := do
+do (v,_) ← solve_aux `(true) (do
+         (expr.elet n t v _) ← (revert e >> target)
+           | fail format!"{e} is not a local definition",
+         return v),
+   return v
+
+meta def get_local_value (e : expr) : tactic (option expr) :=
+try_core $ local_def_value e
 
 meta def unfold_local (n : parse ident) : tactic unit := do
 e ← resolve_name n >>= to_expr,
@@ -37,7 +48,7 @@ meta def funext_attribte : user_attribute :=
 { name := `extensionality
 , descr := "lemmas usable by `funext` tactic" }
 
-attribute [extensionality] funext
+attribute [extensionality] funext stream.ext
 
 meta def funext1 (x : parse ident_ ?) : tactic unit :=
 do ls ← attribute.get_instances `extensionality,
@@ -103,6 +114,17 @@ meta def distributivity
   (args : parse $ rw_rules)
   (l : parse location) : tactic unit :=
 mmap' (λ e, distrib1 e l) args.rules
+
+meta def interactive.replace
+  (h : parse ident)
+  (q₁ : parse (tk ":" *> texpr)?)
+: parse ((tk ":=" *> texpr)?) → tactic unit
+ | none := do h' ← get_local h,
+              tactic.interactive.«have» h q₁ none
+              ; [ skip , clear h' ]
+ | (some pr) := do h' ← get_local h,
+                   tactic.interactive.«have» h q₁ (some pr),
+                   clear h'
 
 end tactic
 

@@ -519,6 +519,9 @@ meta def repeat_until_or_at_most : nat → tactic unit → tactic unit → tacti
 meta def repeat_until : tactic unit → tactic unit → tactic unit :=
 repeat_until_or_at_most 100000
 
+meta def assert_or_rule : parser (pexpr ⊕ pexpr) :=
+(inl <$> texpr <|> (tk ":" *> inr <$> texpr))
+
 /-- `monotonicity` repeatedly unwraps monotonic functions using `monotonicity1`
     until it cannot unwrap anymore.
 
@@ -532,7 +535,7 @@ repeat_until_or_at_most 100000
     TODO: with `monotonicity h` and `monotonicty : p` split the remaining gaol if
       the provided rule does not solve it completely.
 -/
-meta def monotonicity : parse (inl <$> texpr <|> (tk ":" *> inr <$> texpr))? → tactic unit
+meta def monotonicity : parse assert_or_rule? → tactic unit
  | none := repeat monotonicity1
  | (some (inl h)) :=
 do h' ← i_to_expr h,

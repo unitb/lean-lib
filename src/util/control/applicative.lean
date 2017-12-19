@@ -304,6 +304,14 @@ def lift₂
   (ma₁ : m α₁) (ma₂: m α₂) : m φ :=
 f <$> ma₁ <*> ma₂
 
+def mmap₂
+  {α₁ α₂ φ : Type u}
+  (f : α₁ → α₂ → m φ)
+: Π (ma₁ : list α₁) (ma₂: list α₂), m (list φ)
+ | (x :: xs) (y :: ys) := (::) <$> f x y <*> mmap₂ xs ys
+ | _ _ := pure []
+
+
 def lift₃
   {α₁ α₂ α₃ φ : Type u}
   (f : α₁ → α₂ → α₃ → φ)

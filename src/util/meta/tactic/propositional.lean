@@ -5,7 +5,10 @@ namespace tactic
 open predicate
 
 meta def atoms : expr → dlist expr
- | `(%%p → %%q) := atoms p ++ atoms q
+ | e@`(%%p → %%q) :=
+    if q.has_var
+    then dlist.singleton e
+    else  atoms p ++ atoms q
  | `(%%p ↔ %%q) := atoms p ++ atoms q
  | `(%%p ∨ %%q) := atoms p ++ atoms q
  | `(%%p ∧ %%q) := atoms p ++ atoms q
@@ -27,7 +30,7 @@ open interactive (loc)
 open tactic.interactive (simp)
 meta def propositional : tactic unit :=
 do `(_ ⟹ _) ← target | show_prop,
-   `[pointwise with v, simp],
+   `[pointwise with v,simp],
    try show_prop
 
 end tactic

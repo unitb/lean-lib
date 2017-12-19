@@ -336,6 +336,11 @@ begin
   { exact ⟨_,h⟩ }
 end
 
+@[simp]
+lemma exists_one_point_iff_true (y : α)
+: (∃ x, x = y) ↔ true :=
+iff_true_intro ⟨y,rfl⟩
+
 lemma exists_variable_change'
   (p : α → Prop) (q : β → Prop)
   (f : ∀ x : α, p x → β) (g : ∀ x : β, q x → α)

@@ -21,11 +21,16 @@ meta def try_abstract (e : expr) : tactic (list expr) :=
 open nat smt_tactic (eblast solve_goals)
 open smt_tactic.interactive (rsimp)
 
+meta def split_or : smt_tactic unit :=
+do cs ← local_context,
+   h ← cs.any_of $ λ h, h <$ (match_or h <|> match_and h),
+   smt_tactic.destruct h
+
 meta def show_prop : tactic unit :=
 do p ← target,
    vs ← list.join <$> mmap try_abstract (atoms p).to_list,
    ctx ← local_context, mmap' (try ∘ clear) ctx.reverse,
-   using_smt (rsimp <|> (smt_tactic.intros ; eblast))
+   using_smt (rsimp <|> (smt_tactic.intros ; smt_tactic.repeat split_or ; eblast))
 open interactive (loc)
 open tactic.interactive (simp)
 meta def propositional : tactic unit :=

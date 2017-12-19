@@ -266,8 +266,6 @@ local postfix `?`:9001 := optional
 local postfix *:9001 := many
 meta def using_idents := (tk "using" *> ident*) <|> pure []
 
-#check ew_str
-#check @p_imp_sem
 meta def lifted_asm (v : expr) (h : name) : tactic unit :=
 do h' ← get_local h,
    p ← to_expr ``(p_imp_sem  %%h' %%v)
@@ -277,10 +275,6 @@ do h' ← get_local h,
    try $ simp ff [] [] (loc.ns [some h.local_pp_name]),
    try (clear h')
 
-#check pred_ext_sem
-#check entails_of_pointwise
-#check ew_wk
-#check p_imp_ext
 meta def lifted_pred (rs : parse simp_arg_list) (hs : parse using_idents) : tactic unit :=
 do `[apply p_imp_ext _] <|> `[apply pred_ext_sem] <|> `[apply ew_wk _],
    v ← intro1,

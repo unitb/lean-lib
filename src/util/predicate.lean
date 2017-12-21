@@ -617,6 +617,10 @@ lemma p_or_p_not_self (p : pred' β)
 : p ⋁ -p = True :=
 by lifted_pred [classical.em]
 
+lemma em (p : pred' β)
+: ⊩ p ⋁ -p :=
+by lifted_pred [classical.em]
+
 lemma p_and_p_or_p_not_self (p q : pred' β)
 : p ⋀ (q ⋁ -p) = p ⋀ q :=
 by simp [p_and_over_or_left,p_and_p_not_self]
@@ -1068,14 +1072,24 @@ begin
   apply entails_to_pointwise (H x) σ,
 end
 
-lemma p_exists_entails_p_exists {t : Sort u'} (p q : t → pred' β)
-: (∀ x, p x ⟹ q x) → (∃∃ x, p x) ⟹ (∃∃ x, q x) :=
+lemma p_exists_p_imp_p_exists {Γ : pred' β} {t : Sort u'} (p q : t → pred' β)
+: Γ ⊢ (∀∀ x, p x ⟶ q x) → Γ ⊢ (∃∃ x, p x) ⟶ (∃∃ x, q x) :=
 begin
   intros h,
   lifted_pred [- exists_imp_distrib],
+  intro h',
   apply exists_imp_exists,
   intro x,
-  apply entails_to_pointwise (h x) ,
+  apply h.apply _ h',
+end
+
+lemma p_exists_entails_p_exists {t : Sort u'} (p q : t → pred' β)
+: (∀ x, p x ⟹ q x) → (∃∃ x, p x) ⟹ (∃∃ x, q x) :=
+begin
+  intros h _,
+  apply p_exists_p_imp_p_exists,
+  constructor, introv h' x,
+  apply (h x Γ).apply _ h'
 end
 
 lemma p_exists_over_p_or {t} (p q : t → pred' β)

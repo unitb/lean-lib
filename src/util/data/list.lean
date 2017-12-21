@@ -9,6 +9,10 @@ variables {α : Type u} {β : Type v} {γ : Type w}
 variables x : α
 variables xs ys : list α
 
+def opt_head : list α → option α
+ | [] := none
+ | (x :: _) := some x
+
 def front : list α → list α
   | [] := []
   | [x] := []

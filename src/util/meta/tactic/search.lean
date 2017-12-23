@@ -1,11 +1,11 @@
 open tactic environment
 
-meta def search_some (s : expr → tactic bool) (hide : bool := tt) : tactic unit :=
+meta def search_some (s : expr → tactic bool) (hide_prefixed : bool := tt) : tactic unit :=
 do env ← get_env,
    env.fold (pure ()) $ λ d acc,
    do acc,
       declaration.thm n _ ty _ ← pure d | skip,
-      when (hide ∧ n.last_string.front ≠ '_') $ do
+      when (¬ hide_prefixed ∨ n.last_string.front ≠ '_') $ do
         occ ← s ty,
         when occ $ do
           ty ← pp ty,

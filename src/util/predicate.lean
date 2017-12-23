@@ -275,18 +275,36 @@ do h' ← get_local h,
    try $ simp ff [] [] (loc.ns [some h.local_pp_name]),
    try (clear h')
 
-meta def lifted_pred (rs : parse simp_arg_list) (hs : parse using_idents) : tactic unit :=
+meta def lifted_pred (no_dflt : parse only_flag)
+   (rs : parse simp_arg_list)
+   (hs : parse using_idents) : tactic unit :=
 do `[apply p_imp_ext _] <|> `[apply pred_ext_sem] <|> `[apply ew_wk _],
    v ← intro1,
    mmap' (lifted_asm v) (hs : list _),
-   try (simp ff rs [] (loc.ns [none])),
+   try (simp no_dflt rs [`predicate] (loc.ns [none])),
    try reflexivity
 run_cmd add_interactive [`lifted_pred]
 end
+
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : β → α)
 : ((p ⋀ q) '∘ f) = (p '∘ f) ⋀ (q '∘ f) :=
 by lifted_pred
+
+@[simp]
+lemma coe_over_comp (p : α → Prop) (f : β → α)
+: ((p : pred' α) '∘ f) = ↑(p ∘ f) :=
+by lifted_pred
+
+@[simp]
+lemma p_or_comp (p q : pred' α) (f : β → α)
+: ((p ⋁ q) '∘ f) = (p '∘ f) ⋁ (q '∘ f) :=
+by lifted_pred
+
+@[simp]
+lemma p_exists_comp {t} (p : t → pred' α) (f : β → α)
+: (p_exists p '∘ f) = (∃∃ x, p x '∘ f) :=
+by lifted_pred [p_exists,pred.p_exists]
 
 @[simp]
 lemma coe_to_prop_p_and (p q : α → Prop)
@@ -846,8 +864,9 @@ begin
   intro, auto,
 end
 
+@[simp]
 lemma p_not_comp (p : pred' α) (f : β → α)
-: -(p '∘ f) = -p '∘ f :=
+: -p '∘ f = -(p '∘ f) :=
 by lifted_pred
 
 lemma comp_entails_comp {p q : pred' β} (f : α → β)
@@ -1024,6 +1043,10 @@ lemma p_not_p_imp {β : Sort*} (p q : pred' β)
 : (-p) ⟶ q = p ⋁ q :=
 by rw [← True_p_and (-p),← shunting,True_p_imp]
 
+lemma p_imp_iff_p_not_p_or {β : Sort*} (p q : pred' β)
+: p ⟶ q = -p ⋁ q :=
+by rw [← p_not_p_imp,p_not_p_not_iff_self]
+
 lemma p_or_entails_p_or {p p' q q' : pred' β}
   (H₀ : p  ⟹ q )
   (H₁ : p' ⟹ q')
@@ -1191,7 +1214,3 @@ instance entails_category {α} : category (@p_entails α) :=
 -- attribute [trans]  entails_trans
 
 end predicate
-
--- TODO:
---   * switch definition of pred' to a record to strengthen encapsulation
---   * use τ ⊧ []φ instead of ([]φ) τ

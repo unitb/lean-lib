@@ -31,24 +31,29 @@ do cs ← local_context,
   h' <$ mmap' smt_tactic.destruct h'
 
 meta def split_all_or' : list expr → smt_tactic unit
- | xs := do ys ← split_or xs, (guard (¬ ys.empty) >> split_all_or' (ys ++ xs)) <|> return ()
+ | xs := do ys ← split_or xs, (guard (¬ ys.empty) >> smt_tactic.all_goals (split_all_or' (ys ++ xs))) <|> return ()
 
 meta def split_all_or : smt_tactic unit :=
 split_all_or' []
 
 meta def show_prop : tactic unit :=
-do p ← target,
-   vs ← list.join <$> mmap try_abstract (atoms p).to_list,
-   ctx ← local_context, mmap' (try ∘ clear) ctx.reverse,
-   using_smt (rsimp <|> (smt_tactic.intros ; eblast))
+-- do p ← target,
+--    vs ← list.join <$> mmap try_abstract (atoms p).to_list,
+--    ctx ← local_context, mmap' (try ∘ clear) ctx.reverse,
+   using_smt ((smt_tactic.intros ; split_all_or ; eblast))
 
 open interactive (loc)
 open tactic.interactive (simp)
 
 meta def propositional : tactic unit :=
-do `(_ ⟹ _) ← target | show_prop,
-   `[pointwise with v,simp],
-   try show_prop
+do t ← target,
+   match t with
+    | `(_ ⟹ _) := `[pointwise with v,simp with predicate] >> try show_prop
+    | `(_ = _) := `[lifted_pred] >> split ; try show_prop
+    | `(_ ⊢ _) := `[pointwise with v,simp with predicate] >> try show_prop
+    | `(⊩ _) := `[pointwise with v,simp with predicate] >> try show_prop
+    | _ := show_prop
+  end
 
 end tactic
 

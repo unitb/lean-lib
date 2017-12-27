@@ -22,6 +22,19 @@ do (v,_) ← solve_aux `(true) (do
 meta def get_local_value (e : expr) : tactic (option expr) :=
 try_core $ local_def_value e
 
+meta def print (e : parse texpr) : tactic unit :=
+do e ← to_expr e,
+   let e' := e.get_app_fn,
+   if e'.is_local_constant
+     then do p ← local_def_value e' >>= pp,
+             trace format!"{e'.local_pp_name} := {p}"
+   else if e'.is_constant
+     then do e ← get_env, d ← e.get e'.const_name,
+             p ← pp d.value,
+             trace format!"{e'.const_name} := {p}"
+     else do p ← pp e',
+             trace format!"{p} := {e'.to_raw_fmt}"
+
 meta def unfold_local (n : parse ident) : tactic unit := do
 e ← resolve_name n >>= to_expr,
 g ← target,
@@ -131,4 +144,4 @@ end tactic
 open tactic
 run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
                         ,`funext1,`tactic.funext,`clear_except
-                        ,`distributivity]
+                        ,`distributivity,`print]

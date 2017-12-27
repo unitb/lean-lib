@@ -19,7 +19,7 @@ variables {γ : Sort u₂}
 structure pred' (α : Sort u) : Type u :=
   (apply : α → Prop)
 
-notation x ` ⊨ `:53 y:52 := y.apply x
+notation x ` ⊨ `:53 y:52 := pred'.apply y x
 
 structure judgement (h y : pred' α) : Prop :=
 (apply : ∀ σ, σ ⊨ h → σ ⊨ y)
@@ -214,6 +214,16 @@ lemma eq_judgement {p : pred' α} (σ : α)
 by { split ; intro h,
      { apply h.apply σ, exact rfl },
      { constructor, intros _ h', cases h', assumption } }
+
+@[simp, predicate]
+lemma models_prop {p : Prop} (σ : α)
+: σ ⊨ ↑p ↔ p :=
+by refl
+
+@[simp, predicate]
+lemma models_pred {p : α → Prop} (σ : α)
+: σ ⊨ ↑p ↔ p σ :=
+by refl
 
 @[extensionality]
 lemma pred_ext_sem {p q : pred' α}

@@ -325,7 +325,7 @@ lemma not_imp_iff_and_not (p q : Prop)
 : ¬ (p → q) ↔ p ∧ ¬ q :=
 by { apply @not_imp _ _ _, apply classical.prop_decidable }
 
-lemma exists_one_point_right (y : α) {p : α → Prop}
+lemma exists_one_point (y : α) {p : α → Prop}
   (h : ∀ x, p x → x = y)
 : (∃ x, p x) ↔ p y :=
 begin
@@ -340,6 +340,26 @@ end
 lemma exists_one_point_iff_true (y : α)
 : (∃ x, x = y) ↔ true :=
 iff_true_intro ⟨y,rfl⟩
+
+@[simp]
+lemma exists_one_point_right (p : α → Prop) (y : α)
+: (∃ x, p x ∧ x = y) ↔ p y :=
+by { rw exists_one_point y ; simp }
+
+@[simp]
+lemma exists_one_point_right' (p : α → Prop) (y : α)
+: (∃ x, p x ∧ y = x) ↔ p y :=
+by { rw exists_one_point y ; simp, intros, subst x, }
+
+@[simp]
+lemma exists_one_point_left (p : α → Prop) (y : α)
+: (∃ x, x = y ∧ p x) ↔ p y :=
+by { rw exists_one_point y ; simp }
+
+@[simp]
+lemma exists_one_point_left' (p : α → Prop) (y : α)
+: (∃ x, y = x ∧ p x) ↔ p y :=
+by { rw exists_one_point y ; simp, intros, subst x, }
 
 lemma exists_variable_change'
   (p : α → Prop) (q : β → Prop)

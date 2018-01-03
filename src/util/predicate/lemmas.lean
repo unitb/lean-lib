@@ -1,11 +1,5 @@
 
-import util.logic
-import util.data.fin
-import util.category
-import util.meta.tactic.basic
-import util.meta.tactic.monotonicity
-
-run_cmd mk_simp_attr `predicate
+import util.predicate.basic
 
 namespace predicate
 
@@ -14,63 +8,21 @@ universe variables u u' u₀ u₁ u₂
 variables {α : Sort u₀}
 variables {β : Sort u₁}
 variables {γ : Sort u₂}
-
--- @[reducible]
-structure pred' (α : Sort u) : Type u :=
-  (apply : α → Prop)
-
-notation x ` ⊨ `:53 y:52 := pred'.apply y x
-
-structure judgement (h y : pred' α) : Prop :=
-(apply : ∀ σ, σ ⊨ h → σ ⊨ y)
-
-infix ` ⊢ `:53 := judgement
-
-def contramap : pred' α → (β → α) → pred' β
- | ⟨ p ⟩ f := ⟨ p ∘ f ⟩
-
-infixr ` '∘ `:90 := contramap
+variables {σ : Sort u'}
 
 @[simp, predicate]
-lemma contramap_apply (p : pred' α) (f : β → α) (x : β)
-: x ⊨ (p '∘ f) = f x ⊨ p :=
-by { cases p , refl }
-
-def lifted₀ (p : Prop) : pred' α := ⟨ λ _, p ⟩
-def lifted₁ (op : Prop → Prop) (p : pred' α) : pred' α :=
-⟨ λ i, op (i ⊨ p) ⟩
-def lifted₂ (op : Prop → Prop → Prop) (p q : pred' α) : pred' α :=
-⟨ λ i, op (i ⊨ p) (i ⊨ q) ⟩
-
--- def ew (p : pred' α) : Prop :=
--- ∀ i, i ⊨ p
-
-def False {α} : pred' α := lifted₀ false
-def True {α} : pred' α := lifted₀ true
-@[reducible]
-def holds (x : pred' α) := ∀ Γ, judgement Γ x
-
-prefix `⊩ `:53  := holds
-
-def p_or (p₀ p₁ : pred' α) : pred' α :=
-lifted₂ or p₀ p₁
+lemma value_prof (p : var β γ) (f : var α β) (x : α)
+: (p ∘' f).apply x = p.apply (f.apply x) :=
+by { cases p, cases f, refl }
 
 @[simp, predicate]
-lemma p_or_to_fun (p₀ p₁ : pred' α) (x : α)
-: x ⊨ p_or p₀ p₁ ↔ x ⊨ p₀ ∨ x ⊨ p₁ := by refl
-
-def p_and (p₀ p₁ : pred' α) : pred' α :=
-lifted₂ and p₀ p₁
+lemma contramap_apply (p : pred' α) (f : var β α) (x : β)
+: x ⊨ (p ∘' f) = f.apply x ⊨ p :=
+by { cases p , cases f, refl }
 
 @[simp, predicate]
 lemma p_and_to_fun (p₀ p₁ : pred' α) (x : α)
 : x ⊨ p_and p₀ p₁ ↔ x ⊨ p₀ ∧ x ⊨ p₁ := by refl
-
-def p_impl (p₀ p₁ : pred' α) : pred' α :=
-lifted₂ implies p₀ p₁
-
-def p_equiv (p₀ p₁ : pred' α) : pred' α :=
-lifted₂ (↔) p₀ p₁
 
 @[simp, predicate]
 lemma p_impl_to_fun (p₀ p₁ : pred' α) (x : α)
@@ -94,8 +46,15 @@ instance imp_to_fun ⦃α⦄ ⦃Γ p q : pred' α⦄ : has_coe_to_fun (Γ ⊢ p_
 { F := λ _,(Γ ⊢ p) → (Γ ⊢ q)
 , coe := p_impl_revert }
 
-def p_entails (p₀ p₁ : pred' α) : Prop :=
-⊩ p_impl p₀ p₁
+lemma p_imp_ext {Γ p q : pred' α}
+  (h : ∀ σ, σ ⊨ Γ → σ ⊨ p → σ ⊨ q)
+: Γ ⊢ p ⟶ q :=
+⟨ h ⟩
+
+lemma p_imp_sem {Γ p q : pred' α}
+  (h : Γ ⊢ p ⟶ q)
+: ∀ σ, σ ⊨ Γ → σ ⊨ p → σ ⊨ q :=
+h.apply
 
 lemma p_entails_of_fun (p₀ p₁ : pred' α) (x : β)
 : p_entails p₀ p₁ ↔ ∀ Γ, Γ ⊢ p₀ → Γ ⊢ p₁ :=
@@ -108,9 +67,6 @@ begin
     constructor, introv h,
     cases h, assumption, }
 end
-
-def p_not (p : pred' α) : pred' α :=
-lifted₁ not p
 
 @[simp]
 lemma False_eq_false (Γ : pred' β) : Γ ⊢ False ↔ Γ = False :=
@@ -127,7 +83,7 @@ end
 
 @[simp, predicate]
 lemma False_sem (σ : β) : σ ⊨ False ↔ false :=
-by simp [False,lifted₀]
+by simp with predicate
 
 @[simp]
 lemma True_eq_true (Γ : pred' β) : Γ ⊢ True = true :=
@@ -139,23 +95,6 @@ by simp [holds]
 @[simp, predicate]
 lemma True_sem (σ : β) : σ ⊨ True ↔ true :=
 by simp [holds]
-
-def pred.p_exists {β : Sort u'} {t : Sort u} (P : t → pred' β) : pred' β :=
-⟨λ x, ∃ y, x ⊨ P y⟩
-
-class has_p_exists (α : Sort u) (β : Sort u') :=
-  (p_exists : (β → α) → α)
-
-instance pred_has_p_exists {α : Sort u} {β : Sort u'} : has_p_exists (pred' α) β :=
-⟨ @pred.p_exists _ _ ⟩
-
-export has_p_exists (p_exists)
-
-def p_forall {t : Sort u} {β : Sort u'} (P : t → pred' β) : pred' β :=
-⟨ λ x, ∀ y, x ⊨ P y ⟩
-
-notation `∃∃` binders `, ` r:(scoped P, p_exists P) := r
-notation `∀∀` binders `, ` r:(scoped P, p_forall P) := r
 
 lemma p_forall_revert {Γ} {p : β → pred' α}
   (h : Γ ⊢ p_forall p)
@@ -180,33 +119,69 @@ instance to_prop_to_pred : has_coe (α → Prop) (pred' α) :=
 ⟨ pred'.mk ⟩
 
 @[simp, predicate]
-lemma coe_apply (p : Prop) (x : β)
+lemma apply_coe (p : Prop) (x : β)
 : x ⊨ (p : pred' β) ↔ p :=
-by { unfold_coes, simp [lifted₀,pred'.apply] }
+by { unfold_coes, simp }
 
-infixl ` ⋁ `:65 := p_or
-infixl ` ⋀ `:70 := p_and
-infixr ` ⟶ `:60 := p_impl
-precedence ≡:55
-infixr ` ≡ ` := p_equiv
-infix ` ⟹ `:60 := p_entails
--- notation `⦃ `:max act ` ⦄`:0 := ew act
--- Γ ⊢ p
--- ∀ σ, σ ⊨ Γ → σ ⊨ p
-instance : has_neg (pred' α) := has_neg.mk p_not
+instance (α : Type u) : applicative (var α) :=
+{ id_map := by { intros, cases x, refl }
+, pure_seq_eq_map := by { intros, cases x, refl }
+, map_pure := by { intros, refl }
+, seq_pure := by { intros, cases g, refl }
+, seq_assoc := by { intros, cases x, refl }
+, ..(_ : has_map (var α))
+, ..(_ : has_seq (var α))
+, ..(_ : has_pure (var α)) }
 
-def ctx_impl (Γ p q : pred' α) : Prop :=
-Γ ⊢ p ⟶ q
+@[simp, predicate]
+lemma var_map_coe {α β σ : Type u} (f : α → β) (g : σ → α)
+: f <$> (g : var σ α) = (f ∘ g : var σ β) :=
+by { unfold_coes, simp [has_map.map] }
 
-lemma p_imp_ext {Γ p q : pred' α}
-  (h : ∀ σ, σ ⊨ Γ → σ ⊨ p → σ ⊨ q)
-: Γ ⊢ p ⟶ q :=
-⟨ h ⟩
+@[simp, predicate]
+lemma map_proj {α β γ σ : Type u} (f : α → β) (v₁ : var σ γ) (v₀ : var γ α)
+: f <$> (v₀ ∘' v₁) = ↑(λ x, f $ v₀.apply $ v₁.apply x) :=
+by { unfold_coes, simp [has_map.map] }
 
-lemma p_imp_sem {Γ p q : pred' α}
-  (h : Γ ⊢ p ⟶ q)
-: ∀ σ, σ ⊨ Γ → σ ⊨ p → σ ⊨ q :=
-h.apply
+@[simp, predicate]
+lemma var_seq_coe {α β σ : Type u} (f : σ → α → β) (g : σ → α)
+: (f : var σ (α → β)) <*> (g : var σ α) = (λ s : σ, f s (g s) : var σ β) :=
+by { unfold_coes, simp [has_seq.seq] }
+
+@[simp, predicate]
+lemma models_lt {α : Type u} [has_lt α] {s : σ} (x y : var σ α)
+: s ⊨ x ≺ y ↔ x.apply s < y.apply s :=
+by { cases x, cases y, refl }
+
+@[simp, predicate]
+lemma models_wf {_ : has_well_founded α} (s : σ) (x y : var σ α)
+: s ⊨ x ≺≺ y ↔ x.apply s << y.apply s :=
+by { cases x, cases y, refl }
+
+@[simp, predicate]
+lemma models_eq {s : σ} (x y : var σ α)
+: s ⊨ x ≃ y ↔ x.apply s = y.apply s :=
+by { cases x, cases y, refl }
+
+@[simp, predicate]
+lemma models_mem {α β : Type _} {s : σ} [has_mem α β] (x : var σ α) (y : var σ β)
+: s ⊨ (x ∊ y) ↔ x.apply s ∈ y.apply s :=
+by { cases x, cases y, refl }
+
+@[simp, predicate]
+lemma coe_value {s : σ} (x : α)
+: (x : var σ α).apply s = x :=
+rfl
+
+@[simp, predicate]
+lemma coe_fun {s : σ} (x : σ → α)
+: (x : var σ α).apply s = x s :=
+rfl
+
+@[simp, predicate]
+lemma coe_wf_coe {s : σ} (x y : α)
+: (x : var σ α) ≺≺ y = ↑(x << y) :=
+rfl
 
 @[simp]
 lemma eq_judgement {p : pred' α} (σ : α)
@@ -221,19 +196,32 @@ lemma models_prop {p : Prop} (σ : α)
 by refl
 
 @[simp, predicate]
+lemma models_lifted₀ {p : Prop} (σ : α)
+: σ ⊨ lifted₀ p ↔ p :=
+by refl
+
+@[simp, predicate]
 lemma models_pred {p : α → Prop} (σ : α)
 : σ ⊨ ↑p ↔ p σ :=
 by refl
+
+@[extensionality]
+lemma var_ext_sem {p q : var α β}
+  (h : ∀ σ, p.apply σ = q.apply σ)
+: p = q :=
+begin
+  cases p, cases q,
+  congr, funext y,
+  simp with predicate at h,
+  rw h
+end
 
 @[extensionality]
 lemma pred_ext_sem {p q : pred' α}
   (h : ∀ σ, σ ⊨ p ↔ σ ⊨ q)
 : p = q :=
 begin
-  cases p, cases q,
-  congr, funext y,
-  simp at h,
-  rw h
+  apply var_ext_sem, simp [h]
 end
 
 lemma pred_ext {p q : pred' α}
@@ -243,7 +231,7 @@ begin
   cases p, cases q,
   congr, funext y,
   specialize h (eq y),
-  simp  at h,
+  simp with predicate at h,
   rw h,
 end
 
@@ -269,51 +257,112 @@ lemma ew_wk {p : pred' β}
 by { intros h Γ, constructor,
      intros, apply h }
 
+lemma ew_wk' {Γ p : pred' β}
+: (∀ x, x ⊨ Γ → x ⊨ p) → Γ ⊢ p :=
+by { intros h, constructor, apply h }
+
+lemma judgement_sem {Γ p : pred' β}
+: Γ ⊢ p → (∀ x, x ⊨ Γ → x ⊨ p) :=
+by { intros h σ hΓ, apply h.apply _ hΓ }
+
 section
 open interactive interactive.types lean lean.parser
-     tactic tactic.interactive (simp)
+     tactic tactic.interactive (simp dsimp unfold_coes)
 local postfix `?`:9001 := optional
 local postfix *:9001 := many
 meta def using_idents := (tk "using" *> ident*) <|> pure []
 
-meta def lifted_asm (v : expr) (h : name) : tactic unit :=
+meta def lifted_asm (v Γ : expr)
+  (rs : parse simp_arg_list)
+  (h : name) : tactic unit :=
 do h' ← get_local h,
-   p ← to_expr ``(p_imp_sem  %%h' %%v)
-     <|> to_expr ``(ew_str  %%h' %%v)
+   p ← to_expr ``(p_imp_sem  %%h' %%v %%Γ) <* trace "p_imp_sem"
+     <|> (to_expr ``(judgement_sem %%h' %%v %%Γ) <* trace "judgment_sem")
+     <|> to_expr ``(ew_str  %%h' %%v) <* trace "ew_str"
      <|> fail format!"assumtion {h} should be `⊩ p` or `p ⟹ q` or `Γ ⊢ p ⟶ q`",
    h ← note h none p,
-   try $ simp ff [] [] (loc.ns [some h.local_pp_name]),
+   let l := loc.ns [some h.local_pp_name],
+   try $ unfold_coes l,
+   try $ simp ff rs [] l,
    try (clear h')
 
-meta def lifted_pred (no_dflt : parse only_flag)
+meta def keep_flag := (tt <$ tk "keep") <|> pure ff
+precedence `keep`:0
+
+meta def lifted_pred
+   (keep_Γ : parse keep_flag)
+   (no_dflt : parse only_flag)
    (rs : parse simp_arg_list)
    (hs : parse using_idents) : tactic unit :=
-do `[apply p_imp_ext _] <|> `[apply pred_ext_sem] <|> `[apply ew_wk _],
+do b ← tt <$ `[apply p_imp_ext _]
+     <|> ff <$ `[apply pred_ext_sem]
+     <|> ff <$ `[apply var_ext_sem]
+     <|> tt <$ `[apply ew_wk' _]
+     <|> ff <$ `[apply ew_wk _],
    v ← intro1,
-   mmap' (lifted_asm v) (hs : list _),
+   hΓ ← if b then intro1 else return (default _),
+   mmap' (lifted_asm v hΓ rs) (hs : list _),
+   when (b ∧ ¬ keep_Γ) $ clear hΓ,
    try (simp no_dflt rs [`predicate] (loc.ns [none])),
+   try (dsimp no_dflt rs [`predicate] (loc.ns [none])),
+   try `[unfold_coes],
    try reflexivity
 run_cmd add_interactive [`lifted_pred]
 end
 
-@[simp]
-lemma p_and_comp (p q : pred' α) (f : β → α)
-: ((p ⋀ q) '∘ f) = (p '∘ f) ⋀ (q '∘ f) :=
+@[simp, predicate]
+lemma value_coe_comp (x : α) (v : var β γ)
+: (x : var γ α) ∘' v = (x : var β α) :=
 by lifted_pred
 
 @[simp]
-lemma coe_over_comp (p : α → Prop) (f : β → α)
-: ((p : pred' α) '∘ f) = ↑(p ∘ f) :=
+lemma p_and_comp (p q : pred' α) (f : var β α)
+: ((p ⋀ q) ∘' f) = (p ∘' f) ⋀ (q ∘' f) :=
 by lifted_pred
 
 @[simp]
-lemma p_or_comp (p q : pred' α) (f : β → α)
-: ((p ⋁ q) '∘ f) = (p '∘ f) ⋁ (q '∘ f) :=
+lemma coe_over_comp (p : α → γ) (f : β → α)
+: ((p : var α γ) ∘' (f : var β α)) = ↑(p ∘ f) :=
 by lifted_pred
 
 @[simp]
-lemma p_exists_comp {t} (p : t → pred' α) (f : β → α)
-: (p_exists p '∘ f) = (∃∃ x, p x '∘ f) :=
+lemma const_over_comp (p : γ) (f : β → α)
+: ((p : var α γ) ∘' (f : var β α)) = ↑p :=
+by lifted_pred
+
+@[simp]
+lemma p_or_comp (p q : pred' α) (f : var β α)
+: ((p ⋁ q) ∘' f) = (p ∘' f) ⋁ (q ∘' f) :=
+by lifted_pred
+
+@[simp, predicate]
+lemma eq_comp (p q : var α γ) (f : var β α)
+: ((p ≃ q) ∘' f) = (p ∘' f) ≃ (q ∘' f) :=
+by lifted_pred
+
+@[simp, predicate]
+lemma wf_comp {_ : has_well_founded γ} (p q : var α γ) (f : var β α)
+: ((p ≺≺ q) ∘' f) = (p ∘' f) ≺≺ (q ∘' f) :=
+by lifted_pred
+
+@[simp, predicate]
+lemma lt_comp {γ : Type _} [has_lt γ] (p q : var α γ) (f : var β α)
+: ((p ≺ q) ∘' f) = ((p ∘' f) ≺ (q ∘' f)) :=
+by lifted_pred
+
+@[simp, predicate]
+lemma mem_comp {α γ} [has_mem α γ] (p : var σ α) (q : var σ γ) (f : var β σ)
+: ((p ∊ q) ∘' f) = ((p ∘' f) ∊ (q ∘' f)) :=
+by lifted_pred
+
+@[simp, predicate]
+lemma coe_apply (v : var α β)
+: ↑(v.apply) = v :=
+by lifted_pred
+
+@[simp, predicate]
+lemma p_exists_comp {t} (p : t → pred' α) (f : var β α)
+: (p_exists p ∘' f) = (∃∃ x, p x ∘' f) :=
 by lifted_pred [p_exists,pred.p_exists]
 
 @[simp]
@@ -423,7 +472,7 @@ lemma ctx_p_or_p_imp_p_or' {Γ p p' q q' : pred' α}
   (hq : ctx_impl Γ q q')
 : ctx_impl Γ (p ⋁ q) (p' ⋁ q')  :=
 by { lifted_pred using hp hq,
-     begin [smt] intros, destruct a_1 end, }
+     begin [smt] intros, destruct a end, }
 
 lemma p_or_p_imp_p_or' {p p' q q' : pred' α}
   (hp : p ⟹ p')
@@ -875,18 +924,19 @@ begin
 end
 
 @[simp]
-lemma p_not_comp (p : pred' α) (f : β → α)
-: -p '∘ f = -(p '∘ f) :=
+lemma p_not_comp (p : pred' α) (f : var β α)
+: -p ∘' f = -(p ∘' f) :=
 by lifted_pred
 
-lemma comp_entails_comp {p q : pred' β} (f : α → β)
+lemma comp_entails_comp {p q : pred' β} (f : var α β)
   (H : p ⟹ q)
-: p '∘ f ⟹ q '∘ f :=
+: p ∘' f ⟹ q ∘' f :=
 begin
   intros Γ, constructor,
   introv h hp,
   simp at ⊢ hp,
-  apply (H (eq $ f σ)).apply (f σ) rfl hp,
+  specialize H (eq $ f.apply σ),
+  apply H.apply (f.apply σ) rfl hp,
 end
 
 @[monotonic]
@@ -1078,7 +1128,7 @@ lemma ctx_p_or_entails_p_or_left (Γ p q x : pred' β)
 : ctx_impl Γ p q → ctx_impl Γ (p ⋁ x) (q ⋁ x) :=
 begin
   intros h, lifted_pred using h, -- with i h₀,
-  begin [smt] intros, destruct a_1 end
+  begin [smt] intros, destruct a end
 end
 
 lemma p_or_not_and {β : Sort*} (p q : pred' β)
@@ -1109,11 +1159,10 @@ lemma p_exists_p_imp_p_exists {Γ : pred' β} {t : Sort u'} (p q : t → pred' �
 : Γ ⊢ (∀∀ x, p x ⟶ q x) → Γ ⊢ (∃∃ x, p x) ⟶ (∃∃ x, q x) :=
 begin
   intros h,
-  lifted_pred [- exists_imp_distrib],
-  intro h',
+  lifted_pred [- exists_imp_distrib] using h,
   apply exists_imp_exists,
   intro x,
-  apply h.apply _ h',
+  apply h,
 end
 
 lemma p_exists_entails_p_exists {t : Sort u'} (p q : t → pred' β)
@@ -1215,7 +1264,7 @@ end
 
 instance entails_category {α} : category (@p_entails α) :=
   { ident := by { intro, refl }
-  , comp  := by { intros _ _ _, exact flip entails_trans }
+  , comp  := by { intros, apply entails_trans ; assumption }
   , assoc := by { intros, refl }
   , left_ident  := by { intros, refl }
   , right_ident := by { intros, refl } }

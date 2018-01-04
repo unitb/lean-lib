@@ -276,9 +276,9 @@ meta def lifted_asm (v Γ : expr)
   (rs : parse simp_arg_list)
   (h : name) : tactic unit :=
 do h' ← get_local h,
-   p ← to_expr ``(p_imp_sem  %%h' %%v %%Γ) <* trace "p_imp_sem"
-     <|> (to_expr ``(judgement_sem %%h' %%v %%Γ) <* trace "judgment_sem")
-     <|> to_expr ``(ew_str  %%h' %%v) <* trace "ew_str"
+   p ← to_expr ``(p_imp_sem  %%h' %%v %%Γ)
+     <|> to_expr ``(judgement_sem %%h' %%v %%Γ)
+     <|> to_expr ``(ew_str  %%h' %%v)
      <|> fail format!"assumtion {h} should be `⊩ p` or `p ⟹ q` or `Γ ⊢ p ⟶ q`",
    h ← note h none p,
    let l := loc.ns [some h.local_pp_name],

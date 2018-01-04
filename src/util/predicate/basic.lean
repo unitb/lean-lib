@@ -19,6 +19,14 @@ variables {σ : Sort u'}
 structure var (α : Sort u₀) (β : Sort u₁) : Sort (max u₀ u₁+1) :=
   (apply : α → β)
 
+@[simp, predicate]
+def fun_app_to_var (f : α → β) : var σ α → var σ β
+ | ⟨ g ⟩ := ⟨ f ∘ g ⟩
+
+@[simp, predicate]
+def combine_var : var σ (α → β) → var σ α → var σ β
+ | ⟨ f ⟩ ⟨ x ⟩ := ⟨ λ s, f s (x s) ⟩
+
 @[reducible]
 def pred' (α : Sort u) : Type (max u 1) :=
 var.{u 1} α Prop

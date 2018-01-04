@@ -996,6 +996,7 @@ lemma p_and_entails_p_or (p q : pred' β)
 by { lifted_pred,
      begin [smt] intros end }
 
+@[simp]
 lemma True_p_imp (p : pred' β)
 : True ⟶ p = p :=
 by lifted_pred

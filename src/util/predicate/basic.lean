@@ -25,7 +25,7 @@ var.{u 1} α Prop
 
 def pred'.mk := @var.mk
 
-notation x ` ⊨ `:53 y:52 := @var.apply _ _ y x
+notation x ` ⊨ `:53 y:52 := (var.apply y x)
 
 structure judgement (h y : pred' α) : Prop :=
 (apply : ∀ σ, σ ⊨ h → σ ⊨ y)

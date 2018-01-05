@@ -12,7 +12,7 @@ variables {σ : Sort u'}
 
 @[simp, predicate]
 lemma value_prof (p : var β γ) (f : var α β) (x : α)
-: (p ∘' f).apply x = p.apply (f.apply x) :=
+: (p ;; f).apply x = p.apply (f.apply x) :=
 by { cases p, cases f, refl }
 
 @[simp, predicate]
@@ -312,47 +312,47 @@ end
 
 @[simp, predicate]
 lemma value_coe_comp (x : α) (v : var β γ)
-: (x : var γ α) ∘' v = (x : var β α) :=
+: (x : var γ α) ;; v = (x : var β α) :=
 by lifted_pred
 
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : var β α)
-: ((p ⋀ q) ∘' f) = (p ∘' f) ⋀ (q ∘' f) :=
+: ((p ⋀ q) ;; f) = (p ;; f) ⋀ (q ;; f) :=
 by lifted_pred
 
 @[simp]
 lemma coe_over_comp (p : α → γ) (f : β → α)
-: ((p : var α γ) ∘' (f : var β α)) = ↑(p ∘ f) :=
+: ((p : var α γ) ;; (f : var β α)) = ↑(p ∘ f) :=
 by lifted_pred
 
 @[simp]
 lemma const_over_comp (p : γ) (f : β → α)
-: ((p : var α γ) ∘' (f : var β α)) = ↑p :=
+: ((p : var α γ) ;; (f : var β α)) = ↑p :=
 by lifted_pred
 
 @[simp]
 lemma p_or_comp (p q : pred' α) (f : var β α)
-: ((p ⋁ q) ∘' f) = (p ∘' f) ⋁ (q ∘' f) :=
+: ((p ⋁ q) ;; f) = (p ;; f) ⋁ (q ;; f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma eq_comp (p q : var α γ) (f : var β α)
-: ((p ≃ q) ∘' f) = (p ∘' f) ≃ (q ∘' f) :=
+: ((p ≃ q) ;; f) = (p ;; f) ≃ (q ;; f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma wf_comp {_ : has_well_founded γ} (p q : var α γ) (f : var β α)
-: ((p ≺≺ q) ∘' f) = (p ∘' f) ≺≺ (q ∘' f) :=
+: ((p ≺≺ q) ;; f) = (p ;; f) ≺≺ (q ;; f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma lt_comp {γ : Type _} [has_lt γ] (p q : var α γ) (f : var β α)
-: ((p ≺ q) ∘' f) = ((p ∘' f) ≺ (q ∘' f)) :=
+: ((p ≺ q) ;; f) = ((p ;; f) ≺ (q ;; f)) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma mem_comp {α γ} [has_mem α γ] (p : var σ α) (q : var σ γ) (f : var β σ)
-: ((p ∊ q) ∘' f) = ((p ∘' f) ∊ (q ∘' f)) :=
+: ((p ∊ q) ;; f) = ((p ;; f) ∊ (q ;; f)) :=
 by lifted_pred
 
 @[simp, predicate]
@@ -362,7 +362,7 @@ by lifted_pred
 
 @[simp, predicate]
 lemma p_exists_comp {t} (p : t → pred' α) (f : var β α)
-: (p_exists p ∘' f) = (∃∃ x, p x ∘' f) :=
+: (p_exists p ;; f) = (∃∃ x, p x ;; f) :=
 by lifted_pred [p_exists,pred.p_exists]
 
 @[simp]
@@ -925,12 +925,12 @@ end
 
 @[simp]
 lemma p_not_comp (p : pred' α) (f : var β α)
-: -p ∘' f = -(p ∘' f) :=
+: -(p ;; f) = -p ;; f :=
 by lifted_pred
 
 lemma comp_entails_comp {p q : pred' β} (f : var α β)
   (H : p ⟹ q)
-: p ∘' f ⟹ q ∘' f :=
+: p ;; f ⟹ q ;; f :=
 begin
   intros Γ, constructor,
   introv h hp,

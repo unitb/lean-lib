@@ -153,11 +153,11 @@ instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 def proj : var β γ → var α β → var α γ
  | ⟨p⟩ ⟨f⟩ := ⟨p∘f⟩
 
-infix ` ∘' ` := proj
+infix ` ;; `:90 := proj
 
 @[simp, predicate, reducible]
 def contramap (p : pred' α) (f : β → α) : pred' β :=
-p ∘' ↑f
+p ;; ↑f
 
 infixr ` '∘ `:90 := contramap
 

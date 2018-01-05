@@ -315,6 +315,16 @@ lemma value_coe_comp (x : α) (v : var β γ)
 : (x : var γ α) ;; v = (x : var β α) :=
 by lifted_pred
 
+@[simp, predicate]
+lemma True_comp (v : var β γ)
+: True ;; v = True :=
+by lifted_pred
+
+@[simp, predicate]
+lemma False_comp (v : var β γ)
+: False ;; v = False :=
+by lifted_pred
+
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : var β α)
 : ((p ⋀ q) ;; f) = (p ;; f) ⋀ (q ;; f) :=
@@ -924,6 +934,10 @@ begin
 end
 
 @[simp]
+lemma p_not_comp' (p : pred' α) (f : var β α)
+: -p ;; f = -(p ;; f) :=
+by lifted_pred
+
 lemma p_not_comp (p : pred' α) (f : var β α)
 : -(p ;; f) = -p ;; f :=
 by lifted_pred

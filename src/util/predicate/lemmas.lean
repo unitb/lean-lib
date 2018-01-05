@@ -17,7 +17,7 @@ by { cases p, cases f, refl }
 
 @[simp, predicate]
 lemma contramap_apply (p : pred' α) (f : var β α) (x : β)
-: x ⊨ (p ∘' f) = f.apply x ⊨ p :=
+: x ⊨ (p ;; f) = f.apply x ⊨ p :=
 by { cases p , cases f, refl }
 
 @[simp, predicate]
@@ -140,7 +140,7 @@ by { unfold_coes, simp [has_map.map] }
 
 @[simp, predicate]
 lemma map_proj {α β γ σ : Type u} (f : α → β) (v₁ : var σ γ) (v₀ : var γ α)
-: f <$> (v₀ ∘' v₁) = ↑(λ x, f $ v₀.apply $ v₁.apply x) :=
+: f <$> (v₀ ;; v₁) = ↑(λ x, f $ v₀.apply $ v₁.apply x) :=
 by { unfold_coes, simp [has_map.map] }
 
 @[simp, predicate]

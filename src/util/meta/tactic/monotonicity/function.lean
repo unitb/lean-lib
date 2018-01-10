@@ -538,8 +538,7 @@ meta def assert_or_rule : parser (pexpr ⊕ pexpr) :=
 meta def monotonicity : parse assert_or_rule? → tactic unit
  | none := repeat monotonicity1
  | (some (inl h)) :=
-do h' ← i_to_expr h,
-   repeat_until monotonicity1 (tactic.refine $ to_pexpr h')
+do repeat_until monotonicity1 $ (tactic.refine h)
  | (some (inr t)) :=
 do h ← i_to_expr t >>= assert `h,
    tactic.swap,

@@ -30,7 +30,8 @@ lemma p_impl_to_fun (p₀ p₁ : pred' α) (x : α)
 
 @[simp, predicate]
 lemma p_equiv_to_fun (p₀ p₁ : pred' α) (x : α)
-: x ⊨ p_equiv p₀ p₁ ↔ (x ⊨ p₀ ↔ x ⊨ p₁) := by refl
+: x ⊨ p_equiv p₀ p₁ ↔ (x ⊨ p₀ ↔ x ⊨ p₁) :=
+by { simp [p_equiv,v_eq], split ; intro h ; rw h }
 
 lemma p_impl_revert {Γ p q : pred' α}
   (h : Γ ⊢ p_impl p q)
@@ -205,7 +206,7 @@ lemma models_pred {p : α → Prop} (σ : α)
 : σ ⊨ ↑p ↔ p σ :=
 by refl
 
-@[extensionality]
+@[extensionality, priority 0]
 lemma var_ext_sem {p q : var α β}
   (h : ∀ σ, p.apply σ = q.apply σ)
 : p = q :=
@@ -389,7 +390,8 @@ lemma coe_to_prop_p_not (p : α → Prop)
 
 @[simp]
 lemma coe_to_prop_p_equiv (p q : α → Prop)
-: (λ s, p s ↔ q s : pred' α) = p ≡ q := rfl
+: (λ s, p s ↔ q s : pred' α) = p ≡ q :=
+by { funext1, simp }
 
 lemma lifting_prop_asm (Γ : pred' α) {p : Prop} {q : pred' α}
   (h : p → Γ ⊢ q)
@@ -473,9 +475,14 @@ lemma p_impl_refl (Γ p : pred' β)
 by lifted_pred
 
 @[refl]
-lemma equiv_refl (Γ p : pred' β)
-: Γ ⊢ p ≡ p :=
+lemma v_eq_refl (Γ : pred' β) (v : var β α)
+: Γ ⊢ v ≃ v :=
 by lifted_pred
+
+lemma v_eq_symm {Γ : pred' β} {v₀ v₁ : var β α}
+  (h : Γ ⊢ v₁ ≃ v₀)
+: Γ ⊢ v₀ ≃ v₁ :=
+by lifted_pred using h ; rw h
 
 lemma ctx_p_or_p_imp_p_or' {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p p')
@@ -625,6 +632,7 @@ lemma p_or_self (p : pred' β) :
 p ⋁ p = p :=
 by lifted_pred
 
+@[simp]
 lemma p_not_p_not_iff_self (p : pred' β) :
 - - p = p :=
 by lifted_pred [not_not_iff_self]
@@ -942,6 +950,7 @@ lemma p_not_comp (p : pred' α) (f : var β α)
 : -(p ;; f) = -p ;; f :=
 by lifted_pred
 
+@[monotonic]
 lemma comp_entails_comp {p q : pred' β} (f : var α β)
   (H : p ⟹ q)
 : p ;; f ⟹ q ;; f :=
@@ -954,8 +963,14 @@ begin
 end
 
 @[monotonic]
-lemma ctx_p_and_entails_p_and_left (Γ p q x : pred' β)
-  (h : ctx_impl Γ p q)
+lemma ctx_comp_imp_comp {Γ : pred' α} {p q : pred' β} (f : var α β)
+  (H : p ⟹ q)
+: ctx_impl Γ (p ;; f) (q ;; f) :=
+by apply comp_entails_comp _ H
+
+@[monotonic]
+lemma ctx_p_and_entails_p_and_left (Γ p q x : pred' α)
+   (h : ctx_impl Γ p q)
 : ctx_impl Γ (p ⋀ x) (q ⋀ x) :=
 by { lifted_pred using h,
      begin [smt] intros end }
@@ -1003,7 +1018,7 @@ by simp [h]
 lemma equiv_of_eq (Γ p q : pred' β)
   (h : p = q)
 : Γ ⊢ p ≡ q :=
-by simp [h]
+by { cases p, cases q, simp [h], refl }
 
 lemma p_and_entails_p_or (p q : pred' β)
 : p ⋀ q ⟹ p ⋁ q :=
@@ -1019,7 +1034,7 @@ lemma ew_eq_true {p : pred' β} : ⊩ p → p = True :=
 by { intro h, lifted_pred using h,
      begin [smt] intros end }
 
-@[monotonic]
+@[monotonic, priority 0]
 lemma ew_imp_ew {p q : pred' β}
   (H : p ⟹ q)
 : ⊩ p → ⊩ q :=

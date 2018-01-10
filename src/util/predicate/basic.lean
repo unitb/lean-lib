@@ -40,10 +40,10 @@ structure judgement (h y : pred' α) : Prop :=
 
 infix ` ⊢ `:53 := judgement
 
-def lifted₀ (p : Prop) : pred' α := ⟨ λ _, p ⟩
-def lifted₁ (op : Prop → Prop) (p : pred' α) : pred' α :=
+def lifted₀ (p : β) : var α β := ⟨ λ _, p ⟩
+def lifted₁ (op : β → γ) (p : var α β) : var α γ :=
 ⟨ λ i, op (i ⊨ p) ⟩
-def lifted₂ (op : Prop → Prop → Prop) (p q : pred' α) : pred' α :=
+def lifted₂ (op : α → β → γ) (p : var σ α) (q : var σ β) : var σ γ :=
 ⟨ λ i, op (i ⊨ p) (i ⊨ q) ⟩
 
 attribute [simp, predicate] lifted₀ lifted₁ lifted₂
@@ -73,8 +73,11 @@ lifted₂ and p₀ p₁
 def p_impl (p₀ p₁ : pred' α) : pred' α :=
 lifted₂ implies p₀ p₁
 
-def p_equiv (p₀ p₁ : pred' α) : pred' α :=
-lifted₂ (↔) p₀ p₁
+def v_eq : var α β → var α β → pred' α :=
+lifted₂ eq
+
+def p_equiv : pred' α → pred' α → pred' α :=
+v_eq
 
 def p_entails (p₀ p₁ : pred' α) : Prop :=
 ⊩ p_impl p₀ p₁
@@ -119,9 +122,6 @@ instance {γ : Type _} : has_seq (var γ) :=
 { seq := λ α β f x, ⟨ λ s, f.apply s (x.apply s) ⟩ }
 instance {γ : Type _} : has_pure (var γ) :=
 { pure := λ α x, ⟨ λ _, x ⟩ }
-
-def v_eq : var α β → var α β → pred' α
- | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, v₀ s = v₁ s⟩
 
 def v_lt {β : Type _} [has_lt β] : var α β → var α β → pred' α
  | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, v₀ s < v₁ s⟩

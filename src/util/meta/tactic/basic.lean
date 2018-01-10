@@ -82,12 +82,9 @@ do r  ← list.mmap get_local xs >>= revert_lst,
 meta def match_head (e : expr) : expr → tactic unit
 | e' :=
     unify e e'
-<|> match e' with
-     | `(_ → %%e') :=
-     do v ← mk_mvar,
-        match_head (e'.instantiate_var v)
-     | _ := failed
-    end
+<|> do `(_ → %%e') ← whnf e',
+       v ← mk_mvar,
+       match_head (e'.instantiate_var v)
 
 meta def find_matching_head : expr → list expr → tactic expr
 | e []         := failed
@@ -139,9 +136,27 @@ meta def interactive.replace
                    tactic.interactive.«have» h q₁ (some pr),
                    clear h'
 
+meta def split_or (xs : list expr) : smt_tactic (list expr) :=
+do cs ← local_context,
+   h ← mmap (λ h, try_core $ do
+     t ← infer_type h,
+     h <$ (match_or t <|> match_and t))
+   $ cs.diff xs,
+  let h' := h.filter_map id,
+  h' <$ mmap' smt_tactic.destruct h'
+
+meta def split_all_or' : list expr → smt_tactic unit
+ | xs := do ys ← split_or xs, (guard (¬ ys.empty) >> smt_tactic.all_goals (split_all_or' (ys ++ xs))) <|> return ()
+
+meta def split_all_or : smt_tactic unit :=
+split_all_or' []
+
 end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
                         ,`funext1,`tactic.funext,`clear_except
                         ,`distributivity,`print]
+
+meta def smt_tactic.interactive.break_asms : smt_tactic unit :=
+tactic.split_all_or

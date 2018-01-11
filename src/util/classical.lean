@@ -1,4 +1,6 @@
 
+import meta.expr
+
 universe variables u v
 
 namespace classical
@@ -19,3 +21,20 @@ begin
 end
 
 end classical
+
+open tactic interactive interactive.types lean.parser
+
+meta def apply_some_spec (id : parse $ optional (tk "with" *> ident_)) : tactic unit :=
+do t ← target,
+   (l,_) ← solve_aux t (do
+     e ← to_expr ``(classical.some _),
+     v ← mk_fresh_name,
+     generalize e v,
+     (expr.pi v bi t e) ← target,
+     return (expr.lam v bi t e)),
+   refine ``(@classical.some_spec' _ _ %%l _ _),
+   `[simp only],
+   interactive.intro id,
+   try `[intros h, apply h]
+
+run_cmd add_interactive [`apply_some_spec]

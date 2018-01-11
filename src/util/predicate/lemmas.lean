@@ -110,19 +110,19 @@ instance forall_to_fun {Γ : pred' α} ⦃p : β → pred' α⦄ : has_coe_to_fu
 { F := λ _, Π i, (Γ ⊢ p i)
 , coe := p_forall_revert }
 
-instance : has_coe Prop (pred' α) :=
-⟨ lifted₀ ⟩
+-- instance : has_coe Prop (pred' α) :=
+-- ⟨ lifted₀ ⟩
 
 instance proof_coe (p : Prop) (Γ : pred' α) : has_coe p (Γ ⊢ p) :=
 ⟨ assume h, ⟨ λ x _, h ⟩ ⟩
 
-instance to_prop_to_pred : has_coe (α → Prop) (pred' α) :=
-⟨ pred'.mk ⟩
+-- instance to_prop_to_pred : has_coe (α → Prop) (pred' α) :=
+-- ⟨ pred'.mk ⟩
 
 @[simp, predicate]
 lemma apply_coe (p : Prop) (x : β)
 : x ⊨ (p : pred' β) ↔ p :=
-by { unfold_coes, simp }
+by { unfold_coes, }
 
 instance (α : Type u) : applicative (var α) :=
 { id_map := by { intros, cases x, refl }
@@ -1298,8 +1298,5 @@ instance entails_category {α} : category (@p_entails α) :=
   , assoc := by { intros, refl }
   , left_ident  := by { intros, refl }
   , right_ident := by { intros, refl } }
-
--- attribute [irreducible] p_not p_entails
--- attribute [trans]  entails_trans
 
 end predicate

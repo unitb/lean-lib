@@ -93,6 +93,11 @@ by { apply eq_true_intro, constructor, intros, trivial }
 lemma True_holds : ⊩ @True β :=
 by simp [holds]
 
+@[simp]
+lemma coe_true : (true : pred' α) = True := rfl
+@[simp]
+lemma coe_false : (false : pred' α) = False := rfl
+
 @[simp, predicate]
 lemma True_sem (σ : β) : σ ⊨ True ↔ true :=
 by simp [holds]
@@ -326,19 +331,28 @@ lemma False_comp (v : var β γ)
 : False ;; v = False :=
 by lifted_pred
 
+lemma proj_assoc (x : var α β) (y : var β γ) (z : var γ σ)
+: (z ;; y) ;; x = z ;; (y ;; x) :=
+by lifted_pred
+
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : var β α)
 : ((p ⋀ q) ;; f) = (p ;; f) ⋀ (q ;; f) :=
 by lifted_pred
 
 @[simp]
-lemma coe_over_comp (p : α → γ) (f : β → α)
+lemma const_over_comp (p : γ) (f : β → α)
+: ((p : var α γ) ;; (f : var β α)) = ↑p :=
+by lifted_pred
+
+@[predicate]
+lemma coe_over_comp' (p : α → γ) (f : β → α)
 : ((p : var α γ) ;; (f : var β α)) = ↑(p ∘ f) :=
 by lifted_pred
 
-@[simp]
-lemma const_over_comp (p : γ) (f : β → α)
-: ((p : var α γ) ;; (f : var β α)) = ↑p :=
+-- @[simp]
+lemma coe_over_comp (p : α → γ) (f : β → α)
+: ↑(p ∘ f) = ((p : var α γ) ;; (f : var β α)) :=
 by lifted_pred
 
 @[simp]
@@ -684,6 +698,15 @@ instance is_left_distrib_or_and : is_left_distrib (pred' β) (⋁) (⋀) :=
 instance is_right_distrib_or_and : is_right_distrib (pred' β) (⋁) (⋀) :=
 ⟨ by { intros, apply p_or_over_and_right } ⟩
 
+lemma mutual_p_imp {Γ p q : pred' β}
+  (h₀ : Γ ⊢ p ⟶ q)
+  (h₁ : Γ ⊢ q ⟶ p)
+: Γ ⊢ p ≡ q :=
+begin
+  lifted_pred using h₀ h₁,
+  split ; assumption,
+end
+
 lemma mutual_entails {p q : pred' β}
   (h₀ : p ⟹ q)
   (h₁ : q ⟹ p)
@@ -1015,6 +1038,11 @@ lemma entails_of_eq (p q : pred' β)
 : p ⟹ q :=
 by simp [h]
 
+lemma p_imp_of_equiv {Γ : pred' β} (p q : pred' β)
+  (h : Γ ⊢ p ≡ q)
+: Γ ⊢ p ⟶ q :=
+by lifted_pred using h ; simp [h]
+
 lemma equiv_of_eq (Γ p q : pred' β)
   (h : p = q)
 : Γ ⊢ p ≡ q :=
@@ -1214,20 +1242,6 @@ begin
   apply or.imp ; apply Exists.intro a_1,
 end
 
-lemma p_exists_entails_p_exists' {t : Sort u₀} {t' : Sort u₁}
-  (p : t → pred' β)
-  (q : t' → pred' β)
-  (f : t → t')
-  (h : (∀ x, p x ⟹ q (f x)))
-: (∃∃ x, p x) ⟹ (∃∃ x, q x) :=
-begin
-  intros,
-  lifted_pred [- exists_imp_distrib],
-  apply exists_imp_exists' f _ ,
-  intro x,
-  apply entails_to_pointwise (h x),
-end
-
 @[simp]
 lemma p_exists_imp_eq_p_forall_imp
   (p : α → pred' β) (q : pred' β)
@@ -1238,6 +1252,33 @@ lemma p_exists_entails_eq_p_forall_entails
   (p : α → pred' β) (q : pred' β)
 : ((∃∃ x, p x) ⟹ q) ↔ (∀ x, p x ⟹ q) :=
 by simp [p_entails,p_exists_imp_eq_p_forall_imp,ew_p_forall]
+
+lemma p_exists_imp_p_exists' {t : Sort u₀} {t' : Sort u₂}
+  {Γ : pred' β}
+  (p : t → pred' β)
+  (q : t' → pred' β)
+  (f : t → t')
+  (h : Γ ⊢ (∀∀ x, p x ⟶ q (f x)))
+: Γ ⊢ (∃∃ x, p x) ⟶ (∃∃ x, q x) :=
+begin
+  intros,
+  lifted_pred keep [- exists_imp_distrib],
+  apply exists_imp_exists' f _ ,
+  intro x,
+  apply (h.apply _ a),
+end
+
+lemma p_exists_entails_p_exists' {t : Sort u₀} {t' : Sort u₂}
+  (p : t → pred' β)
+  (q : t' → pred' β)
+  (f : t → t')
+  (h : (∀ x, p x ⟹ q (f x)))
+: (∃∃ x, p x) ⟹ (∃∃ x, q x) :=
+begin
+  intro,
+  apply p_exists_imp_p_exists' _ _ f,
+  apply (ew_p_forall _).mpr h,
+end
 
 lemma p_exists_variable_change
   (p : α → pred' β) (q : γ → pred' β)

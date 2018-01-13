@@ -57,7 +57,7 @@ lemma p_imp_sem {Γ p q : pred' α}
 : ∀ σ, σ ⊨ Γ → σ ⊨ p → σ ⊨ q :=
 h.apply
 
-lemma p_entails_of_fun (p₀ p₁ : pred' α) (x : β)
+lemma p_entails_of_fun (p₀ p₁ : pred' α)
 : p_entails p₀ p₁ ↔ ∀ Γ, Γ ⊢ p₀ → Γ ⊢ p₁ :=
 begin
   split ; intros h _,
@@ -388,7 +388,7 @@ by lifted_pred
 @[simp, predicate]
 lemma p_exists_comp {t} (p : t → pred' α) (f : var β α)
 : (p_exists p ;; f) = (∃∃ x, p x ;; f) :=
-by lifted_pred [p_exists,pred.p_exists]
+by lifted_pred [p_exists]
 
 @[simp]
 lemma coe_to_prop_p_and (p q : α → Prop)
@@ -553,11 +553,15 @@ lemma p_or_p_imp_p_or_left {p p' q : pred' α} {τ}
 : τ ⊨ p ⋁ q → τ ⊨ p' ⋁ q :=
 by apply or.imp hp id
 
-lemma p_imp_p_imp_p_imp {p p' q q' : pred' α} {τ}
-  (hp : τ ⊨ p' ⟶ p)
-  (hq : τ ⊨ q ⟶ q')
-: τ ⊨ p ⟶ q → τ ⊨ p' ⟶ q' :=
-assume hpq, hq ∘ hpq ∘ hp
+lemma p_imp_p_imp_p_imp {p p' q q' : pred' α} {Γ}
+  (hp : Γ ⊢ p' ⟶ p)
+  (hq : Γ ⊢ q ⟶ q')
+: Γ ⊢ p ⟶ q → Γ ⊢ p' ⟶ q' :=
+by { intro h₂, constructor, introv h₀ h₁,
+     replace hp := hp.apply _ h₀,
+     replace hq := hq.apply _ h₀,
+     replace h₂ := h₂.apply _ h₀,
+     xassumption, auto, }
 
 lemma revert_p_imp {p q : pred' α}
   (h : ⊩ p ⟶ q)
@@ -596,16 +600,21 @@ lemma p_imp_entails_p_imp {p p' q q' : pred' α}
 by { lifted_pred using hp hq, intros,
      repeat { xassumption }, }
 
-lemma p_imp_p_imp_p_imp_left {p p' q : pred' α} {τ}
-  (hp : τ ⊨ p' ⟶ p)
-: τ ⊨ p ⟶ q → τ ⊨ p' ⟶ q :=
-p_imp_p_imp_p_imp hp id
+lemma p_imp_p_imp_p_imp_left {p p' q : pred' α} {Γ}
+  (hp : Γ ⊢ p' ⟶ p)
+: Γ ⊢ p ⟶ q → Γ ⊢ p' ⟶ q :=
+p_imp_p_imp_p_imp hp (ctx_impl_refl _ _)
 
-lemma p_imp_p_imp_p_imp_right {p q q' : pred' α} {τ}
-  (hq : τ ⊨ q ⟶ q')
-: τ ⊨ p ⟶ q → τ ⊨ p ⟶ q' :=
-p_imp_p_imp_p_imp id hq
+lemma p_imp_p_imp_p_imp_right {p q q' : pred' α} {Γ}
+  (hq : Γ ⊢ q ⟶ q')
+: Γ ⊢ p ⟶ q → Γ ⊢ p ⟶ q' :=
+p_imp_p_imp_p_imp (ctx_impl_refl _ _) hq
 
+lemma ctx_imp_entails_p_imp {Γ p p' q q' : pred' α}
+  (hp : ctx_impl Γ p' p)
+  (hq : ctx_impl Γ q q')
+: ctx_impl Γ ( p ⟶ q ) ( p' ⟶ q' ) :=
+by { lifted_pred using hp hq, intros, xassumption, auto }
 
 @[monotonic]
 lemma ctx_imp_entails_p_imp_left {Γ p p' q : pred' α}
@@ -651,6 +660,11 @@ lemma p_not_p_not_iff_self (p : pred' β) :
 - - p = p :=
 by lifted_pred [not_not_iff_self]
 
+lemma p_not_eq_iff_eq_p_not (p q : pred' β) :
+- p = q ↔ p = - q :=
+by { split ; intro h,
+     rw [← h,p_not_p_not_iff_self],
+     rw [h,p_not_p_not_iff_self], }
 
 lemma p_and_over_or_left (p q r : pred' β)
 : p ⋀ (q ⋁ r) = (p ⋀ q) ⋁ (p ⋀ r) :=
@@ -762,7 +776,7 @@ by rw [p_and_over_or_left,p_not_and_self,False_p_or]
 @[simp, predicate]
 lemma p_exists_apply {t : Sort u'} {P : t → pred' β} (σ : β)
 : σ ⊨ (∃∃ x, P x) ↔ (∃ x, σ ⊨ P x) :=
-by { unfold p_exists pred.p_exists }
+by { unfold p_exists }
 
 lemma p_exists_to_fun {t : Sort u'} {h : pred' β} {P : t → pred' β}
   (x : t)
@@ -806,11 +820,15 @@ by { simp only [holds,forall_swap] { single_pass := tt },
 
 lemma p_not_p_exists {t : Sort*} (p : t → pred' β) :
 (- ∃∃ x, p x) = (∀∀ x, -p x) :=
-by lifted_pred [not_exists_iff_forall_not,p_exists,pred.p_exists]
+by lifted_pred [not_exists_iff_forall_not,p_exists]
+
+lemma p_not_p_forall {t : Sort*} (p : t → pred' β) :
+(- ∀∀ x, p x) = (∃∃ x, -p x) :=
+by { rw [p_not_eq_iff_eq_p_not,p_not_p_exists], simp [p_not_p_not_iff_self] }
 
 lemma p_exists_p_imp {t} (p : t → pred' β) (q : pred' β)
 : (∃∃ x, p x) ⟶ q = (∀∀ x, p x ⟶ q) :=
-by lifted_pred [p_exists,pred.p_exists]
+by lifted_pred [p_exists]
 
 lemma p_or_comm (p q : pred' β) : p ⋁ q = q ⋁ p :=
 by lifted_pred
@@ -1109,15 +1127,15 @@ begin
   lifted_pred,
   have h := (h $ eq σ).apply _ rfl,
   have _inst : nonempty t := nonempty_of_exists h,
-  simp [distrib_or_over_exists_left,p_exists,pred.p_exists],
+  simp [distrib_or_over_exists_left,p_exists],
 end
 
 @[congr]
 lemma {v} p_exists_congr {α : Sort u} {β : Sort v} {p q : α → pred' β}
   (h : ∀ i, p i = q i)
-: pred.p_exists p = pred.p_exists q :=
+: p_exists p = p_exists q :=
 begin
-  lifted_pred [pred.p_exists],
+  lifted_pred [p_exists],
   rw [exists_congr],
   intro, rw h,
 end
@@ -1332,6 +1350,15 @@ begin
   simp [exists_split_one],
   refl,
 end
+
+@[simp]
+lemma whole_v_eq_prj (x : var α α) (y : var γ α)
+: (whole ≃ x) ;; y = y ≃ (x ;; y) :=
+by lifted_pred
+
+@[simp]
+lemma models_whole (s : σ)
+: s ⊨ whole = s := rfl
 
 instance entails_category {α} : category (@p_entails α) :=
   { ident := by { intro, refl }

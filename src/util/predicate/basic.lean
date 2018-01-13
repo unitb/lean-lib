@@ -85,16 +85,8 @@ def p_entails (p₀ p₁ : pred' α) : Prop :=
 def p_not (p : pred' α) : pred' α :=
 lifted₁ not p
 
-def pred.p_exists {β : Sort u'} {t : Sort u} (P : t → pred' β) : pred' β :=
+def p_exists {β : Sort u'} {t : Sort u} (P : t → pred' β) : pred' β :=
 ⟨λ x, ∃ y, x ⊨ P y⟩
-
-class has_p_exists (α : Sort u) (β : Sort u') :=
-  (p_exists : (β → α) → α)
-
-instance pred_has_p_exists {α : Sort u} {β : Sort u'} : has_p_exists (pred' α) β :=
-⟨ @pred.p_exists _ _ ⟩
-
-export has_p_exists (p_exists)
 
 def p_forall {t : Sort u} {β : Sort u'} (P : t → pred' β) : pred' β :=
 ⟨ λ x, ∀ y, x ⊨ P y ⟩
@@ -160,5 +152,7 @@ def contramap (p : pred' α) (f : β → α) : pred' β :=
 p ;; ↑f
 
 infixr ` '∘ `:90 := contramap
+
+def whole : var α α := ↑(@id α)
 
 end predicate

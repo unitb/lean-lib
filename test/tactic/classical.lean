@@ -13,8 +13,22 @@ lemma some_spec_test1
 : p (classical.some Hex) :=
 by { apply_some_spec with w, }
 
+
+section
 include Hall
 
 lemma some_spec_test2
 : q (classical.some Hex) :=
 by { apply_some_spec with w, apply Hall w }
+
+end
+
+variables Hpq : ∀ x, p x → q x
+lemma Hex : ∃ x, p x := sorry
+open classical
+include Hpq
+variable [nonempty α]
+example : q (ε x, p x) :=
+begin
+  apply_epsilon_spec Hex,
+end

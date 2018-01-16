@@ -111,7 +111,7 @@ begin
   apply h.apply _ h₂,
 end
 
-instance forall_to_fun {Γ : pred' α} ⦃p : β → pred' α⦄ : has_coe_to_fun (Γ ⊢ p_forall p) :=
+instance forall_to_fun {Γ : pred' α} ⦃p  : β → pred' α⦄ : has_coe_to_fun (Γ ⊢ p_forall p) :=
 { F := λ _, Π i, (Γ ⊢ p i)
 , coe := p_forall_revert }
 
@@ -524,6 +524,13 @@ lemma ctx_p_and_p_imp_p_and_right' {Γ p q q' : pred' α}
 : ctx_impl Γ ( p ⋀ q ) ( p ⋀ q' ) :=
 by { lifted_pred using hq, intros,
      split ; auto, }
+
+lemma ctx_p_and_p_imp_p_and' {Γ p p' q q' : pred' α}
+  (hp : ctx_impl Γ p p')
+  (hq : ctx_impl Γ q q')
+: ctx_impl Γ (p ⋀ q) (p' ⋀ q')  :=
+by { lifted_pred using hp hq,
+     begin [smt] intros end, }
 
 @[monotonic]
 lemma p_and_p_imp_p_and_right' {p q q' : pred' α}

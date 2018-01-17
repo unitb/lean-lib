@@ -19,6 +19,8 @@ variables {σ : Sort u'}
 structure var (α : Sort u₀) (β : Sort u₁) : Sort (max u₀ u₁+1) :=
   (apply : α → β)
 
+attribute [pp_using_anonymous_constructor] var
+
 @[simp, predicate]
 def fun_app_to_var (f : α → β) : var σ α → var σ β
  | ⟨ g ⟩ := ⟨ f ∘ g ⟩
@@ -136,8 +138,6 @@ infix ` << `:50 := has_well_founded.r
 
 instance val_to_var_coe : has_coe β (var α β) :=
 { coe := λ x, ⟨ λ _, x ⟩ }
-instance fun_to_var_coe : has_coe (α → β) (var α β) :=
-{ coe := λ f, ⟨ f ⟩ }
 instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 { F := λ _, var σ α → var σ β
 , coe := λ f x, ⟨ λ s, f.apply s $ x.apply s ⟩ }
@@ -145,14 +145,14 @@ instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 def proj : var β γ → var α β → var α γ
  | ⟨p⟩ ⟨f⟩ := ⟨p∘f⟩
 
-infix ` ;; `:90 := proj
+infix ` ! `:90 := proj
 
 @[simp, predicate, reducible]
 def contramap (p : pred' α) (f : β → α) : pred' β :=
-p ;; ↑f
+p ! ⟨ f ⟩
 
 infixr ` '∘ `:90 := contramap
 
-def whole : var α α := ↑(@id α)
+def whole : var α α := ⟨ @id α ⟩
 
 end predicate

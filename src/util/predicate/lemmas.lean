@@ -11,13 +11,13 @@ variables {γ : Sort u₂}
 variables {σ : Sort u'}
 
 @[simp, predicate]
-lemma value_prof (p : var β γ) (f : var α β) (x : α)
-: (p ;; f).apply x = p.apply (f.apply x) :=
+lemma value_proj (p : var β γ) (f : var α β) (x : α)
+: (p ! f).apply x = p.apply (f.apply x) :=
 by { cases p, cases f, refl }
 
 @[simp, predicate]
 lemma contramap_apply (p : pred' α) (f : var β α) (x : β)
-: x ⊨ (p ;; f) = f.apply x ⊨ p :=
+: x ⊨ (p ! f) = f.apply x ⊨ p :=
 by { cases p , cases f, refl }
 
 @[simp, predicate]
@@ -141,18 +141,18 @@ instance (α : Type u) : applicative (var α) :=
 
 @[simp, predicate]
 lemma var_map_coe {α β σ : Type u} (f : α → β) (g : σ → α)
-: f <$> (g : var σ α) = (f ∘ g : var σ β) :=
-by { unfold_coes, simp [has_map.map] }
+: ⟨ f  ⟩!⟨ g ⟩ = ⟨ f ∘ g ⟩ :=
+by { simp [proj] }
 
 @[simp, predicate]
 lemma map_proj {α β γ σ : Type u} (f : α → β) (v₁ : var σ γ) (v₀ : var γ α)
-: f <$> (v₀ ;; v₁) = ↑(λ x, f $ v₀.apply $ v₁.apply x) :=
-by { unfold_coes, simp [has_map.map] }
+: ⟨ f ⟩ ! (v₀ ! v₁) = ⟨ λ x, f $ v₀.apply $ v₁.apply x ⟩ :=
+by { cases v₀, cases v₁, simp }
 
 @[simp, predicate]
 lemma var_seq_coe {α β σ : Type u} (f : σ → α → β) (g : σ → α)
-: (f : var σ (α → β)) <*> (g : var σ α) = (λ s : σ, f s (g s) : var σ β) :=
-by { unfold_coes, simp [has_seq.seq] }
+: (⟨ f ⟩ : var _ _) <*> ⟨ g ⟩ = (⟨ λ s : σ, f s (g s) ⟩ : var σ β) :=
+by { simp [has_seq.seq] }
 
 @[simp, predicate]
 lemma models_lt {α : Type u} [has_lt α] {s : σ} (x y : var σ α)
@@ -181,7 +181,7 @@ rfl
 
 @[simp, predicate]
 lemma coe_fun {s : σ} (x : σ → α)
-: (x : var σ α).apply s = x s :=
+: (⟨ x ⟩ : var σ α).apply s = x s :=
 rfl
 
 @[simp, predicate]
@@ -191,7 +191,7 @@ rfl
 
 @[simp]
 lemma eq_judgement {p : pred' α} (σ : α)
-: ↑(eq σ) ⊢ p ↔ σ ⊨ p :=
+: ⟨ eq σ ⟩ ⊢ p ↔ σ ⊨ p :=
 by { split ; intro h,
      { apply h.apply σ, exact rfl },
      { constructor, intros _ h', cases h', assumption } }
@@ -208,7 +208,7 @@ by refl
 
 @[simp, predicate]
 lemma models_pred {p : α → Prop} (σ : α)
-: σ ⊨ ↑p ↔ p σ :=
+: σ ⊨ ⟨ p ⟩ ↔ p σ :=
 by refl
 
 @[extensionality, priority 0]
@@ -236,7 +236,7 @@ lemma pred_ext {p q : pred' α}
 begin
   cases p, cases q,
   congr, funext y,
-  specialize h (eq y),
+  specialize h ⟨eq y⟩,
   simp with predicate at h,
   rw h,
 end
@@ -252,11 +252,11 @@ end
 lemma entails_of_forall_impl {p q : pred' β}
   (h : p ⟹ q)
 : ∀ i, i ⊨ p ⟶ q :=
-by { intros i hp, apply (h $ eq i).apply i rfl hp, }
+by { intros i hp, apply (h ⟨eq i⟩).apply i rfl hp, }
 
 lemma ew_str {p : pred' β}
 : ⊩ p → ∀ x, x ⊨ p :=
-by { intros h _, apply (h $ eq x).apply _ rfl }
+by { intros h _, apply (h ⟨eq x⟩).apply _ rfl }
 
 lemma ew_wk {p : pred' β}
 : (∀ x, x ⊨ p) → ⊩ p :=
@@ -318,93 +318,94 @@ end
 
 @[simp, predicate]
 lemma value_coe_comp (x : α) (v : var β γ)
-: (x : var γ α) ;; v = (x : var β α) :=
+: (x : var γ α) ! v = (x : var β α) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma True_comp (v : var β γ)
-: True ;; v = True :=
+: True ! v = True :=
 by lifted_pred
 
 @[simp, predicate]
 lemma False_comp (v : var β γ)
-: False ;; v = False :=
+: False ! v = False :=
 by lifted_pred
 
+@[simp]
 lemma proj_assoc (x : var α β) (y : var β γ) (z : var γ σ)
-: (z ;; y) ;; x = z ;; (y ;; x) :=
+: (z ! y) ! x = z ! (y ! x) :=
 by lifted_pred
 
 @[simp]
 lemma p_and_comp (p q : pred' α) (f : var β α)
-: ((p ⋀ q) ;; f) = (p ;; f) ⋀ (q ;; f) :=
+: ((p ⋀ q) ! f) = (p ! f) ⋀ (q ! f) :=
 by lifted_pred
 
 @[simp]
-lemma const_over_comp (p : γ) (f : β → α)
-: ((p : var α γ) ;; (f : var β α)) = ↑p :=
+lemma const_over_comp (p : γ) (v : var β α)
+: (p : var α γ) ! v = ↑p :=
 by lifted_pred
 
 @[predicate]
 lemma coe_over_comp' (p : α → γ) (f : β → α)
-: ((p : var α γ) ;; (f : var β α)) = ↑(p ∘ f) :=
+: ⟨ p ⟩ ! ⟨ f ⟩ = ⟨ p ∘ f ⟩ :=
 by lifted_pred
 
 -- @[simp]
 lemma coe_over_comp (p : α → γ) (f : β → α)
-: ↑(p ∘ f) = ((p : var α γ) ;; (f : var β α)) :=
+: (⟨ p ∘ f ⟩ : var _ _) = ⟨ p ⟩ ! ⟨ f ⟩ :=
 by lifted_pred
 
 @[simp]
 lemma p_or_comp (p q : pred' α) (f : var β α)
-: ((p ⋁ q) ;; f) = (p ;; f) ⋁ (q ;; f) :=
+: ((p ⋁ q) ! f) = (p ! f) ⋁ (q ! f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma eq_comp (p q : var α γ) (f : var β α)
-: ((p ≃ q) ;; f) = (p ;; f) ≃ (q ;; f) :=
+: ((p ≃ q) ! f) = (p ! f) ≃ (q ! f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma wf_comp {_ : has_well_founded γ} (p q : var α γ) (f : var β α)
-: ((p ≺≺ q) ;; f) = (p ;; f) ≺≺ (q ;; f) :=
+: ((p ≺≺ q) ! f) = (p ! f) ≺≺ (q ! f) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma lt_comp {γ : Type _} [has_lt γ] (p q : var α γ) (f : var β α)
-: ((p ≺ q) ;; f) = ((p ;; f) ≺ (q ;; f)) :=
+: ((p ≺ q) ! f) = ((p ! f) ≺ (q ! f)) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma mem_comp {α γ} [has_mem α γ] (p : var σ α) (q : var σ γ) (f : var β σ)
-: ((p ∊ q) ;; f) = ((p ;; f) ∊ (q ;; f)) :=
+: ((p ∊ q) ! f) = ((p ! f) ∊ (q ! f)) :=
 by lifted_pred
 
 @[simp, predicate]
 lemma coe_apply (v : var α β)
-: ↑(v.apply) = v :=
+: (⟨ v.apply ⟩ : var _ _) = v :=
 by lifted_pred
 
 @[simp, predicate]
 lemma p_exists_comp {t} (p : t → pred' α) (f : var β α)
-: (p_exists p ;; f) = (∃∃ x, p x ;; f) :=
+: (p_exists p ! f) = (∃∃ x, p x ! f) :=
 by lifted_pred [p_exists]
 
 @[simp]
 lemma coe_to_prop_p_and (p q : α → Prop)
-: (λ s, p s ∧ q s : pred' α) = p ⋀ q := rfl
+: (⟨λ s, p s ∧ q s⟩ : pred' α) = ⟨p⟩ ⋀ ⟨q⟩ := rfl
 
 @[simp]
 lemma coe_to_prop_p_or (p q : α → Prop)
-: (λ s, p s ∨ q s : pred' α) = p ⋁ q := rfl
+: (⟨λ s, p s ∨ q s⟩ : pred' α) = ⟨p⟩ ⋁ ⟨q⟩ := rfl
 
 @[simp]
 lemma coe_to_prop_p_not (p : α → Prop)
-: (λ s, ¬ p s : pred' α) = - p := rfl
+: (⟨λ s, ¬ p s⟩ : pred' α) = - ⟨p⟩ := rfl
 
 @[simp]
 lemma coe_to_prop_p_equiv (p q : α → Prop)
-: (λ s, p s ↔ q s : pred' α) = p ≡ q :=
+: (⟨λ s, p s ↔ q s⟩ : pred' α) = ⟨p⟩ ≡ ⟨q⟩ :=
 by { funext1, simp }
 
 lemma lifting_prop_asm (Γ : pred' α) {p : Prop} {q : pred' α}
@@ -875,7 +876,7 @@ lemma p_imp_intro (p q r : pred' β)
 : Γ ⊢ q ⟶ r :=
 begin
   constructor, introv hΓ hq,
-  apply (h (eq σ) _ _).apply _ rfl ;
+  apply (h ⟨eq σ⟩ _ _).apply _ rfl ;
   constructor
   ; intros _ h
   ; cases h,
@@ -991,29 +992,29 @@ end
 
 @[simp]
 lemma p_not_comp' (p : pred' α) (f : var β α)
-: -p ;; f = -(p ;; f) :=
+: -p ! f = -(p ! f) :=
 by lifted_pred
 
 lemma p_not_comp (p : pred' α) (f : var β α)
-: -(p ;; f) = -p ;; f :=
+: -(p ! f) = -p ! f :=
 by lifted_pred
 
 @[monotonic]
 lemma comp_entails_comp {p q : pred' β} (f : var α β)
   (H : p ⟹ q)
-: p ;; f ⟹ q ;; f :=
+: p ! f ⟹ q ! f :=
 begin
   intros Γ, constructor,
   introv h hp,
   simp at ⊢ hp,
-  specialize H (eq $ f.apply σ),
+  specialize H ⟨eq $ f.apply σ⟩,
   apply H.apply (f.apply σ) rfl hp,
 end
 
 @[monotonic]
 lemma ctx_comp_imp_comp {Γ : pred' α} {p q : pred' β} (f : var α β)
   (H : p ⟹ q)
-: ctx_impl Γ (p ;; f) (q ;; f) :=
+: ctx_impl Γ (p ! f) (q ! f) :=
 by apply comp_entails_comp _ H
 
 @[monotonic]
@@ -1096,7 +1097,7 @@ by { intros hp, lifted_pred using hp H, auto }
 lemma entails_to_pointwise {p q : pred' β}
   (h : p ⟹ q)
 : ∀ i, i ⊨ p → i ⊨ q :=
-by { intros i h', apply (h (eq i)).apply i rfl h' }
+by { intros i h', apply (h ⟨eq i⟩).apply i rfl h' }
 
 lemma impl_of_p_impl {p q : pred' β} (i : β)
   (h : ⊩ p ⟶ q)
@@ -1132,7 +1133,7 @@ lemma p_or_over_p_exists_left {t} (p : t → pred' β) (q : pred' β) {w : t →
 : q ⋁ (∃∃ x, p x) = (∃∃ x, q ⋁ p x) :=
 begin
   lifted_pred,
-  have h := (h $ eq σ).apply _ rfl,
+  have h := (h ⟨eq σ⟩).apply _ rfl,
   have _inst : nonempty t := nonempty_of_exists h,
   simp [distrib_or_over_exists_left,p_exists],
 end
@@ -1360,7 +1361,7 @@ end
 
 @[simp]
 lemma whole_v_eq_prj (x : var α α) (y : var γ α)
-: (whole ≃ x) ;; y = y ≃ (x ;; y) :=
+: (whole ≃ x) ! y = y ≃ (x ! y) :=
 by lifted_pred
 
 @[simp]

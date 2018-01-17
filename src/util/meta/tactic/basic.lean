@@ -101,6 +101,7 @@ do { ctx ← asms.to_monad <|> local_context,
 
 meta def auto (asms : option (list expr) := none) : tactic unit :=
 xassumption asms ; xassumption asms ; xassumption asms ; done
+
 open tactic.interactive
 open applicative (lift₂)
 

@@ -108,8 +108,8 @@ begin
   ; intros x₀,
   case nil
   { refl },
-  case cons x xs
-  { simp [flip,ih_1], }
+  case cons : x xs
+  { simp [flip,xs_ih], }
 end
 
 end
@@ -127,7 +127,7 @@ begin
   induction xs,
   case nil
   { refl },
-  case cons x xs IH
+  case cons : x xs IH
   { unfold foldl foldr,
     rw ← IH, symmetry,
     rw [foldl_hom (f x) f f _ _ xs,is_commutative.comm f],

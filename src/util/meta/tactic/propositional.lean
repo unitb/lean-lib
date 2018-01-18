@@ -34,7 +34,7 @@ meta def propositional : tactic unit :=
 do t ← target,
    match t with
     | `(_ ⟹ _) := `[pointwise with v,simp with predicate] >> try show_prop
-    | `(_ = _) := `[lifted_pred] >> split ; try show_prop
+    | `(_ = _) := `[lifted_pred] >> (() <$ split) ; try show_prop
     | `(_ ⊢ _) := `[pointwise with v,simp with predicate] >> try show_prop
     | `(⊩ _) := `[pointwise with v,simp with predicate] >> try show_prop
     | _ := show_prop

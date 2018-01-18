@@ -5,11 +5,12 @@ import data.array.lemmas
 import util.data.fin
 import util.data.list
 import util.data.order
+import util.meta.tactic
 
 universe variables u₀ u₁ u₂
 variables {α : Type u₀} {β β' : Type u₁} {γ : Type u₂}
 
-open nat
+open nat (hiding foldr)
 
 namespace array
 
@@ -55,7 +56,7 @@ lemma le_maximum_aux {n : ℕ} (a : array n ℕ) (k : ℕ) (Hk : k ≤ n)
 begin
   induction k,
   case nat.zero { admit },
-  case nat.succ k
+  case nat.succ : k
   { unfold maximum_aux iterate_aux,
     simp, admit },
 end
@@ -88,9 +89,9 @@ begin
   induction k,
   case zero
     { refl },
-  case succ k
+  case succ : k
     { rw d_array.iterate_aux.equations._eqn_2 (pop ar), simp,
-      rw ← ih_1, unfold iterate_aux, simp,
+      rw ← k_ih, unfold iterate_aux, simp,
       apply congr_fun,
       cases ar, refl }
 end
@@ -102,7 +103,7 @@ lemma rev_list_eq_cons_aux {n k : ℕ} (ar : array n α) (xs : list α)
 begin
   induction k,
   { unfold iterate_aux, simp },
-  { unfold iterate_aux, simp [ih_1], },
+  { unfold iterate_aux, simp [k_ih], },
 end
 
 lemma rev_list_eq_cons {n : ℕ} (ar : array (succ n) α)
@@ -121,18 +122,17 @@ begin
   induction k,
   case zero
     { refl },
-  case succ k
+  case succ : k
     { unfold iterate_aux, simp,
       apply congr_arg,
-      apply ih_1 },
+      apply k_ih },
 end
 
 lemma rev_list_eq_append {n : ℕ} (ar : array (succ n) α)
 : ar.rev_list = ar.read fin.max :: ar.pop_back.rev_list :=
 begin
   unfold rev_list foldl iterate d_array.iterate iterate_aux,
-  simp,
-  apply congr_arg,
+  simp, split, refl,
   apply iterate_aux_pop_back,
 end
 
@@ -162,10 +162,7 @@ end
 lemma array_widen_eq_pop_back {n : ℕ} (f : fin (succ n) → α)
 : d_array.mk (f ∘ widen) = array.pop_back ⟨f⟩ :=
 begin
-  simp [array.pop_back],
-  apply array.ext,
-  intro,
-  cases i, refl,
+  ext1, cases i, refl,
 end
 
 open list

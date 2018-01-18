@@ -1,5 +1,5 @@
 
-import data.set
+import data.set.basic
 
 import util.logic
 
@@ -69,7 +69,7 @@ lemma fmap_eq_empty_iff_eq_empty
 begin
   split
   ; intro h,
-  { apply eq_empty_of_forall_not_mem,
+  { rw  eq_empty_iff_forall_not_mem,
     have h₁ := congr_fun h,
     intros x h₂,
     have h₃ := h₁ (f x),
@@ -77,7 +77,7 @@ begin
     rw ← iff_eq_eq at h₃,
     rw ← h₃, apply mem_fmap_of_mem h₂, },
   { rw h,
-    apply eq_empty_of_forall_not_mem,
+    rw eq_empty_iff_forall_not_mem,
     intros x h',
     unfold has_map.map image at h',
     rw mem_set_of at h',

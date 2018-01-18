@@ -59,7 +59,7 @@ do applyc `compose.run,
    constr ← fill_implicit_arg c,
    constr' ← to_expr ``(@pure %%(g.app_fn) _ _ %%constr),
    r ← seq_apply_constructor (filter_map id args') constr',
-   tactic.apply r
+   () <$ tactic.apply r
 
 meta def derive_traverse : tactic unit :=
 do `(has_traverse %%f) ← target | failed,
@@ -75,7 +75,7 @@ do `(has_traverse %%f) ← target | failed,
    β ← get_local `β,
    m ← get_local `m,
    () <$ mzip_with'
-      (λ (c : name) (x : _ × _), solve1 (traverse_constructor c n f α x.1))
+      (λ (c : name) (x : _ × _ × _), solve1 (traverse_constructor c n f α x.2.1))
       cs xs
 
 end tactic.interactive

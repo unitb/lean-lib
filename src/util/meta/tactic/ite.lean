@@ -42,17 +42,17 @@ do g ← ls.get_locations >>= mmap instantiate_mvars,
       do hyp' ← get_unused_name $ option.cases_on hyp `h id,
          cases (none,to_pexpr d) [hyp',hyp']
          ; [ (do hyp' ← get_local hyp',
-                 simp tt [ simp_arg_type.expr
-                            ``(@dif_neg _ (is_false %%hyp') %%hyp')
-                         , simp_arg_type.expr
-                            ``(@if_neg _ (is_false %%hyp') %%hyp')]
-                         [] ls)
+                 simp none tt [ simp_arg_type.expr
+                                ``(@dif_neg _ (is_false %%hyp') %%hyp')
+                              , simp_arg_type.expr
+                                ``(@if_neg _ (is_false %%hyp') %%hyp')]
+                              [] ls)
            , do hyp' ← get_local hyp',
-                simp tt [ simp_arg_type.expr
-                           ``(@dif_pos _ (is_true %%hyp') %%hyp')
-                        , simp_arg_type.expr
-                           ``(@if_pos _ (is_true %%hyp') %%hyp')]
-                        [] ls ]
+                simp none tt [ simp_arg_type.expr
+                               ``(@dif_pos _ (is_true %%hyp') %%hyp')
+                             , simp_arg_type.expr
+                               ``(@if_pos _ (is_true %%hyp') %%hyp')]
+                             [] ls ]
     | none :=  fail "no conditionals found"
    end
 

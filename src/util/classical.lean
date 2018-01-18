@@ -39,7 +39,7 @@ open tactic interactive interactive.types lean.parser
 meta def apply_some_spec (id : parse $ optional (tk "with" *> ident_)) : tactic unit :=
 do t ← target,
    (l,_) ← solve_aux t (do
-     e ← to_expr ``(classical.some _),
+     e ← to_expr ``(@classical.some _ _ _),
      v ← mk_fresh_name,
      generalize e v,
      (expr.pi v bi t e) ← target,

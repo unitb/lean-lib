@@ -81,7 +81,7 @@ begin
   tactic.congr,
   apply funext, intro i,
   unfold function.comp id,
-  apply @monad.bind_pure _ α option,
+  apply @monad.bind_pure α option,
 end
 
 lemma pure_bind (x : α) (f : α → nonterm β)
@@ -99,7 +99,7 @@ begin
   unfold bind nonterm.bind nonterm.run,
   tactic.congr,
   apply funext, intro i,
-  destruct (run i),
+  destruct (x_run i),
   { intro h, simp [h,option.bind], },
   { intros x h, simp [h,option.bind] }
 end
@@ -209,7 +209,7 @@ protected def orelse (x y : nonterm α) : nonterm α :=
     induction k with k,
     { apply h },
     { dsimp [add_succ,nonterm.orelse_run],
-      simp [ih_1] }
+      simp [k_ih] }
   end }
 
 instance : has_orelse nonterm :=
@@ -321,7 +321,7 @@ begin
       apply f_monotonic,
       exact ⟨ () ⟩,
       intros z i yy hh,
-      apply ih_1 i n' z _ hh hnn' } }
+      apply n_ih i n' z _ hh hnn' } }
 end
 
 protected def fix (x : α) : nonterm β :=
@@ -469,7 +469,7 @@ lemma dite_monotonic
 begin
   intros i₀ i y v1 v2 Hlt x,
   simp,
-  by_cases p x with h,
+  by_cases h : p x,
   { simp [dif_pos h], apply Ht, apply Hlt },
   { simp [dif_neg h], apply Hf, apply Hlt },
 end

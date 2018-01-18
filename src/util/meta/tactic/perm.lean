@@ -62,6 +62,6 @@ meta def prove_perm : tactic unit := do
       | fail "expecting goal of the form `(list.perm [...] [...])`",
   xs' ← parse_list xs,
   ys' ← parse_list ys,
-  mk_perm_proof xs' ys' >>= tactic.apply
+  () <$ (mk_perm_proof xs' ys' >>= tactic.apply)
 
 end tactic.interactive

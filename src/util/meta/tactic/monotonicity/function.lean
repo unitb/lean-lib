@@ -336,7 +336,7 @@ ctx.to_rel (f ctx.left) (f ctx.right)
 meta def mk_congr_args (fn : expr) (xs₀ xs₁ : list expr) (l r : expr) : tactic expr :=
 do p ← mk_app `eq [fn.mk_app $ xs₀ ++ l :: xs₁,fn.mk_app $ xs₀ ++ r :: xs₁],
    prod.snd <$> solve_aux p
-     (do repeat_exactly (xs₁.length) (applyc `congr_fun),
+     (do iterate_exactly (xs₁.length) (applyc `congr_fun),
          applyc `congr_arg)
 
 meta def mk_congr_law (ctx : mono_ctx) : tactic expr :=
@@ -503,11 +503,11 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
-     repeat_exactly (n-1) (try $ solve1 $ apply_instance <|> auto (some asms)))
+     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> auto (some asms)))
 
 meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=
-repeat_exactly n (monotonicity1 cfg)
+iterate_exactly n (monotonicity1 cfg)
 
 open sum nat
 
@@ -644,7 +644,7 @@ end
 
 attribute [monotonic] or.imp_left
 attribute [monotonic] and.imp_right
-instance : is_associative _ (∨) := ⟨ by simp ⟩
-instance : is_associative _ (∧) := ⟨ by simp ⟩
-instance : is_commutative _ (∨) := ⟨ by simp ⟩
-instance : is_commutative _ (∧) := ⟨ by simp ⟩
+instance : is_associative _ (∨) := ⟨ by simp [or_assoc] ⟩
+instance : is_associative _ (∧) := ⟨ by simp [and_assoc] ⟩
+instance : is_commutative _ (∨) := ⟨ by simp [or_comm] ⟩
+instance : is_commutative _ (∧) := ⟨ by simp [and_comm] ⟩

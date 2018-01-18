@@ -165,9 +165,9 @@ protected lemma eq {α β} (b₀ b₁ : bijection α β)
 begin
   cases b₀, cases b₁,
   unfold bijection.f bijection.g at Hf Hg,
-  have Hf' : f = f_1 := funext Hf,
-  have Hg' : g = g_1 := funext Hg,
-  subst f_1, subst g_1
+  have Hf' : b₀_f = b₁_f := funext Hf,
+  have Hg' : b₀_g = b₁_g := funext Hg,
+  subst b₁_f, subst b₁_g
 end
 
 infixr ∘ := bij.comp
@@ -175,19 +175,19 @@ infixr ∘ := bij.comp
 lemma bijection.left_id {α β} (x : bijection α β) : id ∘ x = x :=
 begin
   cases x, unfold id bij.comp,
-  have Hf : function.comp id.f f = f := function.left_id _,
-  have Hg : function.comp g id.g = g := function.right_id _,
-  simp [Hf,Hg],
-  refl
+  have Hf : function.comp id.f x_f = x_f := function.left_id _,
+  have Hg : function.comp x_g id.g = x_g := function.right_id _,
+  simp [Hf,Hg,function.comp],
+  split ; refl
 end
 
 lemma bijection.right_id {α β} (x : bijection α β) : x ∘ id = x :=
 begin
   cases x, unfold id bij.comp,
-  have Hf : function.comp f id.f = f := function.left_id _,
-  have Hg : function.comp id.g g = g := function.left_id _,
-  simp [Hf,Hg],
-  refl,
+  have Hf : function.comp x_f id.f = x_f := function.left_id _,
+  have Hg : function.comp id.g x_g = x_g := function.left_id _,
+  simp [Hf,Hg,function.comp],
+  split ; refl,
 end
 
 @[simp]
@@ -262,7 +262,7 @@ end
 begin
   intros x,
   unfold bij.prod.pre.g bij.prod.pre.f,
-  simp [nat.mod_add_div]
+  simp [nat.mod_add_div,mul_comm],
 end
 
 section append
@@ -409,7 +409,7 @@ begin
   { cases nat.not_lt_zero _ h },
   { unfold less, have h' := @lt_or_eq_of_le ℕ _ _ _ h,
     cases h' with h' h',
-    { apply or.inr, apply ih_1,
+    { apply or.inr, apply k_ih,
       apply lt_of_succ_lt_succ h' },
     { apply or.inl, injection h' with h, } }
 end
@@ -580,7 +580,7 @@ begin
   intro x,
   induction x with x,
   { rw [bij.prod.f_zero,bij.prod.g_zero_zero] },
-  { rw [bij.prod.f_succ,bij.prod.g_prod_succ_eq_prod_succ_g,ih_1] },
+  { rw [bij.prod.f_succ,bij.prod.g_prod_succ_eq_prod_succ_g,x_ih] },
 end
 
 instance : finite unit :=
@@ -711,12 +711,12 @@ begin
   { unfold bij.prod.f,
     cases bij.prod.f n with x y,
     cases y with y h ; unfold bij.prod.succ prod.sum,
-    { unfold prod.sum at ih_1, simp at ih_1,
-      simp [succ_le_succ,ih_1] },
-    { unfold prod.sum at ih_1,
-      simp [add_succ] at ih_1,
+    { unfold prod.sum at n_ih, simp at n_ih,
+      simp [succ_le_succ,n_ih] },
+    { unfold prod.sum at n_ih,
+      simp [add_succ] at n_ih,
       simp [succ_add], transitivity,
-      apply ih_1,
+      apply n_ih,
       apply le_succ  } }
 end
 
@@ -779,7 +779,7 @@ begin
     rw concat.g_succ,
     apply congr, apply congr_arg,
     { rw h },
-    { rw h, unfold prod.snd, apply ih_1 },  }
+    { rw h, unfold prod.snd, apply x_ih },  }
 end
 begin
   intro x,
@@ -873,7 +873,7 @@ end)
     apply congr_arg,
     unfold bij.prod.pre.g prod.snd,
     rw ih, unfold prod.fst bij.prod.pre.f,
-    simp [mod_add_div],
+    simp [mul_comm,mod_add_div],
     { apply lt_succ_of_le, apply nat.div_le_self } }
 end)
 
@@ -980,11 +980,11 @@ begin
 end
 begin
   intro x, cases x,
-  have h := le_of_succ_le_succ is_lt,
-  have h' := le_antisymm (zero_le _) h,
+  have h := le_of_succ_le_succ x_is_lt,
+  have h' := le_antisymm (nat.zero_le _) h,
   apply fin.eq_of_veq,
   unfold has_zero.zero,
-  subst val,
+  subst x_val,
 end
 
 instance : pos_finite unit :=
@@ -1158,7 +1158,7 @@ begin
     apply congr_arg, symmetry,
     rw ← bijection.inverse,
     apply fin.eq_of_veq, refl, -/ },
-  case succ n
+  case succ : n
   { simp [fin.sum_succ],
     -- have H : ¬ (sz (bt.g (0 : fin $ succ n).val)
     --     + (((b x).f Fx).val + fin.sum n ((λ (i : fin (succ n)), sz (bt.g (i.val))) ∘ fin.succ))

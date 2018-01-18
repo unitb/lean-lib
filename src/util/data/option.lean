@@ -46,11 +46,7 @@ lemma fmap_some (f : α → β) (x : α)
 @[simp]
 lemma fmap_eq_none_iff (f : α → β) (x : option α)
 : f <$> x = none ↔ x = none :=
-begin
-  cases x ; simp,
-  split ; intro h ;
-  contradiction
-end
+by cases x ; simp
 
 @[simp]
 lemma coe_eq_some (x : α)

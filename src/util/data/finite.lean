@@ -1,11 +1,11 @@
 
 import util.data.nat
 
-open nat
+open nat (hiding zero_le)
 open list
 
 def fin_interleave (n : ℕ) (i : ℕ) : fin (succ n) :=
-⟨i % succ n,mod_lt _ (succ_le_succ $ zero_le _)⟩
+⟨i % succ n,mod_lt _ (succ_le_succ $ nat.zero_le _)⟩
 
 theorem inf_repeat_fin_inter {n : ℕ} : ∀ x i, ∃ j, fin_interleave n (i+j) = x :=
 begin
@@ -17,7 +17,7 @@ begin
   unfold fin_interleave,
   have h : i % succ n ≤ succ n,
   { apply nat.le_of_lt (mod_lt _ _),
-    apply succ_le_succ, apply zero_le },
+    apply succ_le_succ, apply nat.zero_le },
   apply fin.eq_of_veq, unfold fin.val ,
   rw [nat.add_sub_assoc h,add_comm x,← add_assoc,mod_add,@mod_add i],
   rw [← @mod_add' (i % succ n),← nat.add_sub_assoc h],

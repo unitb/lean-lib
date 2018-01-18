@@ -78,9 +78,7 @@ begin
   cases x,
   simp [has_bind.bind,ulift_t.bind,function.comp,pure,has_pure.pure,ulift_t.pure],
   simp [up_down],
-  apply congr_arg,
   apply monad.bind_pure,
-  exact (ulift α)
 end
 
 end ulift_t

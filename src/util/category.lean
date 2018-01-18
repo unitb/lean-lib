@@ -39,5 +39,5 @@ instance {m : Type u → Type v} [monad m] : category (kleisli m) :=
   { ident := λ α x, pure x
   , comp := λ α β γ (x : kleisli m β γ) (y : kleisli m α β), λ i, y i >>= x
   , assoc := by { intros, simp [has_comp.comp,monad.bind_assoc] }
-  , left_ident  := by { intros, apply funext, intro, apply @monad.bind_pure β α m, }
+  , left_ident  := by { intros, apply funext, intro, apply monad.bind_pure, }
   , right_ident := by { intros, apply funext, intro, apply monad.pure_bind, } }

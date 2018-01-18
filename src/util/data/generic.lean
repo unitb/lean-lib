@@ -100,7 +100,7 @@ do c ← resolve_name n >>= to_expr,
    match t with
     | `(_ × _) := tactic.cases c [`x,`y] >> prove_inverse `y
     | `(Σ _, _) := tactic.cases c [`x,`y] >> prove_inverse `y
-    | `(_ ⊕ _) := tactic.cases c [`x,`x] ; solve1 (prove_inverse `x)
+    | `(_ ⊕ _) := (() <$ tactic.cases c [`x,`x]) ; solve1 (prove_inverse `x)
     | `(unit) :=  tactic.cases c >> reflexivity
     | _ := fail "cannot prove inverse"
    end
@@ -167,4 +167,3 @@ instance generic_generic_ex2 : generic generic_ex2 :=
 begin mk_generic_instance end
 
 end examples
-

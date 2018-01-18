@@ -129,7 +129,6 @@ begin
   { apply classical.some_spec',
     intro, apply and.right },
 end
-
 lemma solutions_increases {i j : ℕ}
   (H : i < j)
 : solutions i < solutions j :=
@@ -141,17 +140,17 @@ begin
   rw [succ_add],
   induction k,
   case zero
-  { unfold solutions,
-    apply classical.some_spec',
+  { dsimp [solutions], simp,
+    apply_some_spec,
     simp,
-    introv h h', apply h', },
-  case succ j
+    introv h h', assumption, },
+  case succ : j
   { unfold solutions,
     apply classical.some_spec',
     intros x Hx,
     transitivity solutions Hp (succ (i + j)),
-    { apply ih_1 },
-    { apply Hx.left } },
+    { apply k_ih },
+    { simp [stream.solutions], apply Hx.left } },
 end
 
 lemma solutions_injective

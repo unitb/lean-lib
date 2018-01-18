@@ -101,7 +101,7 @@ lemma exists_and
    (P : α → Prop)
    (Q : Prop)
 : (∃ x, P x) ∧ Q ↔ (∃ x, P x ∧ Q) :=
-by { rw [and_comm,and_exists], simp }
+by simp
 
 lemma mem_set_of {α : Type u} (x : α) (P : α → Prop) : x ∈ set_of P ↔ P x :=
 by refl
@@ -155,7 +155,7 @@ lemma not_iff_not_iff {p q : Prop}
 
 lemma distrib_right_or
 : c ∨ (a ∧ b) ↔ (c ∨ a) ∧ (c ∨ b) :=
-by { rw [or_comm,distrib_left_or], simp }
+by { rw [or_comm,distrib_left_or], simp [or_comm], }
 
 lemma or_not_and (p q : Prop)
 : p ∨ (¬ p ∧ q) ↔ p ∨ q :=
@@ -359,7 +359,7 @@ by { rw exists_one_point y ; simp }
 @[simp]
 lemma exists_one_point_left' (p : α → Prop) (y : α)
 : (∃ x, y = x ∧ p x) ↔ p y :=
-by { rw exists_one_point y ; simp, intros, subst x, }
+by { rw exists_one_point y ; simp, }
 
 lemma exists_variable_change'
   (p : α → Prop) (q : β → Prop)

@@ -3,7 +3,7 @@ import util.meta.tactic
 
 open list tactic tactic.interactive
 
-meta class elaborable (α : Type) (β : inout Type) :=
+meta class elaborable (α : Type) (β : out_param Type) :=
   (elaborate : α → tactic β)
 
 export elaborable (elaborate)
@@ -104,7 +104,7 @@ begin
   induction xs with x xs,
   { trivial },
   { simp [has_le.le,list.le],
-    split, apply le_refl, apply ih_1 }
+    split, apply le_refl, apply xs_ih }
 end
 
 -- @[trans]
@@ -124,7 +124,7 @@ begin
   { simp [has_le.le,list.le],
     split,
     apply le_trans h.left h'.left,
-    apply ih_1 _ h.right h'.right, }
+    apply xs_ih _ h.right h'.right, }
 end
 
 @[monotonic]
@@ -137,7 +137,7 @@ begin
   { cases ys, refl, cases h },
   { cases ys with y ys, cases h, simp [has_le.le,list.le] at *,
     revert h, apply and.imp_right,
-    apply ih_1 }
+    apply xs_ih }
 end
 
 @[monotonic]
@@ -155,8 +155,8 @@ begin
       induction zs with z zs,
       { simp [has_le.le,list.le], apply h.left },
       { simp [has_le.le,list.le], split, apply le_refl,
-        apply ih_1_1, } },
-    { apply ih_1 h.right, } }
+        apply zs_ih, } },
+    { apply xs_ih h.right, } }
 end
 
 lemma bar_bar'

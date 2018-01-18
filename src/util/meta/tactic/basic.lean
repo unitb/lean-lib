@@ -61,16 +61,16 @@ meta def funext_attribte : user_attribute :=
 { name := `extensionality
 , descr := "lemmas usable by `funext` tactic" }
 
-attribute [extensionality] funext stream.ext
+attribute [extensionality] funext stream.ext array.ext
 
-meta def funext1 (x : parse ident_ ?) : tactic unit :=
+meta def ext1 (x : parse ident_ ?) : tactic unit :=
 do ls ← attribute.get_instances `extensionality,
    ls.any_of (λ l, applyc l) <|> fail "no applicable extensionality rule found",
    interactive.intro x
 
-meta def funext : parse ident_ * → tactic unit
+meta def ext : parse ident_ * → tactic unit
  | [] := return ()
- | (x :: xs) := funext1 x >> funext xs
+ | (x :: xs) := ext1 x >> ext xs
 
 open list
 
@@ -96,7 +96,7 @@ meta def xassumption (asms : option (list expr) := none) : tactic unit :=
 do { ctx ← asms.to_monad <|> local_context,
      t   ← target,
      H   ← find_matching_head t ctx,
-     tactic.apply H }
+     () <$ tactic.apply H }
 <|> fail "assumption tactic failed"
 
 meta def auto (asms : option (list expr) := none) : tactic unit :=
@@ -126,17 +126,6 @@ meta def distributivity
   (l : parse location) : tactic unit :=
 mmap' (λ e, distrib1 e l) args.rules
 
-meta def interactive.replace
-  (h : parse ident)
-  (q₁ : parse (tk ":" *> texpr)?)
-: parse ((tk ":=" *> texpr)?) → tactic unit
- | none := do h' ← get_local h,
-              tactic.interactive.«have» h q₁ none
-              ; [ skip , clear h' ]
- | (some pr) := do h' ← get_local h,
-                   tactic.interactive.«have» h q₁ (some pr),
-                   clear h'
-
 meta def split_or (xs : list expr) : smt_tactic (list expr) :=
 do cs ← local_context,
    h ← mmap (λ h, try_core $ do
@@ -156,7 +145,7 @@ end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
-                        ,`funext1,`tactic.funext,`clear_except
+                        ,`ext1,`ext,`clear_except
                         ,`distributivity,`print]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=

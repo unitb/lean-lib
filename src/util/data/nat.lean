@@ -36,18 +36,18 @@ begin
   existsi (n / p), existsi (n % p),
   split,
   { apply mod_lt _ h, },
-  { simp [mod_add_div] }
+  { simp [mod_add_div,mul_comm,mod_add_div], }
 end
 
 theorem mul_plus_mod (k p q : ℕ) (h : q < p) : (k * p + q) % p = q :=
 begin
   induction k with k,
   { rw [mod_def,if_neg], simp,
-    simp, intro h', cases not_lt_of_ge h' h },
+    simp, intro h', assumption },
   { rw [mod_def,if_pos,succ_mul],
     simp [nat.add_sub_cancel_left],
-    simp at ih_1,
-    apply ih_1,
+    simp at k_ih,
+    apply k_ih,
     { split,
       { apply lt_of_le_of_lt (zero_le _), apply h },
       { simp [succ_mul], apply zero_le  } } }
@@ -92,7 +92,7 @@ theorem mod_add' {m n p : ℕ} : (m + n) % p = (m + n % p) % p :=
 begin
   induction m with m,
   { symmetry, simp, apply mod_mod },
-  { rw [succ_add,succ_mod,ih_1,succ_add,← succ_mod] }
+  { rw [succ_add,succ_mod,m_ih,succ_add,← succ_mod] }
 end
 
 theorem mod_add {m n p : ℕ} : (m + n) % p = (m % p + n % p) % p :=
@@ -213,7 +213,7 @@ begin
     { rw [div_eq_of_lt h'], apply zero_lt_succ },
     { rw [div_eq_sub_div hn h',nat.add_one],
       apply succ_lt_succ,
-      apply ih_1,
+      apply m_ih,
       apply @nat.lt_of_add_lt_add_left n,
       rw [← nat.add_sub_assoc h',nat.add_sub_cancel_left],
       simp [succ_mul] at h, simp [h],  } }
@@ -228,10 +228,7 @@ begin
   induction y with y,
   { simp [div_eq_of_lt h] },
   { rw [mul_succ,div_eq_sub_div h₀],
-    { simp [nat.add_sub_cancel_left,add_one],
-      apply congr_arg,
-      apply eq.trans _ ih_1,
-      simp },
+    { simp [nat.add_sub_cancel_left,add_one,y_ih] },
     { simp, apply le_add_right } }
 end
 
@@ -254,7 +251,7 @@ begin
     apply le_add_left  },
   { rw [succ_mul,succ_mul],
     apply add_lt_add,
-    apply ih_1,
+    apply c_ih,
     apply lt_of_succ_lt_succ h₀,
     apply h₁, }
 end
@@ -265,7 +262,7 @@ begin
   induction y,
   { refl },
   { unfold has_sub.sub nat.sub,
-    apply congr_arg, apply ih_1 }
+    apply congr_arg, apply y_ih }
 end
 
 end nat

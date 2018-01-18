@@ -74,7 +74,7 @@ lemma False_eq_false (Γ : pred' β) : Γ ⊢ False ↔ Γ = False :=
 begin
   split ; intro h,
   { cases h with h, cases Γ with Γ, simp [False,lifted₀],
-    congr, funext σ,
+    funext σ,
     specialize h σ, apply eq_false_intro,
     intro h',
     apply h h' },
@@ -289,7 +289,7 @@ do h' ← get_local h,
    h ← note h none p,
    let l := loc.ns [some h.local_pp_name],
    try $ unfold_coes l,
-   try $ simp ff rs [] l,
+   try $ simp none ff rs [] l,
    try (clear h')
 
 meta def keep_flag := (tt <$ tk "keep") <|> pure ff
@@ -309,7 +309,7 @@ do b ← tt <$ `[apply p_imp_ext _]
    hΓ ← if b then intro1 else return (default _),
    mmap' (lifted_asm v hΓ rs) (hs : list _),
    when (b ∧ ¬ keep_Γ) $ clear hΓ,
-   try (simp no_dflt rs [`predicate] (loc.ns [none])),
+   try (simp none no_dflt rs [`predicate] (loc.ns [none])),
    try (dsimp no_dflt rs [`predicate] (loc.ns [none])),
    try `[unfold_coes],
    try reflexivity
@@ -406,7 +406,7 @@ lemma coe_to_prop_p_not (p : α → Prop)
 @[simp]
 lemma coe_to_prop_p_equiv (p q : α → Prop)
 : (⟨λ s, p s ↔ q s⟩ : pred' α) = ⟨p⟩ ≡ ⟨q⟩ :=
-by { funext1, simp }
+by { ext1, simp }
 
 lemma lifting_prop_asm (Γ : pred' α) {p : Prop} {q : pred' α}
   (h : p → Γ ⊢ q)
@@ -713,7 +713,7 @@ end
 
 lemma p_or_over_and_right (p q r : pred' β)
 : (q ⋀ r) ⋁ p = (q ⋁ p) ⋀ (r ⋁ p) :=
-by lifted_pred [distrib_right_or]
+by { lifted_pred [distrib_left_or] }
 
 instance is_left_distrib_or_and : is_left_distrib (pred' β) (⋁) (⋀) :=
 ⟨ p_or_over_and_left ⟩
@@ -839,10 +839,10 @@ lemma p_exists_p_imp {t} (p : t → pred' β) (q : pred' β)
 by lifted_pred [p_exists]
 
 lemma p_or_comm (p q : pred' β) : p ⋁ q = q ⋁ p :=
-by lifted_pred
+by lifted_pred [or_comm]
 
 lemma p_or_assoc (p q r : pred' β) : p ⋁ (q ⋁ r) = p ⋁ q ⋁ r :=
-by lifted_pred
+by lifted_pred [or_assoc]
 
 instance p_or_is_assoc : is_associative (pred' β) (⋁) :=
 ⟨ by { intros, rw p_or_assoc, } ⟩
@@ -850,10 +850,10 @@ instance p_or_is_comm : is_commutative (pred' β) (⋁) :=
 ⟨ by apply p_or_comm ⟩
 
 lemma p_and_comm (p q : pred' β) : p ⋀ q = q ⋀ p :=
-by lifted_pred
+by lifted_pred [and_comm]
 
 lemma p_and_assoc (p q r : pred' β) : p ⋀ (q ⋀ r) = p ⋀ q ⋀ r :=
-by lifted_pred
+by lifted_pred [and_assoc]
 
 instance p_and_is_assoc : is_associative (pred' β) (⋀) :=
 ⟨ by { intros, rw p_and_assoc, } ⟩
@@ -1324,10 +1324,7 @@ end
 lemma p_exists_range_subtype {α : Sort u}
   (p : α → Prop) (q : α → pred' β)
 : (∃∃ i, p i ⋀ q i : pred' β) = (∃∃ j : subtype p, q (j.val)) :=
-begin
-  lifted_pred,
-  rw [← exists_range_subtype],
-end
+by lifted_pred
 
 lemma p_or_iff_not_imp (p q : pred' β)
 : p ⋁ q = - p ⟶ q :=

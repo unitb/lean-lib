@@ -87,7 +87,7 @@ begin
   cases decidable.em (j ≤ k) with h' h',
   { rw rounds_succ,
     apply stream.le_trans,
-    { apply ih_1 h' },
+    { apply k_ih h' },
     { apply suffix_cons } },
   { have h' : j = succ k,
     { apply le_antisymm h,
@@ -102,7 +102,7 @@ begin
   existsi (succ k),
   induction k with k,
   { simp [rounds_zero,stream.drop_succ,stream.tail_cons],refl },
-  { rw ih_1, simp [rounds_succ,stream.drop_succ,stream.tail_cons] }
+  { rw k_ih, simp [rounds_succ,stream.drop_succ,stream.tail_cons] }
 end
 
 theorem is_prefix_add : ∀ (i j : ℕ), rounds (j+i) (j+i) ⊑ rounds j j
@@ -155,10 +155,10 @@ begin
   { rw drop_succ,
     cases j with j,
     { rw [rounds_zero,tail_cons] ,
-      have h' := @ih_1 (succ i) (succ i) (nat.le_refl _),
+      have h' := @k_ih (succ i) (succ i) (nat.le_refl _),
       apply h',  },
     { have Hij' := nat.le_of_succ_le Hij,
-      have h' := @ih_1 i j Hij',
+      have h' := @k_ih i j Hij',
       rw [rounds_succ,tail_cons],
       apply h', } },
 end

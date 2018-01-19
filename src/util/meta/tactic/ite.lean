@@ -46,13 +46,15 @@ do g ← ls.get_locations >>= mmap instantiate_mvars,
                                 ``(@dif_neg _ (is_false %%hyp') %%hyp')
                               , simp_arg_type.expr
                                 ``(@if_neg _ (is_false %%hyp') %%hyp')]
-                              [] ls)
+                              [] ls
+                       {constructor_eq := ff} )
            , do hyp' ← get_local hyp',
                 simp none tt [ simp_arg_type.expr
                                ``(@dif_pos _ (is_true %%hyp') %%hyp')
                              , simp_arg_type.expr
                                ``(@if_pos _ (is_true %%hyp') %%hyp')]
-                             [] ls ]
+                             [] ls
+                      {constructor_eq := ff} ]
     | none :=  fail "no conditionals found"
    end
 

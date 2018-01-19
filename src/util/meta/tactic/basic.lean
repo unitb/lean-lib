@@ -1,6 +1,7 @@
 
 import data.stream
 import util.control.applicative
+import util.logic
 
 namespace tactic
 
@@ -141,12 +142,110 @@ meta def split_all_or' : list expr → smt_tactic unit
 meta def split_all_or : smt_tactic unit :=
 split_all_or' []
 
+/--  (w,p) ← find_eq e returns a witness for bound variable #0 and a proof that
+ -   the witness is valid
+ -/
+meta def find_eq (v : expr) : expr → tactic (expr × expr)
+ | `(%%p ∧ %%q) :=
+(do (w,pr) ← whnf p >>= find_eq,
+    pr' ← to_expr ``(λ p : %%p ∧ %%q, %%pr ∘ and.elim_left $ p),
+    return (w,pr')) <|>
+(do (w,pr) ← whnf q >>= find_eq,
+    pr' ← to_expr ``(λ p : %%p ∧ %%q, %%pr ∘ and.elim_right $ p),
+    return (w,pr'))
+ | e@`(@Exists %%t %%p') :=
+do  (expr.lam n bi _ p) ← pure p',
+    v ← mk_local' n bi t,
+    let p'' := p.instantiate_var v,
+    (w,pr) ← whnf p'' >>= find_eq,
+    pr' ← to_expr ``( (exists_imp_iff_forall_imp _ _).mpr %%(pr.lambdas [v])),
+    return (w,pr')
+ | `(%%e₀ = %%e₁) := do
+   if e₀ = v then do
+      guard (¬ e₁.occurs v),
+      p ← to_expr ``(@id (%%e₀ = %%e₁)), return (e₁,p)
+   else if e₁ = v then do
+      guard (¬ e₀.occurs v),
+      p ← to_expr ``(@eq.symm _ %%e₀ %%e₁), return (e₀,p)
+   else failed
+ | _ := failed
+
+meta def one_point_aux : expr → tactic (expr × expr)
+ | e@`(@Exists %%t %%p') :=
+(do (expr.lam n bi _ p) ← pure p',
+    v ← mk_local' n bi t,
+    let p'' := p.instantiate_var v,
+    (w,pr) ← whnf p'' >>= find_eq v,
+    let pr' := pr.lambdas [v],
+    pr'' ← to_expr ``(iff.to_eq (exists_one_point %%w %%pr')),
+    let p' := p.instantiate_var w,
+    return (p',pr'')) <|>
+(do (expr.lam n bi _ p) ← pure p',
+    v ← mk_local' n bi t,
+    let p'' := p.instantiate_var v,
+    (e',pr) ← one_point_aux p'',
+    e'' ← to_expr ``(Exists %%(e'.lambdas[v])),
+    pr' ← to_expr ``(eq.to_iff %%pr),
+    pr'' ← to_expr ``(iff.to_eq (exists_congr %%(pr'.lambdas [v]))),
+    return (e'',pr''))
+ | e₀@(expr.lam n bi t e₁) :=
+do  v ← mk_local' n bi t,
+    (e',pr) ← one_point_aux (e₁.instantiate_var v),
+    let pr' := pr.lambdas [v],
+    pr'' ← to_expr ``(@_root_.funext %%t _ %%e₀ %%(e'.lambdas [v]) %%pr'),
+    return (e'.lambdas [v],pr'')
+ | (expr.app e₀ e₁) :=
+(do (e',pr) ← one_point_aux e₀,
+    pr' ← to_expr ``(congr_fun %%pr %%e₁),
+    return (expr.app e' e₁,pr')) <|>
+(do (e',pr) ← one_point_aux e₁,
+    pr' ← to_expr ``(congr_arg %%e₀ %%pr),
+    return (expr.app e₀ e',pr'))
+--  | `(%%e₀ → %%e₁) :=
+-- do guard (e₁.has_var_idx 0),
+--    (do (e',pr) ← one_point_aux e₀, _) <|>
+--    (do (e',pr) ← one_point_aux e₁, _)
+ | _ := failed
+
+meta def soft_apply : loc → (expr → tactic unit) → tactic unit → tactic unit
+ | l@loc.wildcard asm tgt := l.try_apply asm tgt
+ | l asm tgt := l.apply asm tgt
+
+meta def one_point_at : option name → tactic unit
+| (some h) :=
+  do h ← get_local h,
+     t ← infer_type h,
+     (t',pr) ← one_point_aux t,
+     () <$ replace_hyp h t' pr
+| none :=
+  do t ← target,
+    (t',pr) ← one_point_aux t,
+    replace_target t' pr
+
+
+meta def one_point (l : parse location) : tactic unit :=
+soft_apply l
+(λ h, one_point_at h.local_pp_name)
+(one_point_at none)
+
+meta def repeat1 (tac : tactic unit) : tactic unit :=
+tac >> repeat tac
+
+meta def simp_one_point
+     (only_kw : parse only_flag)
+     (rs : parse simp_arg_list)
+     (atts : parse with_ident_list)
+     (l : parse location) : tactic unit :=
+soft_apply l
+     (λ h, repeat1 $ one_point_at h.local_pp_name <|> simp none only_kw rs atts (loc.ns [h.local_pp_name]))
+     (repeat1 $ one_point_at none <|> simp none only_kw rs atts (loc.ns [none]))
+
 end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
                         ,`ext1,`ext,`clear_except
-                        ,`distributivity,`print]
+                        ,`distributivity,`print,`one_point,`simp_one_point]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=
 tactic.split_all_or

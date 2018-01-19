@@ -325,16 +325,27 @@ lemma not_imp_iff_and_not (p q : Prop)
 : ¬ (p → q) ↔ p ∧ ¬ q :=
 by { apply @not_imp _ _ _, apply classical.prop_decidable }
 
-lemma exists_one_point (y : α) {p : α → Prop}
-  (h : ∀ x, p x → x = y)
-: (∃ x, p x) ↔ p y :=
+open function
+lemma exists_one_point_of_right_inverse
+  {f : β → α} {g : α → β} (h₀ : right_inverse g f)
+  (y : α) {p : α → Prop}
+  (h₁ : ∀ x, p (f x) → f x = y)
+: (∃ x, p (f x)) ↔ p y :=
 begin
   split ; intro h,
   { cases h with x h',
-    rw [ ← h _ h' ],
+    rw [ ← h₁ _ h' ],
     apply h' },
-  { exact ⟨_,h⟩ }
+  { existsi g y,
+    rw h₀,
+    exact h }
 end
+
+lemma exists_one_point (y : α) {p : α → Prop}
+  (h : ∀ x, p x → x = y)
+: (∃ x, p x) ↔ p y :=
+by { refine exists_one_point_of_right_inverse _ y h,
+     exact id, intro, refl }
 
 @[simp]
 lemma exists_one_point_iff_true (y : α)

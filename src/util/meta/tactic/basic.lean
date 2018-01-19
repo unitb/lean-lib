@@ -87,21 +87,28 @@ meta def match_head (e : expr) : expr → tactic unit
        v ← mk_mvar,
        match_head (e'.instantiate_var v)
 
-meta def find_matching_head : expr → list expr → tactic expr
-| e []         := failed
+meta def find_matching_head : expr → list expr → tactic (list expr)
+| e []         := return []
 | e (H :: Hs) :=
   do t ← infer_type H,
-     (match_head e t >> return H) <|> find_matching_head e Hs
+     (cons H <$ match_head e t <|> pure id) <*> find_matching_head e Hs
 
-meta def xassumption (asms : option (list expr) := none) : tactic unit :=
+meta def xassumption
+  (asms : option (list expr) := none)
+  (tac : tactic unit := return ()) : tactic unit :=
 do { ctx ← asms.to_monad <|> local_context,
      t   ← target,
-     H   ← find_matching_head t ctx,
-     () <$ tactic.apply H }
+     hs   ← find_matching_head t ctx,
+     hs.any_of (λ H, () <$ tactic.apply H ; tac) } <|>
+do { exfalso,
+     ctx ← asms.to_monad <|> local_context,
+     t   ← target,
+     hs   ← find_matching_head t ctx,
+     hs.any_of (λ H, () <$ tactic.apply H ; tac) }
 <|> fail "assumption tactic failed"
 
 meta def auto (asms : option (list expr) := none) : tactic unit :=
-xassumption asms ; xassumption asms ; xassumption asms ; done
+xassumption asms $ xassumption asms $ xassumption asms done
 
 open tactic.interactive
 open applicative (lift₂)
@@ -249,3 +256,9 @@ run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=
 tactic.split_all_or
+meta def smt_tactic.interactive.auto : opt_param ℕ 3 → tactic unit
+ | 0 := done
+ | (nat.succ n) :=
+do ls ← (local_context),
+   ls.any_of (λ h, () <$ apply h ; smt_tactic.interactive.auto n)
+     <|> exfalso ; smt_tactic.interactive.auto n

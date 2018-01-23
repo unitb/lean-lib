@@ -47,7 +47,10 @@ do t ← target,
    refine ``(@classical.some_spec' _ _ %%l _ _),
    `[simp only],
    interactive.intro id,
-   try `[intros h, apply h]
+   `[intros h, apply h] <|>
+      tauto <|>
+      smt_tactic.execute smt_tactic.eblast <|>
+      return ()
 
 meta def apply_epsilon_spec (ex : parse $ optional texpr)
   (id : parse $ optional (tk "with" *> ident_)) : tactic unit :=
@@ -63,6 +66,9 @@ do t ← target,
    `[simp only],
    interactive.intro id,
    try `[intros h, apply h],
-   all_goals (auto <|> ↑ex >>= tactic.refine <|> return ())
+   all_goals (auto <|> ↑ex >>= tactic.refine <|>
+              tauto <|>
+              smt_tactic.execute (smt_tactic.intros >> smt_tactic.eblast) <|>
+              return ())
 
 run_cmd add_interactive [`apply_some_spec,`apply_epsilon_spec]

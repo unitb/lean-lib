@@ -489,6 +489,11 @@ lemma p_impl_refl (Γ p : pred' β)
 : Γ ⊢ p ⟶ p :=
 by lifted_pred
 
+@[simp,predicate]
+lemma p_impl_refl_eq_True (p : pred' β)
+: p ⟶ p = True :=
+by lifted_pred
+
 @[refl]
 lemma v_eq_refl (Γ : pred' β) (v : var β α)
 : Γ ⊢ v ≃ v :=
@@ -512,6 +517,13 @@ lemma p_or_p_imp_p_or' {p p' q q' : pred' α}
 : (p ⋁ q)  ⟹  (p' ⋁ q')  :=
 by { lifted_pred using hp hq,
      apply or.imp hp hq, }
+
+lemma p_and_p_imp_p_and' {p p' q q' : pred' α}
+  (hp : p ⟹ p')
+  (hq : q ⟹ q')
+: (p ⋀ q)  ⟹  (p' ⋀ q')  :=
+by { lifted_pred only using hp hq,
+     apply and.imp hp hq, }
 
 lemma p_or_p_imp_p_or {p p' q q' : pred' α} {τ}
   (hp : τ ⊨ p ⟶ p')
@@ -1082,6 +1094,11 @@ by { lifted_pred,
 @[simp]
 lemma True_p_imp (p : pred' β)
 : True ⟶ p = p :=
+by lifted_pred
+
+@[simp]
+lemma p_imp_True (p : pred' β)
+: p ⟶ True = True :=
 by lifted_pred
 
 lemma ew_eq_true {p : pred' β} : ⊩ p → p = True :=

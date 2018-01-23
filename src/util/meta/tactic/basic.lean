@@ -113,6 +113,12 @@ xassumption asms $ xassumption asms $ xassumption asms done
 open tactic.interactive
 open applicative (lift₂)
 
+meta def tauto : tactic unit :=
+() <$ intros ;
+casesm (some ()) [``(_ ∧ _),``(_ ∨ _)] ;
+constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)] ;
+auto
+
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
 do interactive.rw ⟨[rw_rule.mk p ff r ],none⟩ loc
 

@@ -141,9 +141,7 @@ begin
   induction k,
   case zero
   { dsimp [solutions], simp,
-    apply_some_spec,
-    simp,
-    introv h h', assumption, },
+    apply_some_spec, },
   case succ : j
   { unfold solutions,
     apply classical.some_spec',

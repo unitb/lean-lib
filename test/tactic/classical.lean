@@ -11,7 +11,7 @@ variables Hex : ∃ x, p x
 
 lemma some_spec_test1
 : p (classical.some Hex) :=
-by { apply_some_spec with w, }
+by apply_some_spec
 
 
 section
@@ -19,7 +19,7 @@ include Hall
 
 lemma some_spec_test2
 : q (classical.some Hex) :=
-by { apply_some_spec with w, apply Hall w }
+by apply_some_spec
 
 end
 

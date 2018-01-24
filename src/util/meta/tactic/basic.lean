@@ -117,7 +117,7 @@ meta def tauto : tactic unit :=
 () <$ intros ;
 casesm (some ()) [``(_ ∧ _),``(_ ∨ _)] ;
 constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)] ;
-auto
+(refl <|> auto)
 
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
 do interactive.rw ⟨[rw_rule.mk p ff r ],none⟩ loc

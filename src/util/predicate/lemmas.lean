@@ -686,6 +686,11 @@ by { split ; intro h,
      rw [← h,p_not_p_not_iff_self],
      rw [h,p_not_p_not_iff_self], }
 
+@[simp]
+lemma p_not_eq_p_not_iff_eq (p q : pred' β) :
+- p = - q ↔ p = q :=
+by simp [p_not_eq_iff_eq_p_not]
+
 lemma p_and_over_or_left (p q r : pred' β)
 : p ⋀ (q ⋁ r) = (p ⋀ q) ⋁ (p ⋀ r) :=
 begin

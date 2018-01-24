@@ -1343,6 +1343,15 @@ begin
   ; auto,
 end
 
+lemma p_exists_partial_intro {t : Sort u₀} {t' : Sort u₂}
+  (p : t → pred' β)
+  (f : t' → t)
+: (∃∃ x, p (f x)) ⟹ (∃∃ x, p x) :=
+begin
+  intro, apply p_exists_imp_p_exists' _ _ f,
+  lifted_pred,
+end
+
 lemma p_exists_range_subtype {α : Sort u}
   (p : α → Prop) (q : α → pred' β)
 : (∃∃ i, p i ⋀ q i : pred' β) = (∃∃ j : subtype p, q (j.val)) :=

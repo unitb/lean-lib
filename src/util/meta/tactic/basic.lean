@@ -256,7 +256,7 @@ soft_apply l
 end tactic
 
 open tactic
-run_cmd add_interactive [`auto,`xassumption,`unfold_local,`unfold_locals
+run_cmd add_interactive [`auto,`tauto,`xassumption,`unfold_local,`unfold_locals
                         ,`ext1,`ext,`clear_except
                         ,`distributivity,`print,`one_point,`simp_one_point]
 

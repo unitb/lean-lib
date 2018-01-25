@@ -114,9 +114,13 @@ open tactic.interactive
 open applicative (lift₂)
 
 meta def tauto : tactic unit :=
-() <$ intros ;
-casesm (some ()) [``(_ ∧ _),``(_ ∨ _)] ;
-constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)] ;
+repeat (do
+  gs ← get_goals,
+  () <$ intros ;
+  casesm (some ()) [``(_ ∧ _),``(_ ∨ _)] ;
+  constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)],
+  gs' ← get_goals,
+  guard (gs ≠ gs') ) ;
 (refl <|> auto)
 
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=

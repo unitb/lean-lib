@@ -106,9 +106,14 @@ do { exfalso,
      hs   ← find_matching_head t ctx,
      hs.any_of (λ H, () <$ tactic.apply H ; tac) }
 <|> fail "assumption tactic failed"
+open nat
+meta def auto_aux (asms : option (list expr) := none) : ℕ → tactic unit
+| 0 := done
+| (succ n) :=
+xassumption asms $ auto_aux n
 
-meta def auto (asms : option (list expr) := none) : tactic unit :=
-xassumption asms $ xassumption asms $ xassumption asms done
+meta def auto (asms : option (list expr) := none) (depth := 3) : tactic unit :=
+auto_aux asms depth
 
 open tactic.interactive
 open applicative (lift₂)
@@ -117,14 +122,26 @@ meta def tauto : tactic unit :=
 repeat (do
   gs ← get_goals,
   () <$ intros ;
-  casesm (some ()) [``(_ ∧ _),``(_ ∨ _)] ;
+  casesm (some ()) [``(_ ∧ _),``(_ ∨ _),``(Exists _)] ;
   constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)],
   gs' ← get_goals,
   guard (gs ≠ gs') ) ;
-(refl <|> auto)
+repeat
+(refl <|> auto <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]) ;
+done
 
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
 do interactive.rw ⟨[rw_rule.mk p ff r ],none⟩ loc
+
+meta def simp_coes
+         (eta : parse (tk "!")?) (only_kw : parse only_flag)
+         (rs : parse simp_arg_list) (atts : parse with_ident_list)
+         (l : parse location)
+: tactic unit := do
+coes ← [``coe,``lift_t,``has_lift_t.lift,``coe_t,``has_coe_t.coe,``coe_b,``has_coe.coe,
+        ``coe_fn, ``has_coe_to_fun.coe, ``coe_sort, ``has_coe_to_sort.coe].mmap
+(λ n, simp_arg_type.expr <$> resolve_name n),
+tactic.interactive.simp eta only_kw (rs ++ coes) atts l
 
 meta def distrib1
   (arg : rw_rule)
@@ -236,8 +253,8 @@ meta def one_point_at : option name → tactic unit
      () <$ replace_hyp h t' pr
 | none :=
   do t ← target,
-    (t',pr) ← one_point_aux t,
-    replace_target t' pr
+     (t',pr) ← one_point_aux t,
+     replace_target t' pr
 
 
 meta def one_point (l : parse location) : tactic unit :=

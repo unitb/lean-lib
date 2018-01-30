@@ -142,6 +142,12 @@ instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 { F := λ _, var σ α → var σ β
 , coe := λ f x, ⟨ λ s, f.apply s $ x.apply s ⟩ }
 
+abbreviation val_to_var : β → var α β :=
+coe
+
+notation `⟪ ` x ` ⟫` := (⟨ x ⟩ : var _ _)
+notation `⟪ ` t, x ` ⟫` := (@val_to_var t _ x)
+
 def proj : var β γ → var α β → var α γ
  | ⟨p⟩ ⟨f⟩ := ⟨p∘f⟩
 

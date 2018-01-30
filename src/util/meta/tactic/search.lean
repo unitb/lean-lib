@@ -4,6 +4,7 @@ meta def search_some (s : expr → tactic bool) (hide_prefixed : bool := tt) : t
 do env ← get_env,
    env.fold (pure ()) $ λ d acc,
    do acc,
+      try $ do
       declaration.thm n _ ty _ ← pure d | skip,
       when (¬ hide_prefixed ∨ n.last_string.front ≠ '_') $ do
         occ ← s ty,

@@ -16,7 +16,7 @@ lemma value_proj (p : var β γ) (f : var α β) (x : α)
 by { cases p, cases f, refl }
 
 @[simp, predicate]
-lemma contramap_apply (p : pred' α) (f : var β α) (x : β)
+lemma contramap_apply (p : var α γ) (f : var β α) (x : β)
 : x ⊨ (p ! f) = f.apply x ⊨ p :=
 by { cases p , cases f, refl }
 

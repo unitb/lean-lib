@@ -1106,6 +1106,16 @@ lemma p_imp_True (p : pred' β)
 : p ⟶ True = True :=
 by lifted_pred
 
+@[simp]
+lemma p_forall_True
+: (∀∀ x : α, @True β) = True :=
+by lifted_pred
+
+@[simp]
+lemma p_exists_True [nonempty α]
+: (∃∃ x : α, @True β) = True :=
+by { lifted_pred, apply classical.exists_true_of_nonempty, apply_instance }
+
 lemma ew_eq_true {p : pred' β} : ⊩ p → p = True :=
 by { intro h, lifted_pred using h,
      begin [smt] intros end }

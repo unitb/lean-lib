@@ -12,6 +12,7 @@ variables (f : α → β)
 noncomputable def inv (y : β) : α :=
 ε x, f x = y
 
+variable {f}
 lemma inv_is_left_inverse_of_injective
   (H : injective f)
 : left_inverse (inv f) f :=

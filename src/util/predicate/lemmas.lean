@@ -207,8 +207,8 @@ lemma models_lifted₀ {p : Prop} (σ : α)
 by refl
 
 @[simp, predicate]
-lemma models_pred {p : α → Prop} (σ : α)
-: σ ⊨ ⟨ p ⟩ ↔ p σ :=
+lemma models_pred {p : α → β} (σ : α)
+: σ ⊨ ⟨ p ⟩ = p σ :=
 by refl
 
 @[extensionality, priority 0]

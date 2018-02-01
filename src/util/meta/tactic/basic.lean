@@ -137,11 +137,12 @@ meta def simp_coes
          (eta : parse (tk "!")?) (only_kw : parse only_flag)
          (rs : parse simp_arg_list) (atts : parse with_ident_list)
          (l : parse location)
+         (cfg : simp_config_ext := {})
 : tactic unit := do
 coes ← [``coe,``lift_t,``has_lift_t.lift,``coe_t,``has_coe_t.coe,``coe_b,``has_coe.coe,
         ``coe_fn, ``has_coe_to_fun.coe, ``coe_sort, ``has_coe_to_sort.coe].mmap
 (λ n, simp_arg_type.expr <$> resolve_name n),
-tactic.interactive.simp eta only_kw (rs ++ coes) atts l
+tactic.interactive.simp eta only_kw (rs ++ coes) atts l cfg
 
 meta def distrib1
   (arg : rw_rule)
@@ -278,7 +279,7 @@ end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`tauto,`xassumption,`unfold_local,`unfold_locals
-                        ,`ext1,`ext,`clear_except
+                        ,`ext1,`ext,`clear_except,`simp_coes
                         ,`distributivity,`print,`one_point,`simp_one_point]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=

@@ -125,9 +125,14 @@ instance proof_coe (p : Prop) (Γ : pred' α) : has_coe p (Γ ⊢ p) :=
 -- ⟨ pred'.mk ⟩
 
 @[simp, predicate]
-lemma apply_coe (p : Prop) (x : β)
+lemma sem_coe (p : Prop) (x : β)
 : x ⊨ (p : pred' β) ↔ p :=
 by { unfold_coes, }
+
+@[simp, predicate]
+lemma sem_seq (σ : γ) (f : var γ (α → β)) (x : var γ α)
+: σ ⊨ var_seq f x = (σ ⊨ f) (σ ⊨ x)  :=
+by { cases x, cases f, simp [var_seq], }
 
 instance (α : Type u) : applicative (var α) :=
 { id_map := by { intros, cases x, refl }

@@ -136,11 +136,14 @@ infix ` ≼ `:75 := v_le
 infix ` ≺≺ `:75 := v_wf_r
 infix ` << `:50 := has_well_founded.r
 
+def var_seq : var σ (α → β) → var σ α → var σ β
+ | ⟨ f ⟩ ⟨ x ⟩ := ⟨ λ i, f i (x i) ⟩
+
 instance val_to_var_coe : has_coe β (var α β) :=
 { coe := λ x, ⟨ λ _, x ⟩ }
 instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 { F := λ _, var σ α → var σ β
-, coe := λ f x, ⟨ λ s, f.apply s $ x.apply s ⟩ }
+, coe := var_seq }
 
 abbreviation val_to_var : β → var α β :=
 coe

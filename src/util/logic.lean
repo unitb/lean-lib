@@ -60,6 +60,16 @@ begin
   apply h _ P,
 end
 
+lemma exists_imp_exists_simpl
+   {p : β → Prop}
+   (f : α → β)
+   (P : ∃ a, p (f a)) : ∃ a, p a :=
+begin
+  cases P with a P,
+  existsi f a,
+  assumption,
+end
+
 lemma exists_imp_exists_prop {h₀ h₁ : Prop}
    {p : h₀ → Prop}
    {q : h₁ → Prop}

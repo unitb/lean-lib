@@ -642,6 +642,52 @@ begin
   apply lt_of_not_ge h'',
 end
 
+@[monotonic]
+lemma sub_mono_left_strict {x y z : α} [ordered_comm_group α]
+  (h : x < y)
+: x - z < y - z :=
+sub_lt_sub_right h _
+
+@[monotonic]
+lemma sub_mono_right_strict {x y z : α} [ordered_comm_group α]
+  (h : y < x)
+: z - x < z - y :=
+sub_lt_sub_left h _
+
+@[monotonic]
+lemma add_mono_strict {x y z : α} [ordered_semiring α]
+  (h : x < y)
+: x + z < y + z :=
+add_lt_add_right h _
+
+@[monotonic]
+lemma nat.sub_mono_left_strict {x y z : ℕ}
+  (h' : z ≤ x)
+  (h : x < y)
+: x - z < y - z :=
+begin
+  have : z ≤ y,
+  { transitivity, assumption, apply le_of_lt h, },
+  apply @lt_of_add_lt_add_left _ _ z,
+  rw [nat.add_sub_of_le,nat.add_sub_of_le]
+  ; auto,
+end
+
+@[monotonic]
+lemma nat.sub_mono_right_strict {x y z : ℕ}
+  (h' : x ≤ z)
+  (h : y < x)
+: z - x < z - y :=
+begin
+  have h'' : y ≤ z,
+  { transitivity, apply le_of_lt h, assumption },
+  apply @lt_of_add_lt_add_right _ _ _ x,
+  rw [nat.sub_add_cancel h'],
+  apply @lt_of_le_of_lt _ _ _ (z - y + y),
+  rw [nat.sub_add_cancel h''],
+  monotonicity h,
+end
+
 attribute [monotonic] or.imp_left
 attribute [monotonic] and.imp_right
 instance : is_associative _ (∨) := ⟨ by simp [or_assoc] ⟩

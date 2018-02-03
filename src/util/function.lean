@@ -21,6 +21,12 @@ begin
   apply_epsilon_spec,
 end
 
+lemma inv_eq (x : α) (y : β)
+  (H : injective f)
+  (h : y = f x)
+: inv f y = x :=
+by rw [h,inv_is_left_inverse_of_injective H]
+
 lemma inv_is_right_inverse_of_surjective
   (H : surjective f)
 : right_inverse (inv f) f :=

@@ -1,4 +1,8 @@
 
+import util.meta.tactic.basic
+
+import algebra.order
+
 namespace interactive
 
 open tactic
@@ -57,5 +61,37 @@ do g ← ls.get_locations >>= mmap instantiate_mvars,
                       {constructor_eq := ff} ]
     | none :=  fail "no conditionals found"
    end
+
+section lemmas
+universe u
+variables {α : Type u}
+variables [decidable_linear_order α]
+
+lemma cmp_eq_eq (a b : α)
+: cmp a b = ordering.eq = (a = b) :=
+by { simp [cmp,cmp_using_eq_eq], rw ← le_antisymm_iff, cc }
+
+end lemmas
+
+meta def ordering_cases
+     (p : parse cases_arg_p)
+     (pos : parse cur_pos)
+     (hyp : parse (tk "with" *> ident)?)
+: tactic unit :=
+do `(cmp %%x %%y) ← to_expr p.2 | fail "expecting expression of shape `cmp _ _`",
+   h₀ ← p.1 <|> mk_unique_name `this,
+   let mk_asm : pexpr → tactic unit :=
+     λ e,
+      (do h₀ ← get_local h₀,
+          h₁ ← (hyp : tactic name) <|> mk_unique_name `h,
+          to_expr ``((%%e).mp %%h₀) >>=
+            note h₁ none,
+          interactive.rewrite ⟨[⟨pos,ff,``(%%h₀)⟩],none⟩ loc.wildcard,
+          when p.1.is_none $ tactic.clear h₀,
+          return ()),
+   interactive.cases (some h₀,p.2) []
+   ; [ mk_asm ``(cmp_using_eq_lt %%x %%y)
+     , mk_asm ``(cmp_eq_eq %%x %%y)
+     , mk_asm ``(cmp_using_eq_gt %%x %%y) ]
 
 end tactic.interactive

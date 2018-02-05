@@ -27,6 +27,11 @@ lemma inv_eq (x : α) (y : β)
 : inv f y = x :=
 by rw [h,inv_is_left_inverse_of_injective H]
 
+lemma injective_of_left_inverse_inv
+  (h : left_inverse (inv f) f)
+: injective f :=
+injective_of_left_inverse h
+
 lemma inv_is_right_inverse_of_surjective
   (H : surjective f)
 : right_inverse (inv f) f :=

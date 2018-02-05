@@ -76,9 +76,10 @@ meta def ext : parse ident_ * → tactic unit
 open list
 
 meta def clear_except (xs : parse ident *) : tactic unit :=
-do r  ← list.mmap get_local xs >>= revert_lst,
-   local_context >>= mmap (try ∘ tactic.clear),
-   intron r
+do let ns := name_set.of_list xs,
+   local_context >>= mmap' (λ h : expr,
+     when (¬ ns.contains h.local_pp_name) $
+       try $ tactic.clear h) ∘ list.reverse
 
 meta def match_head (e : expr) : expr → tactic unit
 | e' :=
@@ -266,6 +267,7 @@ soft_apply l
 meta def repeat1 (tac : tactic unit) : tactic unit :=
 tac >> repeat tac
 
+/-- simplify `∃ x, ... x = y ...` and delete `x` -/
 meta def simp_one_point
      (only_kw : parse only_flag)
      (rs : parse simp_arg_list)
@@ -275,11 +277,73 @@ soft_apply l
      (λ h, repeat1 $ one_point_at h.local_pp_name <|> simp none only_kw rs atts (loc.ns [h.local_pp_name]))
      (repeat1 $ one_point_at none <|> simp none only_kw rs atts (loc.ns [none]))
 
+meta def subst_locals (s : list (expr × expr)) (e : expr) : expr :=
+(e.abstract_locals (s.map (expr.local_uniq_name ∘ prod.fst)).reverse).instantiate_vars (s.map prod.snd)
+
+
+meta def set_binder : expr → list binder_info → expr
+ | e [] := e
+ | (expr.pi v _ d b) (bi :: bs) := expr.pi v bi d (set_binder b bs)
+ | e _ := e
+
+open expr
+meta def pis' : list expr → expr → tactic expr
+| (e@(local_const uniq pp info _) :: es) f := do
+  t ← infer_type e,
+  f' ← pis' es f,
+  pure $ pi pp info t (abstract_local f' uniq)
+| _ f := pure f
+
+/-- `wlog i j : i ≤ j with h`: without loss of generality, let us assume `i ≤ j` -/
+meta def wlog (x y : parse ident) (p : parse $ tk ":" *> texpr)
+              (h : parse (tk "with" *> ident)?)
+: tactic unit :=
+do x ← get_local x,
+   y ← get_local y,
+   n ← tactic.revert_lst [x,y],
+   x ← intro1, y ← intro1,
+   p ← to_expr p,
+   when (¬ x.occurs p ∨ ¬ x.occurs p) (do
+     p ← pp p,
+     fail format!"{p} should reference {x} and {y}"),
+   let p' := subst_locals [(x,y),(y,x)] p,
+   t ← target,
+   let g := p.imp t,
+   g ← pis' [x,y] g,
+   this ← assert `this (set_binder g [binder_info.default,binder_info.default]),
+   tactic.clear x, tactic.clear y,
+   intron 2,
+   intro $ h.get_or_else `a, intron (n-2), tactic.swap,
+   let h := h.get_or_else `this,
+   h' ← to_expr ``(%%p ∨ %%p') >>= assert h,
+   clear this,
+   assumption <|> `[exact le_total _ _] <|> tactic.swap,
+   (() <$ tactic.cases h' [`h,`h])
+   ; specialize ```(%%this _ _ h)
+   ; intron (n-2) ; try (auto <|> tauto <|> (intros >> cc)),
+   return ()
+
+meta def update_name (f : string → string) : name → name
+ | (name.mk_string s p) := name.mk_string (f s) p
+ | x := x <.> f ""
+
+meta def strip_prefix : name → name
+ | (name.mk_string s p) := name.mk_string s name.anonymous
+ | (name.mk_numeral s p) := name.mk_numeral s name.anonymous
+ | name.anonymous := name.anonymous
+
+protected meta def mk_unique_name' (n : name) : ℕ → tactic name | i :=
+do let n' := update_name (λ x, x ++ "_" ++ to_string i) n,
+   (resolve_name n' >> mk_unique_name' (i+1)) <|> pure n'
+
+meta def mk_unique_name (n : name) : tactic name :=
+(resolve_name n >> tactic.mk_unique_name' n 1) <|> pure n
+
 end tactic
 
 open tactic
 run_cmd add_interactive [`auto,`tauto,`xassumption,`unfold_local,`unfold_locals
-                        ,`ext1,`ext,`clear_except,`simp_coes
+                        ,`ext1,`ext,`clear_except,`simp_coes,`wlog
                         ,`distributivity,`print,`one_point,`simp_one_point]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=

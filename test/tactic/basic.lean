@@ -52,3 +52,14 @@ begin
   guard_target (p 7 ∧ 7 = 7 ∧ q 7) ∧ p 7 ∨ p 1,
   admit
 end
+
+example {x y : ℕ}
+: x = 1 → false :=
+begin
+  revert x y,
+  intros x y a,
+  wlog x y : x = y,
+  guard_target x = y ∨ y = x, admit,
+  guard_hyp a := x = y,
+  guard_hyp a_1 := x = 1, admit,
+end

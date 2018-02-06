@@ -165,6 +165,11 @@ lemma models_lt {α : Type u} [has_lt α] {s : σ} (x y : var σ α)
 by { cases x, cases y, refl }
 
 @[simp, predicate]
+lemma models_le {α : Type u} [has_le α] {s : σ} (x y : var σ α)
+: s ⊨ x ≼ y ↔ x.apply s ≤ y.apply s :=
+by { cases x, cases y, refl }
+
+@[simp, predicate]
 lemma models_wf {_ : has_well_founded α} (s : σ) (x y : var σ α)
 : s ⊨ x ≺≺ y ↔ x.apply s << y.apply s :=
 by { cases x, cases y, refl }

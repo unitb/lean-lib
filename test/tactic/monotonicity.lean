@@ -11,21 +11,23 @@ export elaborable (elaborate)
 meta instance : elaborable pexpr expr :=
 ⟨ to_expr ⟩
 
+#check elaborate
+
 meta instance elaborable_list {α α'} [elaborable α α'] : elaborable (list α) (list α') :=
-⟨ mmap (elaborate _) ⟩
+⟨ mmap elaborate ⟩
 
 meta def mono_function.elaborate : mono_function ff → tactic mono_function
 | (mono_function.non_assoc x y z) :=
-mono_function.non_assoc <$> elaborate _ x
-                        <*> elaborate _ y
-                        <*> elaborate _ z
+mono_function.non_assoc <$> elaborate x
+                        <*> elaborate y
+                        <*> elaborate z
 | (mono_function.assoc x y z) :=
-mono_function.assoc <$> elaborate _ x
-                    <*> traverse (elaborate _) y
-                    <*> traverse (elaborate _) z
+mono_function.assoc <$> elaborate x
+                    <*> traverse elaborate y
+                    <*> traverse elaborate z
 | (mono_function.assoc_comm x y) :=
-mono_function.assoc_comm <$> elaborate _ x
-                         <*> elaborate _ y
+mono_function.assoc_comm <$> elaborate x
+                         <*> elaborate y
 
 
 meta instance elaborable_mono_function : elaborable (mono_function ff) mono_function :=
@@ -33,7 +35,7 @@ meta instance elaborable_mono_function : elaborable (mono_function ff) mono_func
 
 meta instance prod_elaborable {α α' β β' : Type} [elaborable α α']  [elaborable β β']
 : elaborable (α × β) (α' × β') :=
-⟨ λ i, prod.rec_on i (λ x y, prod.mk <$> elaborate _ x <*> elaborate _ y) ⟩
+⟨ λ i, prod.rec_on i (λ x y, prod.mk <$> elaborate x <*> elaborate y) ⟩
 
 meta def parse_mono_function' (l r : pexpr) :=
 do l' ← to_expr l,
@@ -44,20 +46,21 @@ run_cmd
 do xs ← mmap to_expr [``(1),``(2),``(3)],
    ys ← mmap to_expr [``(1),``(2),``(4)],
    x ← match_prefix { unify := ff } xs ys,
-   p ← elaborate _ ([``(1),``(2)] , [``(3)], [``(4)]),
+   p ← elaborate ([``(1),``(2)] , [``(3)], [``(4)]),
    guard $ x = p
 
 run_cmd
 do xs ← mmap to_expr [``(1),``(2),``(3),``(6),``(7)],
    ys ← mmap to_expr [``(1),``(2),``(4),``(5),``(6),``(7)],
    x ← match_assoc { unify := ff } xs ys,
-   p ← elaborate _ ([``(1), ``(2)], [``(3)], ([``(4), ``(5)], [``(6), ``(7)])),
+   p ← elaborate ([``(1), ``(2)], [``(3)], ([``(4), ``(5)], [``(6), ``(7)])),
    guard (x = p)
 
 run_cmd
 do x ← to_expr ``(7 + 3 : ℕ) >>= check_ac,
    x ← pp x.2.2.1,
-   guard $ x.to_string = "(some (is_left_id.left_id has_add.add 0, (is_right_id.right_id has_add.add 0, 0)))"
+   let y := "(some (is_left_id.left_id has_add.add, (is_right_id.right_id has_add.add, 0)))",
+   guard $ x.to_string = y
 
 run_cmd
 do parse_mono_function' ``(1 + 3 + 2 + 6) ``(4 + 2 + 1 + 5) >>= tactic.trace,

@@ -140,9 +140,9 @@ instance (α : Type u) : applicative (var α) :=
 , map_pure := by { intros, refl }
 , seq_pure := by { intros, cases g, refl }
 , seq_assoc := by { intros, cases x, refl }
-, ..(_ : has_map (var α))
-, ..(_ : has_seq (var α))
-, ..(_ : has_pure (var α)) }
+, ..(by apply_instance : has_map (var α))
+, ..(by apply_instance : has_seq (var α))
+, ..(by apply_instance : has_pure (var α)) }
 
 @[simp, predicate]
 lemma var_map_coe {α β σ : Type u} (f : α → β) (g : σ → α)
@@ -1176,7 +1176,7 @@ lemma p_or_over_p_exists_left {t} (p : t → pred' β) (q : pred' β) {w : t →
 begin
   lifted_pred,
   have h := (h ⟨eq σ⟩).apply _ rfl,
-  have _inst : nonempty t := nonempty_of_exists h,
+  have _inst : nonempty t := nonempty_of_exists h, resetI,
   simp [distrib_or_over_exists_left,p_exists],
 end
 

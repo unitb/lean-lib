@@ -141,11 +141,11 @@ lemma append_cons {α : Type u} (xs : list α) (x : α) (ys : list α)
 by simp
 
 instance {α : Type*} : monoid (list α) :=
-{ mul := append
+{ mul := has_append.append
 , one := []
-, one_mul := by simp [has_mul.mul]
-, mul_one := by simp [has_mul.mul]
-, mul_assoc := by simp [has_mul.mul] }
+, one_mul := nil_append
+, mul_one := append_nil
+, mul_assoc := append_assoc }
 
 def mapp (f : α → β → γ) : list (α × β) → list γ
  | [ ] := [ ]

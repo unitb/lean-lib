@@ -65,7 +65,7 @@ instance : functor_pair identity identity :=
   begin
     intros α β β' γ,
     intros h hp hp' h' x,
-    intros H, unfold has_map.map,
+    intros H,
     rw [← identity.map_comp,← identity.map_comp,H],
   end }
 

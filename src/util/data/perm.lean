@@ -95,7 +95,6 @@ begin
   apply bijection.eq
   ; intro x
   ; simp [comp_f,comp_g]
-  ; unfold function.comp
   ; simp [swap_inverse']
   ; refl
 end

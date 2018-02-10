@@ -1,6 +1,7 @@
 
 import data.set
-
+import data.set.basic
+import util.meta.tactic.basic
 import util.data.order
 
 open nat
@@ -68,6 +69,21 @@ begin
     apply indirect_le_left_of_le x,
     apply has_minimum.minimum_le _ _ h₁, },
   { apply le_minimum_of_forall_le h h₀, },
+end
+
+lemma minimum_le_iff_exists_le
+  (h : s ≠ ∅)
+  (x : α)
+: (↓ x, x ∈ s) ≤ x ↔ (∃ y, y ∈ s ∧ y ≤ x) :=
+begin
+  split ; intro h₀,
+  { existsi (↓ (x : α), x ∈ s),
+    refine ⟨_,h₀⟩,
+    apply minimum_mem h, },
+  { cases h₀,
+    apply indirect_le_right_of_le ,
+    apply has_minimum.minimum_le _ _ h₀_h.left,
+    tauto, },
 end
 
 end minimum

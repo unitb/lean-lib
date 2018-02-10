@@ -1,4 +1,6 @@
 
+import algebra.functions
+
 universe variables u
 
 section
@@ -116,6 +118,34 @@ begin
     cases H with H H,
     assumption,
     transitivity z ; assumption }
+end
+
+parameters {x y}
+
+lemma le_max_of_le_left
+  (h : x ≤ y)
+: x ≤ max y z :=
+by simp [le_max_iff_le_or_le,h]
+
+lemma lt_max_of_lt_left
+  (h : x < y)
+: x < max y z :=
+begin
+  simp only [lt_iff_not_ge,(≥),max_le_iff,decidable.not_and_iff_or_not] at ⊢ h,
+  left, assumption,
+end
+
+lemma le_max_of_le_right
+  (h : x ≤ z)
+: x ≤ max y z :=
+by simp [le_max_iff_le_or_le,h]
+
+lemma lt_max_of_lt_right
+  (h : x < z)
+: x < max y z :=
+begin
+  simp only [lt_iff_not_ge,(≥),max_le_iff,decidable.not_and_iff_or_not] at ⊢ h,
+  right, assumption,
 end
 
 end

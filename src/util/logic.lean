@@ -47,7 +47,7 @@ begin
   existsi f a P,
   apply h _ P,
 end
-
+ --  `∀ [i0 : cl a] [i1 : cl b], a = b -> i0 == i1`
 lemma exists_imp_exists'
    {p : α → Prop}
    {q : β → Prop}
@@ -216,6 +216,15 @@ begin
     apply h, cases hnnp h },
   exact not_not_intro
 end
+
+lemma and_iff_imp (p q : Prop)
+  (h : p)
+: p ∧ q ↔ p → q :=
+by { split ; intros
+     ; cases_matching* _ ∧ _
+     ; try { split }
+     ; try { assumption },
+     exact a h }
 
 lemma and_shunting (p q r : Prop)
 : (p ∧ q → r) ↔ (p → q → r) :=
@@ -417,6 +426,14 @@ begin
   { intros x h, exact ⟨x.property, h⟩  },
   { intros x h, apply h.right },
 end
+
+lemma forall_eq_iff_iff_eq {a b : α}
+: (∀ c, a = c ↔ c = b) ↔ a = b :=
+by { split ; intro h ; rw h, cc, }
+
+lemma forall_eq_implies_iff_eq {a b : α}
+: (∀ c, a = c → c = b) ↔ a = b :=
+by { split ; intro h, apply h, refl, intros, cc }
 
 lemma or_of_ite {c t f : Prop} [decidable c]
   (h : ite c t f)

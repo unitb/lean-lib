@@ -1,7 +1,6 @@
 
 import util.meta.tactic.basic
-
-import algebra.order
+import util.data.ordering
 
 namespace interactive
 
@@ -61,17 +60,6 @@ do g ← ls.get_locations >>= mmap instantiate_mvars,
                       {constructor_eq := ff} ]
     | none :=  fail "no conditionals found"
    end
-
-section lemmas
-universe u
-variables {α : Type u}
-variables [decidable_linear_order α]
-
-lemma cmp_eq_eq (a b : α)
-: cmp a b = ordering.eq = (a = b) :=
-by { simp [cmp,cmp_using_eq_eq], rw ← le_antisymm_iff, cc }
-
-end lemmas
 
 meta def ordering_cases
      (p : parse cases_arg_p)

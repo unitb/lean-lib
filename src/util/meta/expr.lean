@@ -16,7 +16,4 @@ e.fold [] (λ e' _ es, if expr.is_mvar e' ∧ ¬ e' ∈ es then e' :: es else es
 meta def expr.list_const (e : expr) : list expr :=
 e.fold [] (λ e' _ es, if expr.is_constant e' ∧ ¬ e' ∈ es then e' :: es else es)
 
-meta def expr.list_local_const (e : expr) : list expr :=
-e.fold [] (λ e' _ es, if expr.is_local_constant e' ∧ ¬ e' ∈ es then e' :: es else es)
-
 end expr

@@ -496,3 +496,8 @@ begin
   apply h₁,
   refl,
 end
+
+instance : is_associative _ (∨) := ⟨ by simp [or_assoc] ⟩
+instance : is_associative _ (∧) := ⟨ by simp [and_assoc] ⟩
+instance : is_commutative _ (∨) := ⟨ by simp [or_comm] ⟩
+instance : is_commutative _ (∧) := ⟨ by simp [and_comm] ⟩

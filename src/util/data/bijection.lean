@@ -119,9 +119,6 @@ lemma comp_f  (x : bijection β γ) (y : bijection α β)
 lemma comp_g  (x : bijection β γ) (y : bijection α β)
 : (bij.comp x y).g = y.g ∘ x.g := rfl
 
-def sum.swap : α ⊕ β → β ⊕ α
-  | (sum.inl x) := sum.inr x
-  | (sum.inr x) := sum.inl x
 
 def bij.sum.swap : bijection (α ⊕ β) (β ⊕ α) :=
    bijection.mk sum.swap sum.swap

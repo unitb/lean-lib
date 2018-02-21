@@ -1,10 +1,10 @@
 
+import tactic
 import meta.expr
-import util.meta.tactic
 
 universe variables u v
 
-notation `ε` binders `, ` r:(scoped p, classical.epsilon p) := r
+notation `ε` binder `, ` r:(scoped p, classical.epsilon p) := r
 
 namespace classical
 
@@ -35,6 +35,7 @@ end
 end classical
 
 open tactic interactive interactive.types lean.parser
+open tactic.interactive (tauto solve_by_elim)
 
 meta def apply_some_spec (id : parse $ optional (tk "with" *> ident_)) : tactic unit :=
 do t ← target,

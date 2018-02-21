@@ -1,5 +1,6 @@
 
 import util.meta.tactic
+import tactic
 
 open list tactic tactic.interactive
 
@@ -10,8 +11,6 @@ export elaborable (elaborate)
 
 meta instance : elaborable pexpr expr :=
 ⟨ to_expr ⟩
-
-#check elaborate
 
 meta instance elaborable_list {α α'} [elaborable α α'] : elaborable (list α) (list α') :=
 ⟨ mmap elaborate ⟩

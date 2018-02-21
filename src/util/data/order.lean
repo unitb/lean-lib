@@ -1,5 +1,5 @@
 
-import algebra.functions
+import algebra.order_functions
 
 universe variables u
 

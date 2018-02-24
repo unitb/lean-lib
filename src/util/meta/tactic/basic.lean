@@ -339,12 +339,31 @@ do let n' := update_name (λ x, x ++ "_" ++ to_string i) n,
 meta def mk_unique_name (n : name) : tactic name :=
 (resolve_name n >> tactic.mk_unique_name' n 1) <|> pure n
 
+meta def my_generalize
+     (n : parse $ ident <* tk ":")
+     (p : parse texpr)
+     (h : parse (tk "with" *> ident)?): tactic unit :=
+do u ← mk_meta_univ,
+   t ← mk_meta_var (expr.sort u),
+   tgt ← target,
+   v ← mk_meta_var t,
+   -- (fail "thus far" : tactic unit),
+   t ← to_expr ``(%%t → %%tgt),
+   (p,_) ← solve_aux t (do
+     n ← intro n,
+     p ← to_expr p,
+     return $ expr.instantiate_var (expr.abstract p n) v),
+   unify p tgt,
+   interactive.generalize h () (to_pexpr v,n),
+   instantiate_mvars v >>= trace
+
 end tactic
 
 open tactic
 run_cmd add_interactive [`solve_by_elim,`tauto,`apply_assumption,`unfold_local,`unfold_locals
                         ,`ext1,`ext,`clear_except,`simp_coes,`wlog
-                        ,`distributivity,`print,`one_point,`simp_one_point]
+                        ,`distributivity,`print,`one_point,`simp_one_point
+                        ,`my_generalize]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=
 tactic.split_all_or
@@ -354,3 +373,9 @@ meta def smt_tactic.interactive.auto : opt_param ℕ 3 → tactic unit
 do ls ← (local_context),
    ls.any_of (λ h, () <$ apply h ; smt_tactic.interactive.auto n)
      <|> exfalso ; smt_tactic.interactive.auto n
+
+example : 13 + 7 ≤ 3 :=
+begin
+  my_generalize x : x + _ ≤ _ with h,
+  admit
+end

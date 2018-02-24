@@ -1,4 +1,5 @@
 import util.meta.tactic
+import util.cast
 import util.logic
 
 import data.stream
@@ -8,6 +9,8 @@ universes u v w
 open nat function
 
 namespace coind
+
+prefix `♯`:0 := cast (by simp [*])
 
 variables {α : Type u}
 variables (β : α → Type v)
@@ -19,7 +22,7 @@ coinductive ind {α : Type u} (β : α → Type v) : Type (max u v)
 
 inductive cofix' : ℕ → Type (max u v)
 | continue : cofix' 0
-| intro {n} : ∀ a, (β a → cofix' n) → cofix' (n+1)
+| intro {n} : ∀ a, (β a → cofix' n) → cofix' (succ n)
 
 variables {β}
 
@@ -33,7 +36,7 @@ def agree
 : ∀ {n : ℕ}, cofix' β n → cofix' β (n+1) → Prop
  | 0 continue _ := true
  | n (cofix'.intro x y) (cofix'.intro x' y') :=
-   ∃ h : x = x', ∀ i j : β _, i == j → agree (y i) (y' j)
+   x = x' ∧ ∀ i j : β _, i == j → agree (y i) (y' j)
 
 lemma agree_def {n : ℕ} (x : cofix' β (succ n)) (y : cofix' β (succ n+1))
   (h₀ : head' x = head' y)
@@ -225,25 +228,200 @@ coind.cases f x
 lemma head_mk (x : α) (ch : β x → cofix β)
 : head (coind.mk x ch) = x :=
 rfl
+inductive leaf : Π n, cofix' β (succ n) → Type (max u v)
+ | nil (x : cofix' β 1) : leaf 0 x
 
-inductive path : cofix β → list (Σ i, β i) → Type (max u v)
- | nil (x : cofix β) : path x []
- | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
-   : path (ch i) xs → path (coind.mk y ch) (⟨ y, i ⟩ :: xs)
+inductive path' : Π {n : ℕ}, cofix' β n → list (Σ i, β i) → Type (max u v)
+ | nil {n : ℕ} (x : cofix' β n) : path' x []
+ | child (y : α) (i : β y) (n : ℕ) (ch : β y → cofix' β n) (ps : list (Σ i, β i)) :
+     path' (ch i) ps →
+     path' (cofix'.intro y ch) (⟨y,i⟩ :: ps)
 
-def select : ∀ {x : cofix β} {ps}, path x ps → cofix β
- | ._ ._ (path.nil x) := x
- | ._ ._ (path.child xs i ch ps) := select ps
+def select' : ∀ {n : ℕ} {x : cofix' β (succ n)} ps, path' x ps → α
+ | _ x ._ (path'.nil n) := head' x
+ | 0 ._ ._ (path'.child y i m ch _ p) := y
+ | (succ n) ._ ._ (path'.child y i ._ _ ch p) := select' _ p
+
+def subtree' : ∀ {n : ℕ} {ps : list _} {x : cofix' β (n + ps.length)},
+    path' x ps → cofix' β n
+ | n [] x (path'.nil _) := x
+ | n (⟨i,x⟩ :: xs) ._ (path'.child _ _ _ _ ch p) := subtree' p
+
+def convert_path
+  {n m : ℕ} {ps : list $ Σ i, β i}
+  {x : cofix' β m}
+  (h : n = m)
+  (a : path' x ps)
+: path' (cast (by subst n) x : cofix' β n) ps :=
+begin
+  refine cast _ a,
+  subst m, simp [cast]
+end
+
+def path_add_succ
+  {n m : ℕ} {ps : list $ Σ i, β i}
+  {x : cofix' β $ succ $ n + m}
+  (a : path' x ps)
+: path' (cast (by simp [succ_add]) x : cofix' β $ succ n + m) ps :=
+convert_path (by rw [succ_add]) a
+
+
+lemma subtree'_convert_path {m n : ℕ}
+  {ps : list (Σ (i : α), β i)}
+  -- {x : cofix' β n}
+  {y : α} {i : β y}
+  (H : m + ps.length = n)
+  {ch : β y → cofix' β n}
+  {p : path' (ch i) ps}
+: subtree' (convert_path (by apply congr_arg succ H) (path'.child y i n ch _ p)) =
+  subtree' (convert_path H p) :=
+by { subst n, refl }
+
+lemma select'_eq_head'_subtree' {n : ℕ} {ps : list $ Σ i, β i}
+  {x : cofix' β $ succ $ n + ps.length}
+  (p : path' x ps)
+: select' ps p = head' (subtree' (path_add_succ p)) :=
+begin
+  revert p,
+  induction ps ; intros p,
+  { cases p, cases x,
+    simp [select',head',path_add_succ,convert_path,cast_eq,subtree'] at *,
+    cases n ; refl },
+  { cases p,
+    erw [select',ps_ih,path_add_succ,subtree'_convert_path], }
+end
+
+def path : cofix β → list (Σ i, β i) → Type (max u v)
+  | ⟨approx,H⟩ ps := path' (approx (succ $ ps.length)) ps
+
+instance : subsingleton (cofix' β 0) :=
+⟨ by { intros, casesm* cofix' β 0, refl } ⟩
+
+-- set_option pp.all true
+def d'
+: Π {ps : list (Σ i, β i)} {m} (x₀ : cofix' β m) (x₁ : cofix' β (succ m)),
+     agree x₀ x₁ →
+     path' x₀ ps → path' x₁ ps
+ | [] 0 _ _ _ (path'.nil ._) := path'.nil _
+ | [] (succ m) (cofix'.intro a b) _ _ (path'.nil ._) := path'.nil _
+ | (⟨y,i⟩ :: xs) (succ _) (cofix'.intro ._ ch₀) (cofix'.intro y' ch₁)
+   -- ⟨rfl, H⟩
+   H
+   (path'.child ._ ._ ._ ._ ._ p) :=
+by { simp [agree] at H, cases H, subst y', constructor,
+     apply d' ; apply_assumption, refl, }
+-- match H with
+--  ⟨rfl,H⟩ :=  _
+-- end
+
+-- begin
+--   cases x₀ ; cases x₁ ; cases f,
+--   cases H, subst x₁_a,
+--   constructor,
+--   apply d' ; apply_assumption, refl,
+-- end
+
+def d {ps : list (Σ i, β i)} (x : Π n, cofix' β n)
+  (h : ∀ n, agree (x n) (x $ succ n))
+  (m : ℕ)
+: Π n, path' (x m) ps → path' (x (n + m)) ps
+ | 0 i := by { refine cast _ i, congr ; simp }
+ | (succ n) i :=
+begin
+  let : path' (x $ succ (n + m)) ps,
+  { apply d' _ _ _ (d n i),
+    solve_by_elim, },
+  refine cast _ this,
+  congr ; simp
+end
+
+def select : ∀ {x : cofix β} {ps}, path x ps → α
+ | ⟨approx,H⟩ ps p := select' _ p
+
+section subtree
+
+variables {x : cofix β} {ps : list (Σ i, β i)} (p : path x ps)
+
+private def ch
+: Π {x : cofix β} {ps : list (Σ i, β i)} (p : path x ps), Π (n : ℕ), cofix' β n
+ | ⟨ch',approx⟩ ps p 0 := by constructor
+ | ⟨ch',approx⟩ ps p (succ n) :=
+by
+  { refine @subtree' α β _ ps (ch' _) _,
+    let x : path' (ch' (n + succ ps.length)) ps,
+    { apply d ; solve_by_elim, },
+    have : n + succ (list.length ps) = succ n + list.length ps,
+    { simp [succ_add] },
+    refine cast _ x, cc, }
+
+include p
+def subtree : cofix β :=
+begin
+  refine ⟨ ch p, _ ⟩,
+  intro,
+  cases n,
+  { cases ch p 0, constructor },
+  { my_generalize x : agree x _,
+    cases x, cases ps ; simp [ch,agree], }
+end
+
+end subtree
 
 inductive nested (x : cofix β) : cofix β → list (Σ i, β i) → Prop
  | rfl {} : nested x []
  | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
    : nested (ch i) xs → nested (coind.mk y ch) (⟨ y, i ⟩ :: xs)
 
-lemma ext (x y : cofix β)
-  (H : ∀ (ps) (Hx : path x ps) (Hy : path y ps), head (select Hx) = head (select Hy))
+-- lemma eq_up_to
+open list
+
+lemma ext_aux {n : ℕ} (x y : cofix' β (succ n)) (z : cofix' β n)
+  (hx : agree z x)
+  (hy : agree z y)
+  (hrec : ∀ ps (px : path' x ps) (py : path' y ps),
+            n = ps.length →
+            (select' px) = (select' py))
 : x = y :=
-sorry
+begin
+  induction n,
+  { cases x, cases y, cases z,
+    suffices : x_a = y_a,
+    { congr, assumption, subst y_a, simp,
+      funext i, cases x_a_1 i, cases y_a_1 i, refl },
+    clear hx hy,
+    specialize hrec [] (path'.nil _) (path'.nil _),
+    simp [select'] at hrec, exact hrec },
+  { cases x, cases y, cases z,
+    have : y_a = z_a,
+    { simp [agree] at hx hy, cc, },
+    have : x_a = y_a,
+    { simp [agree] at hx hy, cc, },
+    subst x_a, subst z_a, congr,
+    funext i, simp [agree] at hx hy,
+    apply n_ih _ _ (z_a_1 i),
+    { apply hx _ _ rfl },
+    { apply hy _ _ rfl },
+    { intros,
+      specialize hrec _ (path'.child _ _ _ _ px) (path'.child _ _ _ _ py) _,
+      simp [select'] at hrec, exact hrec,
+      rw a, refl, },  }
+end
+
+lemma ext (x y : cofix β)
+  (H : ∀ ps (Hx : path x ps) (Hy : path y ps), select Hx = select Hy)
+: x = y :=
+begin
+  cases x, cases y,
+  congr, funext i,
+  induction i with i,
+  { cases x_approx 0, cases y_approx 0, refl },
+  { apply ext_aux, apply_assumption,
+    rw i_ih, apply_assumption,
+    introv H',
+    simp [select] at H,
+    cases H',
+    apply H ps px py, }
+end
 
 section bisim
   variable (R : cofix β → cofix β → Prop)

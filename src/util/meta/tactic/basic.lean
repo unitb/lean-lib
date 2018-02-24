@@ -94,7 +94,7 @@ meta def find_matching_head : expr → list expr → tactic (list expr)
   do t ← infer_type H,
      (cons H <$ match_head e t <|> pure id) <*> find_matching_head e Hs
 
-meta def xassumption
+meta def apply_assumption
   (asms : option (list expr) := none)
   (tac : tactic unit := return ()) : tactic unit :=
 do { ctx ← asms.to_monad <|> local_context,
@@ -108,13 +108,13 @@ do { exfalso,
      hs.any_of (λ H, () <$ tactic.apply H ; tac) }
 <|> fail "assumption tactic failed"
 open nat
-meta def auto_aux (asms : option (list expr) := none) : ℕ → tactic unit
+meta def solve_by_elim_aux (asms : option (list expr) := none) : ℕ → tactic unit
 | 0 := done
 | (succ n) :=
-xassumption asms $ auto_aux n
+apply_assumption asms $ solve_by_elim_aux n
 
-meta def auto (asms : option (list expr) := none) (depth := 3) : tactic unit :=
-auto_aux asms depth
+meta def solve_by_elim (asms : option (list expr) := none) (depth := 3) : tactic unit :=
+solve_by_elim_aux asms depth
 
 open tactic.interactive
 open applicative (lift₂)
@@ -128,7 +128,7 @@ repeat (do
   gs' ← get_goals,
   guard (gs ≠ gs') ) ;
 repeat
-(refl <|> auto <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]) ;
+(refl <|> solve_by_elim <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]) ;
 done
 
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
@@ -320,7 +320,7 @@ do x ← get_local x,
    assumption <|> `[exact le_total _ _] <|> tactic.swap,
    (() <$ tactic.cases h' [`h,`h])
    ; specialize ```(%%this _ _ h)
-   ; intron (n-2) ; try (auto <|> tauto <|> (intros >> cc)),
+   ; intron (n-2) ; try (solve_by_elim <|> tauto <|> (intros >> cc)),
    return ()
 
 meta def update_name (f : string → string) : name → name
@@ -342,7 +342,7 @@ meta def mk_unique_name (n : name) : tactic name :=
 end tactic
 
 open tactic
-run_cmd add_interactive [`auto,`tauto,`xassumption,`unfold_local,`unfold_locals
+run_cmd add_interactive [`solve_by_elim,`tauto,`apply_assumption,`unfold_local,`unfold_locals
                         ,`ext1,`ext,`clear_except,`simp_coes,`wlog
                         ,`distributivity,`print,`one_point,`simp_one_point]
 

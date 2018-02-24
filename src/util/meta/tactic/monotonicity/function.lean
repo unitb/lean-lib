@@ -1,10 +1,7 @@
 
-import data.dlist
+import util.algebra.group -- do not delete: imports instances
 
-import util.algebra.group
-import util.control.monad
 import util.data.list
-import util.data.traversable
 import util.meta.expr
 import util.meta.tactic.basic
 
@@ -93,7 +90,7 @@ apply_opt_param
 <|>
 apply_auto_param
 <|>
-auto (some asms)
+solve_by_elim (some asms)
 <|>
 return ()
 
@@ -503,7 +500,7 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
-     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> auto (some asms)))
+     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> solve_by_elim (some asms)))
 
 meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=
@@ -670,7 +667,7 @@ begin
   { transitivity, assumption, apply le_of_lt h, },
   apply @lt_of_add_lt_add_left _ _ z,
   rw [nat.add_sub_of_le,nat.add_sub_of_le]
-  ; auto,
+  ; solve_by_elim,
 end
 
 @[monotonic]

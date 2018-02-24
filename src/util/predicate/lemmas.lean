@@ -546,7 +546,7 @@ lemma ctx_p_and_p_imp_p_and_right' {Γ p q q' : pred' α}
   (hq : ctx_impl Γ q q')
 : ctx_impl Γ ( p ⋀ q ) ( p ⋀ q' ) :=
 by { lifted_pred using hq, intros,
-     split ; auto, }
+     split ; solve_by_elim, }
 
 lemma ctx_p_and_p_imp_p_and' {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p p')
@@ -591,7 +591,7 @@ by { intro h₂, constructor, introv h₀ h₁,
      replace hp := hp.apply _ h₀,
      replace hq := hq.apply _ h₀,
      replace h₂ := h₂.apply _ h₀,
-     xassumption, auto, }
+     apply_assumption, solve_by_elim, }
 
 lemma revert_p_imp {p q : pred' α}
   (h : ⊩ p ⟶ q)
@@ -628,7 +628,7 @@ lemma p_imp_entails_p_imp {p p' q q' : pred' α}
   (hq : q ⟹ q')
 : ( p ⟶ q ) ⟹ ( p' ⟶ q' ) :=
 by { lifted_pred using hp hq, intros,
-     repeat { xassumption }, }
+     repeat { apply_assumption }, }
 
 lemma p_imp_p_imp_p_imp_left {p p' q : pred' α} {Γ}
   (hp : Γ ⊢ p' ⟶ p)
@@ -644,13 +644,13 @@ lemma ctx_imp_entails_p_imp {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p' p)
   (hq : ctx_impl Γ q q')
 : ctx_impl Γ ( p ⟶ q ) ( p' ⟶ q' ) :=
-by { lifted_pred using hp hq, intros, xassumption, auto }
+by { lifted_pred using hp hq, intros, apply_assumption, solve_by_elim }
 
 @[monotonic]
 lemma ctx_imp_entails_p_imp_left {Γ p p' q : pred' α}
   (hp : ctx_impl Γ p' p)
 : ctx_impl Γ ( p ⟶ q ) ( p' ⟶ q ) :=
-by { lifted_pred using hp, intros, auto }
+by { lifted_pred using hp, intros, solve_by_elim }
 
 @[monotonic]
 lemma p_imp_entails_p_imp_left {p p' q : pred' α}
@@ -672,7 +672,7 @@ end
 lemma ctx_p_imp_entails_p_imp_right {Γ p q q' : pred' α}
   (hq : ctx_impl Γ q q')
 : ctx_impl Γ ( p ⟶ q ) ( p ⟶ q' ) :=
-by { lifted_pred using hq, intros, auto }
+by { lifted_pred using hq, intros, solve_by_elim }
 
 @[monotonic]
 lemma p_imp_entails_p_imp_right {p q q' : pred' α}
@@ -1004,7 +1004,7 @@ lemma p_imp_trans {Γ p q r : pred' β}
 begin
   lifted_pred using h₀ h₁,
   intros,
-  auto,
+  solve_by_elim,
 end
 
 @[trans]
@@ -1014,7 +1014,7 @@ lemma entails_trans {p q r : pred' β}
 : p ⟹ r :=
 begin
   lifted_pred using h₀ h₁,
-  intro, auto,
+  intro, solve_by_elim,
 end
 
 @[simp]
@@ -1134,7 +1134,7 @@ by { intro h, lifted_pred using h,
 lemma ew_imp_ew {p q : pred' β}
   (H : p ⟹ q)
 : ⊩ p → ⊩ q :=
-by { intros hp, lifted_pred using hp H, auto }
+by { intros hp, lifted_pred using hp H, solve_by_elim }
 
 lemma entails_to_pointwise {p q : pred' β}
   (h : p ⟹ q)
@@ -1360,7 +1360,7 @@ begin
   rw exists_variable_change _ _ f g
   ; intro x
   ; apply entails_to_pointwise
-  ; auto,
+  ; solve_by_elim,
 end
 
 lemma p_exists_partial_intro {t : Sort u₀} {t' : Sort u₂}

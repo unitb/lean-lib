@@ -60,7 +60,7 @@ run_cmd
 do x ← to_expr ``(7 + 3 : ℕ) >>= check_ac,
    x ← pp x.2.2.1,
    let y := "(some (is_left_id.left_id has_add.add, (is_right_id.right_id has_add.add, 0)))",
-   guard $ x.to_string = y
+   guard (x.to_string = y) <|> fail ("guard: " ++ x.to_string)
 
 run_cmd
 do parse_mono_function' ``(1 + 3 + 2 + 6) ``(4 + 2 + 1 + 5) >>= tactic.trace,
@@ -265,7 +265,7 @@ example {α β : Type} (p q : α → β → ℕ) (r : α → Prop) (s : β → P
 → (∃ i, ∀ j, r i ∧ (P (q i j) ∨ s j)) :=
 begin
   introv_mono h₀ h₁,
-  auto,
+  solve_by_elim,
 end
 
 example (x y z k m n : ℤ)
@@ -276,7 +276,7 @@ begin
   monotonicity1,
   monotonicity1,
   monotonicity1,
-  auto
+  solve_by_elim
 end
 
 example (x y z k m n : ℕ)
@@ -287,7 +287,7 @@ begin
   monotonicity1,
   monotonicity1,
   monotonicity1,
-  auto
+  solve_by_elim
 end
 
 example (x y z k m n : ℕ)

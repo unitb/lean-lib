@@ -17,16 +17,16 @@ end
 
 example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
 begin
-  xassumption,
-  xassumption,
+  apply_assumption,
+  apply_assumption,
 end
 
 example {a b : Prop} (h₀ : a → b) (h₁ : a) : b :=
-by auto
+by solve_by_elim
 
 example {α : Type} {p : α → Prop} (h₀ : ∀ x, p x) (y : α) : p y :=
 begin
-  xassumption,
+  apply_assumption,
 end
 
 example : (∃ x : ℕ, x = 7) :=

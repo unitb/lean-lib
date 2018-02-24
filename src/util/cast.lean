@@ -27,6 +27,12 @@ lemma cast_none' : ∀ {α β} (P : α = β), none.cast' P = none
 lemma cast_cast : ∀ {α β} (P₀ : α = β) (P₁ : β = α) (x : β), cast P₀ (cast P₁ x) = x
  | α ._ rfl rfl x := rfl
 
+attribute [simp] cast_eq
+
+@[simp]
+lemma cast_cast' : ∀ {α β γ} (P₀ : γ = β) (P₁ : β = α) (x : γ), cast P₁ (cast P₀ x) = cast (by cc) x
+ | α _ ._ rfl rfl x := rfl
+
 lemma option_cast_cast {α : Type u}
 : ∀ {β : Type u} (P₀ : α = β) (P₁ : β = α) (x : option β), option.cast(option.cast x P₁) P₀ = x
  | ._ rfl rfl (some x) := rfl

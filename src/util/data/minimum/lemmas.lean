@@ -13,6 +13,6 @@ begin
   split,
   { intros, apply lt_of_lt_of_le a,
     apply minimum_le H, },
-  { intros, xassumption,
+  { intros, apply_assumption,
     apply minimum_mem h },
 end

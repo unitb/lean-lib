@@ -66,7 +66,7 @@ do t ← target,
    `[simp only],
    interactive.intro id,
    try `[intros h, apply h],
-   all_goals (auto <|> ↑ex >>= tactic.refine <|>
+   all_goals (solve_by_elim <|> ↑ex >>= tactic.refine <|>
               tauto <|>
               smt_tactic.execute (smt_tactic.intros >> smt_tactic.eblast) <|>
               return ())

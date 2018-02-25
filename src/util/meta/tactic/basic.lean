@@ -280,6 +280,9 @@ soft_apply l
 meta def subst_locals (s : list (expr × expr)) (e : expr) : expr :=
 (e.abstract_locals (s.map (expr.local_uniq_name ∘ prod.fst)).reverse).instantiate_vars (s.map prod.snd)
 
+meta def set_binder' : expr → binder_info → expr
+ | (expr.pi v _ d b) bi := expr.pi v bi d (set_binder' b bi)
+ | e _ := e
 
 meta def set_binder : expr → list binder_info → expr
  | e [] := e
@@ -357,12 +360,21 @@ do u ← mk_meta_univ,
    interactive.generalize h () (to_pexpr v,n),
    instantiate_mvars v >>= trace
 
+meta def explicit_binders : tactic unit :=
+do t ← target,
+   h ← assert `h $ set_binder' t binder_info.default,
+   tactic.swap,
+   exact h
+
+meta def revert' (ids : parse ident*) : tactic unit :=
+propagate_tags (do hs ← mmap tactic.get_local ids, revert_lst hs, explicit_binders, skip)
+
 end tactic
 
 open tactic
 run_cmd add_interactive [`solve_by_elim,`tauto,`apply_assumption,`unfold_local,`unfold_locals
-                        ,`ext1,`ext,`clear_except,`simp_coes,`wlog
-                        ,`distributivity,`print,`one_point,`simp_one_point
+                        ,`ext1,`ext,`clear_except,`simp_coes,`wlog,`explicit_binders
+                        ,`distributivity,`print,`one_point,`simp_one_point,`revert'
                         ,`my_generalize]
 
 meta def smt_tactic.interactive.break_asms : smt_tactic unit :=

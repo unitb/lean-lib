@@ -276,13 +276,12 @@ sorry
 
 def select' : ∀ {n : ℕ}, cofix' β n → path' β → roption α
  | ._ (cofix'.continue _) _ := roption.none
- | (succ _) (cofix'.intro y' ch) [] := roption.none
+ | (succ _) (cofix'.intro y' ch) [] := return y'
  | (succ _) (cofix'.intro y' ch) (⟨y, i⟩ :: ys) :=
 do ⟨ ⟨ h ⟩ ⟩ ← assert (β y = β y'), select' (ch $ cast h i) ys
 
 def subtree' : ∀ {n : ℕ} (ps : path' β) (x : cofix' β (n + ps.length)), roption (cofix' β n)
  | n [] t := return t
- -- | (succ _) [] (cofix'.intro y' ch) := roption.none
  | n (⟨y, i⟩ :: ys) (cofix'.intro y' ch) :=
 do ⟨ ⟨ h ⟩ ⟩ ← assert (y = y'),
    subtree' ys (ch $ ♯i)
@@ -514,9 +513,9 @@ open list
 lemma ext_aux {n : ℕ} (x y : cofix' β (succ n)) (z : cofix' β n)
   (hx : agree z x)
   (hy : agree z y)
-  (hrec : ∀ ps (px : path' x ps) (py : path' y ps),
+  (hrec : ∀ (ps : path' β),
             n = ps.length →
-            (select' px) = (select' py))
+            (select' x ps) = (select' y ps))
 : x = y :=
 begin
   induction n,
@@ -525,8 +524,10 @@ begin
     { congr, assumption, subst y_a, simp,
       funext i, cases x_a_1 i, cases y_a_1 i, refl },
     clear hx hy,
-    specialize hrec [] (path'.nil _) (path'.nil _),
-    simp [select'] at hrec, exact hrec },
+    specialize hrec [] rfl,
+    simp [select'] at hrec, injection hrec,
+    replace h_2 := congr_fun (eq_of_heq h_2) trivial,
+    exact h_2, },
   { cases x, cases y, cases z,
     have : y_a = z_a,
     { simp [agree] at hx hy, cc, },
@@ -538,13 +539,13 @@ begin
     { apply hx _ _ rfl },
     { apply hy _ _ rfl },
     { intros,
-      specialize hrec _ (path'.child _ _ _ _ px) (path'.child _ _ _ _ py) _,
-      simp [select'] at hrec, exact hrec,
+      specialize hrec (⟨ y_a, i⟩ :: ps) _,
+      simp [select',monad.pure_bind] at hrec, exact hrec,
       rw a, refl, },  }
 end
 
 lemma ext (x y : cofix β)
-  (H : ∀ ps (Hx : path x ps) (Hy : path y ps), select Hx = select Hy)
+  (H : ∀ (ps : path' β), select x ps = select y ps)
 : x = y :=
 begin
   cases x, cases y,
@@ -556,7 +557,7 @@ begin
     introv H',
     simp [select] at H,
     cases H',
-    apply H ps px py, }
+    apply H ps, }
 end
 
 section bisim

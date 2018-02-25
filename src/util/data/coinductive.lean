@@ -288,6 +288,15 @@ do ⟨ ⟨ h ⟩ ⟩ ← assert (y = y'),
 
 open list
 
+@[simp]
+lemma select_cons' {n : ℕ}
+  -- {g : Π n, cofix' β n}
+  {ps : path' β}
+  {y : α} {i : β y} {ch : β y → cofix' β (n + length ps)}
+  -- (Hg : g (n + length (sigma.mk y i :: ps)) = cofix'.intro y ch)
+: select' (cofix'.intro y ch) (⟨y,i⟩ :: ps) = select' (ch i) ps :=
+by simp [select',monad.pure_bind,subtree'._match_1,cast_eq]
+
 @[simp, priority 0]
 lemma subtree_cons {n : ℕ}
   -- {g : Π n, cofix' β n}
@@ -416,11 +425,41 @@ instance : subsingleton (cofix' β 0) :=
 def select : ∀ (x : cofix β) (ps : path' β), roption α
  | ⟨approx,H⟩ ps := select' (approx $ succ ps.length) ps
 
+@[simp]
+lemma select_nil (x : cofix β)
+: select x [] = return (head x) :=
+begin
+  cases x, dsimp [select,head,select',head',length],
+  cases x_approx 1, simp [select',head'],
+end
+
+@[simp]
+lemma select_cons (x : cofix β) (y i p)
+  (H : y = head x)
+: select x (⟨y,i⟩ :: p) = select (children x $ ♯ i) p :=
+begin
+  cases H,
+  cases x, simp [select,head,select',head',children],
+  dsimp [length,select,select',children'],
+  generalize Hj : (cast _ i) = j,
+  replace Hj : i == j, cc,
+  revert i j,
+  cases H : (x_approx (succ (length p + 1))),
+  simp [children',select'], intros,
+  rw assert_if_true, simp [monad.pure_bind,select'._match_1],
+  { congr, apply eq_of_heq, transitivity i, apply cast_heq, assumption, },
+  { congr, simp [head], rw [head_succ' _ (length p + 1) ⟨x_approx,x_consistent⟩],
+    change head' (x_approx _) = _,
+    rw H, refl },
+end
+
+lemma dom_select_cons (x : cofix β) (y i p)
+: (select x (⟨y,i⟩ :: p)).dom → y = head x :=
+sorry
+
 def all_or_nothing (f : Π x : α, roption (β x))
 : roption { g : Π x, β x // ∀ x, g x ∈ f x } :=
 ⟨ ∀ x, (f x).dom, assume h, ⟨ λ x, (f _).get (h _), assume x, ⟨ h x, rfl ⟩ ⟩ ⟩
-
-section subtree
 
 -- variables (x : cofix β) {ps : list (Σ i, β i)} (p : path x ps)
 
@@ -500,12 +539,47 @@ def subtree : Π (x : cofix β) (ps : path' β), roption (cofix β)
 do ⟨f,Hf⟩ ← all_or_nothing (λ n, @subtree' α β _ ps (approx (n + ps.length))),
    return (⟨ f
    , assume _, agree_of_mem_subtree' _ consistent Hf _ ⟩ )
-end subtree
 
-inductive nested (x : cofix β) : cofix β → list (Σ i, β i) → Prop
- | rfl {} : nested x []
- | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
-   : nested (ch i) xs → nested (coind.mk y ch) (⟨ y, i ⟩ :: xs)
+def child (x : cofix β) (ps : path' β)
+          (H : (subtree x ps).dom) (i : β (head ((subtree x ps).get H)))
+: cofix β :=
+children ((subtree x ps).get H) i
+
+@[simp]
+lemma roption.get_return {α} (x : α) (H)
+: roption.get (return x) H = x :=
+rfl
+
+@[simp]
+lemma subtree_nil (x : cofix β)
+: subtree x [] = return x :=
+sorry
+
+@[simp]
+lemma subtree_cons' (x : cofix β) {y i p}
+  (H : y = head x)
+: subtree x (⟨y,i⟩ :: p) = subtree (children x (♯ i)) p :=
+sorry
+
+
+@[simp]
+lemma child_nil (x : cofix β)
+          (H : (subtree x []).dom) (i : β (head ((subtree x []).get H)))
+: child x [] H i = children x (cast (by simp) i) :=
+sorry
+
+@[simp]
+lemma child_cons (x : cofix β) {y i p}
+  (H' : y = head x)
+  (H₀ : (subtree x (⟨y,i⟩ :: p)).dom)
+  (j : β (head ((subtree x (⟨y,i⟩ :: p)).get H₀)))
+: child x (⟨y,i⟩ :: p) _ j = child (children x (♯ i)) p (♯ H₀) (♯ j) :=
+sorry
+
+-- inductive nested (x : cofix β) : cofix β → list (Σ i, β i) → Prop
+--  | rfl {} : nested x []
+--  | child (xs : list (Σ i, β i)) {y : α} (i : β y) (ch : β y → cofix β)
+--    : nested (ch i) xs → nested (coind.mk y ch) (⟨ y, i ⟩ :: xs)
 
 -- lemma eq_up_to
 open list
@@ -514,7 +588,9 @@ lemma ext_aux {n : ℕ} (x y : cofix' β (succ n)) (z : cofix' β n)
   (hx : agree z x)
   (hy : agree z y)
   (hrec : ∀ (ps : path' β),
-            n = ps.length →
+             (select' x ps).dom →
+             (select' y ps).dom →
+             n = ps.length →
             (select' x ps) = (select' y ps))
 : x = y :=
 begin
@@ -524,10 +600,10 @@ begin
     { congr, assumption, subst y_a, simp,
       funext i, cases x_a_1 i, cases y_a_1 i, refl },
     clear hx hy,
-    specialize hrec [] rfl,
+    specialize hrec [] trivial trivial rfl,
     simp [select'] at hrec, injection hrec,
     replace h_2 := congr_fun (eq_of_heq h_2) trivial,
-    exact h_2, },
+    exact h_2,  },
   { cases x, cases y, cases z,
     have : y_a = z_a,
     { simp [agree] at hx hy, cc, },
@@ -539,13 +615,17 @@ begin
     { apply hx _ _ rfl },
     { apply hy _ _ rfl },
     { intros,
-      specialize hrec (⟨ y_a, i⟩ :: ps) _,
+      specialize hrec (⟨ y_a, i⟩ :: ps) _ _ _,
       simp [select',monad.pure_bind] at hrec, exact hrec,
+      { revert a, simp,              -- WHY CAN'T I USE select_cons'???
+        my_generalize x : roption.dom x with H,  simp [select_cons'] at H, },
       rw a, refl, },  }
 end
 
 lemma ext (x y : cofix β)
-  (H : ∀ (ps : path' β), select x ps = select y ps)
+  (H : ∀ (ps : path' β), (select x ps).dom →
+                         (select y ps).dom →
+                         select x ps = select y ps)
 : x = y :=
 begin
   cases x, cases y,
@@ -554,10 +634,10 @@ begin
   { cases x_approx 0, cases y_approx 0, refl },
   { apply ext_aux, apply_assumption,
     rw i_ih, apply_assumption,
-    introv H',
+    introv h₀ h₁ H',
     simp [select] at H,
     cases H',
-    apply H ps, }
+    apply H ps ; assumption, }
 end
 
 section bisim
@@ -570,27 +650,37 @@ section bisim
         (∀ i j : β (head _), i == j → children s₁ i ~ children s₂ j)
 
   theorem nth_of_bisim (bisim : is_bisimulation R) :
-     ∀ {s₁ s₂} ps (p₁ : path s₁ ps) (p₂ : path s₂ ps),
+     ∀ (s₁ s₂) (ps : path' β)
+       (H₁ : (select s₁ ps).dom)
+       (H₂ : (select s₂ ps).dom),
        s₁ ~ s₂ →
-         head (select p₁) = head (select p₂) ∧
-         ∀ i j, i == j →
-                children (select p₁) i ~ children (select p₂) j :=
+         (select s₁ ps) = (select s₂ ps) ∧
+         ∀ Hi Hj i j, i == j →
+                child s₁ ps Hi i ~ child s₂ ps Hj j :=
   begin
     intros _ _ _,
     revert s₁ s₂,
     induction ps,
-    { introv h₀,
+    { introv _ _ h₀,
       have h₁ := bisim h₀,
-      cases p₁, cases p₂, simp [select],
-      apply h₁, },
-    { introv h₀,
-      cases p₁, cases p₂,
-      unfold select,
-      apply ps_ih p₁_a p₂_a,
-      have h₁ := (bisim h₀).right p₁_i p₁_i heq.rfl,
-      have h₂ := @children_mk _ β,
-      dunfold coind.mk at h₂,
-      simp [h₂] at h₁, apply h₁, }
+      simp, split, cc,
+      intros,
+      apply h₁.2, cc, },
+    { introv _ _ h₀,
+      cases ps_hd with y i,
+      have hd₁ : y = head s₁, { apply dom_select_cons, assumption },
+      have hd₂ : y = head s₂, { apply dom_select_cons, assumption },
+      split, rw [select_cons,select_cons] ; try { assumption },
+      { apply (ps_ih _ _ _ _ _).1 ; clear ps_ih,
+        simp [hd₁] at H₁, assumption,
+        simp [hd₂] at H₂, assumption,
+        simp [is_bisimulation] at bisim,
+        apply (bisim h₀).2, cc, },
+      intros,
+      { simp [hd₁] at ⊢ H₁, simp [hd₂] at ⊢ H₂,
+        apply (ps_ih _ _ _ _ _).2 ; clear ps_ih
+        ; try { cc <|> assumption },
+        apply (bisim h₀).2, cc, } },
   end
 
   -- If two streams are bisimilar, then they are equal
@@ -598,8 +688,8 @@ section bisim
   begin
     introv Hr, apply ext,
     introv,
-    have H := nth_of_bisim R bisim ps Hx Hy Hr,
-    apply H.left
+    have H := nth_of_bisim R bisim _ _ ps ,
+    apply (H _ _ _).left,
   end
 end bisim
 

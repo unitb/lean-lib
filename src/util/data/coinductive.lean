@@ -244,6 +244,17 @@ coind.cases f x
 lemma head_mk (x : α) (ch : β x → cofix β)
 : head (coind.mk x ch) = x :=
 rfl
+
+@[simp]
+lemma head_corec  (i : X)
+: head (coind.corec f i) = (f i).fst :=
+sorry
+
+@[simp]
+lemma children_corec  (i : X) (y : β (head (coind.corec f i)))
+: children (coind.corec f i) y = coind.corec f ((f i).2 $ ♯ y) :=
+sorry
+
 inductive leaf : Π n, cofix' β (succ n) → Type (max u v)
  | nil (x : cofix' β 1) : leaf 0 x
 
@@ -461,10 +472,27 @@ lemma subtree_nil (x : cofix β)
 sorry
 
 @[simp]
+lemma subtree_nil_dom (x : cofix β)
+: (subtree x []).dom ↔ true :=
+sorry
+
+@[simp]
+lemma subtree_nil_get (x : cofix β)
+: (subtree x []).get (by simp) = x :=
+by simp
+
+@[simp]
 lemma subtree_cons' (x : cofix β) {y i p}
   (H : y = head x)
 : subtree x (⟨y,i⟩ :: p) = subtree (children x (♯ i)) p :=
 sorry
+
+@[simp]
+lemma subtree_cons_dom' (x : cofix β) {y i p}
+  (H : y = head x)
+: (subtree x (⟨y,i⟩ :: p)).dom :=
+sorry
+
 
 
 @[simp]
@@ -630,4 +658,38 @@ eq_of_bisim
    sorry)
 
 end coinduction
+
+def iterate (x : α) (f : Π x, β x → α) : cofix β :=
+coind.corec (λ x, ⟨ x, f x⟩) x
+
+universes u' v'
+
+def map {α' : Type u'} {β' : α' → Type v'}
+  (f : α → α') (g : Π x, β' (f x) → β x)
+  (x : cofix  β) : cofix β' :=
+coind.corec (λ t, ⟨ f (head t), λ k, children t (g _ k) ⟩) x
+
+def corec_on {X : Type*} (x₀ : X) (f : X → (Σ (y : α), β y → X)) : cofix β :=
+coind.corec f x₀
+
+-- theorem corec_def (f : α → β) (g : α → α) (a : α) : corec f g a = map f (iterate g a) := rfl
+
+theorem corec_eq {X : Type*} (f : X → (Σ (y : α), β y → X)) (x₀ : X)
+: coind.corec f x₀ = sigma.rec_on (f x₀) (λ y ch, coind.mk y (λ i, coind.corec f (ch i))) :=
+begin
+  cases Hf : f x₀, simp,
+  apply coinduction,
+  { simp [*], },
+  { intros, rw [children_mk,children_corec],
+    congr,
+    generalize Hi : cast _ i = k,
+    have : k == j, cc, clear Hi a_1 i,
+    cases (f x₀), injection Hf, subst fst_1, cases h_2,
+    congr, apply eq_of_heq this, }
+end
+
+theorem corec_eq' {X : Type*} (f : X → α) (g : Π x : X, β (f x) → X) (x₀ : X)
+: coind.corec (λ x, ⟨f x,g x⟩) x₀ = coind.mk (f x₀) (λ i, coind.corec (λ x, ⟨f x,g x⟩) (g x₀ i)) :=
+corec_eq _ x₀
+
 end coind

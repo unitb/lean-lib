@@ -255,14 +255,10 @@ lemma children_corec  (i : X) (y : β (head (coind.corec f i)))
 : children (coind.corec f i) y = coind.corec f ((f i).2 $ ♯ y) :=
 sorry
 
-inductive leaf : Π n, cofix' β (succ n) → Type (max u v)
- | nil (x : cofix' β 1) : leaf 0 x
-
--- inductive path' : Π {n : ℕ}, cofix' β n → list (Σ i, β i) → Type (max u v)
---  | nil {n : ℕ} (x : cofix' β n) : path' x []
---  | child (y : α) (i : β y) (n : ℕ) (ch : β y → cofix' β n) (ps : list (Σ i, β i)) :
---      path' (ch i) ps →
---      path' (cofix'.intro y ch) (⟨y,i⟩ :: ps)
+lemma children_cast_eq_of_eq {x} (y : cofix β) {i : β (head y)}
+  (H : x = y)
+: children x (♯ i) = children y i :=
+by { subst y, refl, }
 
 abbreviation path' (β : α → Type v) := list (Σ i, β i)
 
@@ -613,7 +609,6 @@ section bisim
         apply (bisim h₀).2, cc, } },
   end
 
-  -- If two streams are bisimilar, then they are equal
   theorem eq_of_bisim (bisim : is_bisimulation R) : ∀ {s₁ s₂}, s₁ ~ s₂ → s₁ = s₂ :=
   begin
     introv Hr, apply ext,
@@ -628,34 +623,48 @@ section coinduction
 variables β
 def R (s₁ s₂ : cofix β) :=
    head s₁ = head s₂ ∧
-            ∀ -- (γ : cofix β → Type u)
-              -- (φ : ∀ x : cofix β, γ x)
-              (φ : Π x : cofix β, Type v)
-              (γ : Π x : cofix β, φ x → Type u)
-              (fr : ∀ (x : cofix β) i, γ x i),
-              -- (I : Π x : cofix β, β (head x))
-              (∀ i₂ j₂, i₂ == j₂ → fr s₁ i₂ == fr s₂ j₂) →
-              ∀ i j i' j',
-                i  == j →
-                i' == j' →
-                fr (children s₁ i) i' == fr (children s₂ j) j'
+            ∀ (FR : Π x y : cofix β, Prop),
+              reflexive FR →
+              FR s₁ s₂ →
+            ∀ i j, i == j →
+                FR (children s₁ i) (children s₂ j)
 
+open ulift
 lemma R_is_bisimulation : is_bisimulation (R β) :=
-sorry
+begin
+  simp [is_bisimulation,R],
+  introv H_head H_coind,
+  split, assumption,
+  introv Hij,
+  split,
+  { apply H_coind (λ x y, head x = head y)
+    ; simp [reflexive] <|> assumption },
+  { intros,
+    let FR' : cofix β → cofix β → Prop := λ x y,
+        FR x y →
+        ∀ i j, i == j → FR (children x i) (children y j),
+    apply H_coind FR' ; try { assumption },
+    { simp [FR',reflexive], intros, subst i_2, solve_by_elim, },
+    { simp [FR'], intros, apply H_coind ; assumption, }, },
+end
 
 variables {β}
 
 lemma coinduction {s₁ s₂ : cofix β}
   (hh : head s₁ = head s₂)
-  (ht : ∀ (γ : Type u) (fr : cofix β → γ),
-          fr s₁ = fr s₂ →
+  (ht : ∀ (FR : Π x y : cofix β, Prop),
+          reflexive FR →
+          FR s₁ s₂ →
           ∀ i j, i == j →
-                 fr (children s₁ i) = fr (children s₂ j))
+                 FR (children s₁ i) (children s₂ j))
 : s₁ = s₂ :=
 eq_of_bisim
   (R β) (R_is_bisimulation β)
   (and.intro hh $
-   sorry)
+   begin
+     intros, specialize ht FR,
+     apply ht ; assumption,
+   end)
 
 end coinduction
 
@@ -672,8 +681,6 @@ coind.corec (λ t, ⟨ f (head t), λ k, children t (g _ k) ⟩) x
 def corec_on {X : Type*} (x₀ : X) (f : X → (Σ (y : α), β y → X)) : cofix β :=
 coind.corec f x₀
 
--- theorem corec_def (f : α → β) (g : α → α) (a : α) : corec f g a = map f (iterate g a) := rfl
-
 theorem corec_eq {X : Type*} (f : X → (Σ (y : α), β y → X)) (x₀ : X)
 : coind.corec f x₀ = sigma.rec_on (f x₀) (λ y ch, coind.mk y (λ i, coind.corec f (ch i))) :=
 begin
@@ -681,11 +688,12 @@ begin
   apply coinduction,
   { simp [*], },
   { intros, rw [children_mk,children_corec],
-    congr,
     generalize Hi : cast _ i = k,
-    have : k == j, cc, clear Hi a_1 i,
+    have : k == j, cc, clear Hi a_2 i,
     cases (f x₀), injection Hf, subst fst_1, cases h_2,
-    congr, apply eq_of_heq this, }
+    suffices : (coind.corec f ((sigma.mk fst snd).snd k)) = (coind.corec f (snd j)),
+    { rw this, apply a },
+    congr, cc, }
 end
 
 theorem corec_eq' {X : Type*} (f : X → α) (g : Π x : X, β (f x) → X) (x₀ : X)

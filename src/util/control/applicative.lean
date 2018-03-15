@@ -144,7 +144,7 @@ variables {α β γ : Type v}
 def seq : compose f g (α → β) → compose f g α → compose f g β
   | ⟨ h ⟩ ⟨ x ⟩ := ⟨ has_seq.seq <$> h <*> x ⟩
 
-def pure : α → compose f g α := compose.mk ∘ has_pure.pure f ∘ has_pure.pure g
+def pure : α → compose f g α := compose.mk ∘ has_pure.pure ∘ has_pure.pure
 
 local infix ` <$> ` := map
 local infix ` <*> ` := seq

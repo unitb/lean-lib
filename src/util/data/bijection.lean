@@ -94,8 +94,7 @@ def pos_of_finite {α} [finite α] [_ne : nonempty α] : pos_finite α :=
     begin
       rw nat.succ_pred_eq_of_pos,
       apply finite.to_nat,
-      cases _ne with x,
-      have H := ((finite.to_nat α).f x).is_lt,
+      cases exists_of_nonempty _ (λ x, ((finite.to_nat α).f x).is_lt) with x H,
       apply lt_of_le_of_lt (nat.zero_le _) H,
     end }
 

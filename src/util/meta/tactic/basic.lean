@@ -81,55 +81,8 @@ do let ns := name_set.of_list xs,
      when (¬ ns.contains h.local_pp_name) $
        try $ tactic.clear h) ∘ list.reverse
 
-meta def match_head (e : expr) : expr → tactic unit
-| e' :=
-    unify e e'
-<|> do `(_ → %%e') ← whnf e',
-       v ← mk_mvar,
-       match_head (e'.instantiate_var v)
-
-meta def find_matching_head : expr → list expr → tactic (list expr)
-| e []         := return []
-| e (H :: Hs) :=
-  do t ← infer_type H,
-     (cons H <$ match_head e t <|> pure id) <*> find_matching_head e Hs
-
-meta def apply_assumption
-  (asms : option (list expr) := none)
-  (tac : tactic unit := return ()) : tactic unit :=
-do { ctx ← asms.to_monad <|> local_context,
-     t   ← target,
-     hs   ← find_matching_head t ctx,
-     hs.any_of (λ H, () <$ tactic.apply H ; tac) } <|>
-do { exfalso,
-     ctx ← asms.to_monad <|> local_context,
-     t   ← target,
-     hs   ← find_matching_head t ctx,
-     hs.any_of (λ H, () <$ tactic.apply H ; tac) }
-<|> fail "assumption tactic failed"
-open nat
-meta def solve_by_elim_aux (asms : option (list expr) := none) : ℕ → tactic unit
-| 0 := done
-| (succ n) :=
-apply_assumption asms $ solve_by_elim_aux n
-
-meta def solve_by_elim (asms : option (list expr) := none) (depth := 3) : tactic unit :=
-solve_by_elim_aux asms depth
-
 open tactic.interactive
 open applicative (lift₂)
-
-meta def tauto : tactic unit :=
-repeat (do
-  gs ← get_goals,
-  () <$ intros ;
-  casesm (some ()) [``(_ ∧ _),``(_ ∨ _),``(Exists _)] ;
-  constructor_matching (some ()) [``(_ ∧ _),``(_ ↔ _)],
-  gs' ← get_goals,
-  guard (gs ≠ gs') ) ;
-repeat
-(refl <|> solve_by_elim <|> constructor_matching none [``(_ ∧ _),``(_ ↔ _),``(Exists _)]) ;
-done
 
 meta def rw_aux (p : pos) (r : pexpr) (loc : loc) : tactic unit :=
 do interactive.rw ⟨[rw_rule.mk p ff r ],none⟩ loc
@@ -277,16 +230,8 @@ soft_apply l
      (λ h, repeat1 $ one_point_at h.local_pp_name <|> simp none only_kw rs atts (loc.ns [h.local_pp_name]))
      (repeat1 $ one_point_at none <|> simp none only_kw rs atts (loc.ns [none]))
 
-meta def subst_locals (s : list (expr × expr)) (e : expr) : expr :=
-(e.abstract_locals (s.map (expr.local_uniq_name ∘ prod.fst)).reverse).instantiate_vars (s.map prod.snd)
-
 meta def set_binder' : expr → binder_info → expr
  | (expr.pi v _ d b) bi := expr.pi v bi d (set_binder' b bi)
- | e _ := e
-
-meta def set_binder : expr → list binder_info → expr
- | e [] := e
- | (expr.pi v _ d b) (bi :: bs) := expr.pi v bi d (set_binder b bs)
  | e _ := e
 
 open expr
@@ -372,8 +317,8 @@ propagate_tags (do hs ← mmap tactic.get_local ids, revert_lst hs, explicit_bin
 end tactic
 
 open tactic
-run_cmd add_interactive [`solve_by_elim,`tauto,`apply_assumption,`unfold_local,`unfold_locals
-                        ,`ext1,`ext,`clear_except,`simp_coes,`wlog,`explicit_binders
+run_cmd add_interactive [`unfold_local,`unfold_locals
+                        ,`ext1,`ext,`clear_except,`simp_coes,`explicit_binders
                         ,`distributivity,`print,`one_point,`simp_one_point,`revert'
                         ,`my_generalize]
 
@@ -385,9 +330,3 @@ meta def smt_tactic.interactive.auto : opt_param ℕ 3 → tactic unit
 do ls ← (local_context),
    ls.any_of (λ h, () <$ apply h ; smt_tactic.interactive.auto n)
      <|> exfalso ; smt_tactic.interactive.auto n
-
-example : 13 + 7 ≤ 3 :=
-begin
-  my_generalize x : x + _ ≤ _ with h,
-  admit
-end

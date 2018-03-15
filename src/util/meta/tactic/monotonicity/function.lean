@@ -2,6 +2,7 @@
 import util.algebra.group -- do not delete: imports instances
 
 import util.data.list
+import util.data.ulift_t
 import util.meta.expr
 import util.meta.tactic.basic
 
@@ -516,7 +517,7 @@ meta def repeat_until_or_at_most : nat → tactic unit → tactic unit → tacti
 meta def repeat_until : tactic unit → tactic unit → tactic unit :=
 repeat_until_or_at_most 100000
 
-meta def assert_or_rule : parser (pexpr ⊕ pexpr) :=
+meta def assert_or_rule : lean.parser (pexpr ⊕ pexpr) :=
 (inl <$> texpr <|> (tk ":" *> inr <$> texpr))
 
 /-- `monotonicity` repeatedly unwraps monotonic functions using `monotonicity1`

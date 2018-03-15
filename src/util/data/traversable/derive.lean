@@ -1,4 +1,5 @@
 
+import tactic
 import util.data.traversable.basic
 
 universes u v w w'
@@ -68,6 +69,7 @@ do `(has_traverse %%f) ← target | failed,
    let cs := env.constructors_of n,
    constructor,
    `[intros m _ α β f x],
+   resetI,
    x ← get_local `x,
    xs ← tactic.induction x,
    f ← get_local `f,

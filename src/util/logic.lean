@@ -310,6 +310,10 @@ lemma true_imp (p : Prop)
 : true → p ↔ p :=
 by { split ; intro h ; intros ; apply h ; trivial }
 
+lemma exists_of_nonempty {t} (p : t → Prop)
+: Π [nonempty t], (∀ x, p x) → ∃ x, p x
+ | ⟨ x ⟩ H := ⟨x,H x⟩
+
 lemma distrib_left_and (p q r : Prop)
 : p ∧ (q ∨ r) ↔ (p ∧ q) ∨ (p ∧ r) :=
 begin
@@ -323,8 +327,8 @@ lemma distrib_or_over_exists_left {t} [nonempty t] (p : t → Prop) (q : Prop)
 begin
   split ; intro h,
   cases h with h h,
-  { cases _inst_1 with x,
-    existsi x, left, apply h },
+  { apply exists_of_nonempty,
+    intro, left, apply h },
   { apply exists_imp_exists _ h,
     intro, apply or.intro_right },
   cases h with x h,
@@ -482,20 +486,6 @@ begin
     apply tc.trans _ _ _ h₀ h₁, }
 end
 
-variables {γ : Sort v}
-
-variables (f : α → γ) (g : α' → γ)
-variables h₀ : α = α'
-variables h₁ : ∀ (x : α) (y : α'), x == y → f x = g y
-include h₀ h₁
-lemma hfunext : f == g :=
-begin
-  subst α',
-  apply heq_of_eq,
-  apply funext, intro i,
-  apply h₁,
-  refl,
-end
 
 instance : is_associative _ (∨) := ⟨ by simp [or_assoc] ⟩
 instance : is_associative _ (∧) := ⟨ by simp [and_assoc] ⟩

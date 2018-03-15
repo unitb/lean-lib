@@ -225,9 +225,7 @@ begin
     apply hfunext,
     { unfold head, rw [← h,head_succ' n _ ⟨x_approx,x_consistent⟩] },
     introv h',
-    congr, rw h,
-    transitivity y, apply h',
-    symmetry, apply cast_heq, },
+    congr, rw h, cc, },
 end
 
 protected def cases {r : cofix β → Sort w}

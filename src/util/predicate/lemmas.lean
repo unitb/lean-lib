@@ -135,14 +135,16 @@ lemma sem_seq (σ : γ) (f : var γ (α → β)) (x : var γ α)
 by { cases x, cases f, simp [var_seq], }
 
 instance (α : Type u) : applicative (var α) :=
+{ ..(by apply_instance : functor (var α))
+, ..(by apply_instance : has_seq (var α))
+, ..(by apply_instance : has_pure (var α)) }
+
+instance (α : Type u) : is_lawful_applicative (var α) :=
 { id_map := by { intros, cases x, refl }
 , pure_seq_eq_map := by { intros, cases x, refl }
 , map_pure := by { intros, refl }
 , seq_pure := by { intros, cases g, refl }
-, seq_assoc := by { intros, cases x, refl }
-, ..(by apply_instance : has_map (var α))
-, ..(by apply_instance : has_seq (var α))
-, ..(by apply_instance : has_pure (var α)) }
+, seq_assoc := by { intros, cases x, refl } }
 
 @[simp, predicate]
 lemma var_map_coe {α β σ : Type u} (f : α → β) (g : σ → α)

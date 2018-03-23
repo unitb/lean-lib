@@ -151,11 +151,10 @@ lemma fin.sum_succ {n : ℕ}
 begin
   unfold fin.sum fin.foldl,
   repeat { rw [← rev_list_foldr] },
-  simp [d_array.foldl,array.rev_list_eq_cons,d_array.iterate,d_array.iterate_aux
-       ,read,d_array.read,d_array.data,array.pop],
+  simp! [d_array.foldl,array.rev_list_eq_cons,d_array.iterate,d_array.iterate_aux
+        ,d_array.read,d_array.data,array.pop],
   symmetry,
-  rw list.foldr_hom (has_add.add (f 0)), simp,
-  intros, simp
+  simp [list.foldr_hom (has_add.add (f 0)) _ has_add.add], refl,
 end
 
 @[simp]
@@ -173,5 +172,5 @@ lemma fin.sum_succ' {n : ℕ}
 begin
   unfold fin.sum fin.foldl,
   rw [← to_list_foldl,← to_list_foldl],
-  simp [foldl_eq_foldr',rev_list_eq_append,foldr,flip,read,d_array.read],
+  simp [foldl_eq_foldr',rev_list_eq_append,flip,array.read,d_array.read],
 end

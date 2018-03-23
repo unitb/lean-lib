@@ -6,7 +6,7 @@ variable {m : Type u → Type v}
 variable [monad m]
 variables {α β γ : Type u}
 
-open has_map nat
+open functor nat
 
 namespace monad
 

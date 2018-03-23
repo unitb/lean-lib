@@ -22,7 +22,7 @@ lemma lt_of_mem_fin_set {k : ℕ}
   (h : k ∈ val <$> s)
 : k < n.succ :=
 begin
-  unfold has_map.map set.image at h,
+  unfold functor.map set.image at h,
   rw [mem_set_of] at h,
   cases h with i h, cases h with h₀ h₁,
   rw ← h₁, apply i.is_lt

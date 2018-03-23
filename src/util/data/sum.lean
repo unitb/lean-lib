@@ -13,7 +13,7 @@ def is_right : α ⊕ β → bool
   | (sum.inl _) := ff
   | (sum.inr _) := tt
 
-instance {α : Type u} : has_map (sum α) :=
+instance {α : Type u} : functor (sum α) :=
  { map := λ β γ f x, sum.rec_on x sum.inl (sum.inr ∘ f) }
 
 end sum

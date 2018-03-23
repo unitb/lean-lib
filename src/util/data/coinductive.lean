@@ -306,7 +306,7 @@ begin
     cases x with n y ch,
     { dsimp [select'], refl },
     by_cases (β y' = β y),
-    { simp [select',assert_if_true,*,monad.pure_bind,select'._match_1],
+    { simp [select',assert_if_true,*,pure_bind,select'._match_1],
       apply ps_ih, apply lt_of_succ_lt_succ Hg, },
     { simp [select',assert_if_false,*], } },
 end
@@ -316,14 +316,14 @@ lemma select_cons' {n : ℕ}
   {ps : path' β}
   {y : α} {i : β y} {ch : β y → cofix' β (n + length ps)}
 : select' (cofix'.intro y ch) (⟨y,i⟩ :: ps) = select' (ch i) ps :=
-by simp [select',monad.pure_bind,subtree'._match_1,cast_eq]
+by simp [select',pure_bind,cast_eq]
 
 @[simp, priority 0]
 lemma subtree_cons {n : ℕ}
   {ps : path' β}
   {y : α} {i : β y} {ch : β y → cofix' β (n + length ps)}
 : subtree' (⟨y,i⟩ :: ps) (cofix'.intro y ch) = subtree' ps (ch i) :=
-by simp [subtree',monad.pure_bind,subtree'._match_1,cast_eq]
+by simp [subtree',pure_bind,cast_eq]
 
 lemma subtree_cons_of_ne {n : ℕ}
   {ps : path' β}
@@ -378,7 +378,7 @@ begin
   revert i j,
   cases H : (x_approx (succ (length p + 1))),
   simp [children',select'], intros,
-  rw assert_if_true, simp [monad.pure_bind,select'._match_1],
+  rw assert_if_true, simp [pure_bind,select'._match_1],
   { congr, apply eq_of_heq, transitivity i, apply cast_heq, assumption, },
   { congr, simp [head], rw [head_succ' _ (length p + 1) ⟨x_approx,x_consistent⟩],
     change head' (x_approx _) = _,
@@ -543,7 +543,7 @@ begin
       { rw this, simp [select_cons'], },
       specialize hrec (⟨ y_a, i⟩ :: ps) _ _ (♯ this)
       ; try { simp [Hselect,*], },
-      { simp [select',monad.pure_bind] at hrec, exact hrec }, }, }
+      { simp [select',pure_bind] at hrec, exact hrec }, }, }
 end
 
 lemma ext (x y : cofix β)

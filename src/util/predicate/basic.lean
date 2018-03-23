@@ -110,7 +110,7 @@ instance : has_neg (pred' α) := has_neg.mk p_not
 def ctx_impl (Γ p q : pred' α) : Prop :=
 Γ ⊢ p ⟶ q
 
-instance {γ : Type _} : has_map (var γ) :=
+instance {γ : Type _} : functor (var γ) :=
 { map := λ α β f x, ⟨ λ y, f $ x.apply y ⟩ }
 instance {γ : Type _} : has_seq (var γ) :=
 { seq := λ α β f x, ⟨ λ s, f.apply s (x.apply s) ⟩ }
@@ -144,6 +144,15 @@ instance val_to_var_coe : has_coe β (var α β) :=
 instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 { F := λ _, var σ α → var σ β
 , coe := var_seq }
+instance var_coe_to_fun₂ : has_coe_to_fun (var σ $ α → β → γ) :=
+{ F := λ _, var σ α → var σ β → var σ γ
+, coe := λ f x₀ x₁, f x₀ x₁ }
+instance var_coe_to_fun₃ {α₀ α₁ α₂} : has_coe_to_fun (var σ $ α₀ → α₁ → α₂ → β) :=
+{ F := λ _, var σ α₀ → var σ α₁ → var σ α₂ → var σ β
+, coe := λ f x₀ x₁ x₂, f x₀ x₁ x₂ }
+instance var_coe_to_fun₄ {α₀ α₁ α₂ α₃} : has_coe_to_fun (var σ $ α₀ → α₁ → α₂ → α₃ → β) :=
+{ F := λ _, var σ α₀ → var σ α₁ → var σ α₂ → var σ α₃ → var σ β
+, coe := λ f x₀ x₁ x₂ x₃, f x₀ x₁ x₂ x₃ }
 
 abbreviation val_to_var : β → var α β :=
 coe

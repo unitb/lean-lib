@@ -76,7 +76,7 @@ do gs ← get_goals,
    tac,
    set_goals gs
 
-open list (hiding map) has_map dlist monad (mmap₂')
+open list (hiding map) functor dlist monad (mmap₂')
 
 section config
 

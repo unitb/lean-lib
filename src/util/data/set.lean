@@ -25,7 +25,7 @@ lemma mem_fmap_of_mem
   (h : x ∈ s)
 : f x ∈ f <$> s :=
 begin
-  unfold has_map.map image,
+  unfold functor.map image,
   rw mem_set_of,
   exact ⟨x,h,rfl⟩
 end
@@ -37,7 +37,7 @@ lemma mem_of_mem_fmap
   (h : f x ∈ f <$> s)
 : x ∈ s :=
 begin
-  unfold has_map.map image at h,
+  unfold functor.map image at h,
   rw mem_set_of at h,
   cases h with y h₀, cases h₀ with h₀ h₁,
   rw ← Hinj h₁,
@@ -79,7 +79,7 @@ begin
   { rw h,
     rw eq_empty_iff_forall_not_mem,
     intros x h',
-    unfold has_map.map image at h',
+    unfold functor.map image at h',
     rw mem_set_of at h',
     cases h' with i h', cases h' with h₀ h₁,
     apply not_mem_empty _ h₀ },

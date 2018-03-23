@@ -72,7 +72,6 @@ begin
   apply le_max_right
 end
 
-
 lemma id_map (x : nonterm α)
 : x >>= pure ∘ id = x :=
 begin
@@ -81,7 +80,7 @@ begin
   tactic.congr,
   apply funext, intro i,
   unfold function.comp id,
-  apply @monad.bind_pure α option,
+  apply @bind_pure α option,
 end
 
 lemma pure_bind (x : α) (f : α → nonterm β)
@@ -267,8 +266,10 @@ end monotonic
 
 instance : monad nonterm :=
 { pure := @nonterm.pure
-, bind := @nonterm.bind
-, bind_assoc := @nonterm.bind_assoc
+, bind := @nonterm.bind }
+
+instance : is_lawful_monad nonterm :=
+{ bind_assoc := @nonterm.bind_assoc
 , pure_bind := @nonterm.pure_bind
 , id_map := @nonterm.id_map }
 

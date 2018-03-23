@@ -8,8 +8,8 @@ notation `ε` binder `, ` r:(scoped p, classical.epsilon p) := r
 
 namespace classical
 
-variables {α : Type u}
-variables {β : Type v}
+variables {α : Sort u}
+variables {β : Sort v}
 variables {p q : α → Prop}
 variables Hpq : ∀ x, p x → q x
 variables Hex : ∃ x, p x
@@ -31,7 +31,7 @@ begin
   apply Hpq,
   apply epsilon_spec Hex,
 end
-
+#check @epsilon_spec'
 end classical
 
 open tactic interactive interactive.types lean.parser

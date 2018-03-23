@@ -35,9 +35,11 @@ instance arrow_cat : category (->) :=
 
 def kleisli (m : Sort u → Sort v) (a : Sort w) (b : Sort u) := a → m b
 
-instance {m : Type u → Type v} [monad m] : category (kleisli m) :=
+open is_lawful_monad
+
+instance {m : Type u → Type v} [monad m] [is_lawful_monad m] : category (kleisli m) :=
   { ident := λ α x, pure x
   , comp := λ α β γ (x : kleisli m β γ) (y : kleisli m α β), λ i, y i >>= x
-  , assoc := by { intros, simp [has_comp.comp,monad.bind_assoc] }
-  , left_ident  := by { intros, apply funext, intro, apply monad.bind_pure, }
-  , right_ident := by { intros, apply funext, intro, apply monad.pure_bind, } }
+  , assoc := by { intros, simp! [bind_assoc], }
+  , left_ident  := by { intros, apply funext, intro, apply bind_pure, }
+  , right_ident := by { intros, apply funext, intro, apply pure_bind, } }

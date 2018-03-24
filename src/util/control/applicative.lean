@@ -343,6 +343,10 @@ def replicate' : ℕ → m α → m punit
  | 0 _ := pure punit.star
  | (succ n) m := m *> replicate' n m
 
+def mapp (f : γ → β → α) : list (γ × β) → list α
+ | [ ] := [ ]
+ | ((x,y) :: xs) := f x y :: mapp xs
+
 def mmapp (f : γ → β → m α) : list (γ × β) → m (list α)
  | [ ] := pure [ ]
  | ((x,y) :: xs) := (::) <$> f x y <*> mmapp xs

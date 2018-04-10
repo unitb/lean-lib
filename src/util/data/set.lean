@@ -63,7 +63,7 @@ begin
 end
 
 omit Hinj
-
+set_option pp.all true
 lemma fmap_eq_empty_iff_eq_empty
 : f <$> s = ∅ ↔ s = ∅ :=
 begin
@@ -75,7 +75,7 @@ begin
     have h₃ := h₁ (f x),
     change (∅ : set β) (f x),
     rw ← iff_eq_eq at h₃,
-    rw ← h₃, apply mem_fmap_of_mem h₂, },
+    apply h₃.1, apply mem_fmap_of_mem h₂, },
   { rw h,
     rw eq_empty_iff_forall_not_mem,
     intros x h',

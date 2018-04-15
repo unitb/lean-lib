@@ -5,4 +5,5 @@ install:
   - source ~/.elan/env
 
 script:
+  - echo $TRAVIS_BUILD_DIR
   - leanpkg test

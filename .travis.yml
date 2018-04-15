@@ -1,4 +1,7 @@
 language: generic
+cache:
+  directories:
+  - "$TRAVIS_BUILD_DIR/_target"
 
 install:
   - curl https://raw.githubusercontent.com/Kha/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y

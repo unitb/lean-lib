@@ -57,22 +57,6 @@ meta def unfold_locals : parse ident * → tactic unit
  | [] := return ()
  | (n::ns) := unfold_local n >> unfold_locals ns
 
-@[user_attribute]
-meta def funext_attribte : user_attribute :=
-{ name := `extensionality
-, descr := "lemmas usable by `funext` tactic" }
-
-attribute [extensionality] funext stream.ext array.ext
-
-meta def ext1 (x : parse ident_ ?) : tactic unit :=
-do ls ← attribute.get_instances `extensionality,
-   ls.any_of (λ l, applyc l) <|> fail "no applicable extensionality rule found",
-   interactive.intro x
-
-meta def ext : parse ident_ * → tactic unit
- | [] := return ()
- | (x :: xs) := ext1 x >> ext xs
-
 open list
 
 meta def clear_except (xs : parse ident *) : tactic unit :=
@@ -318,7 +302,7 @@ end tactic
 
 open tactic
 run_cmd add_interactive [`unfold_local,`unfold_locals
-                        ,`ext1,`ext,`clear_except,`simp_coes,`explicit_binders
+                        ,`clear_except,`simp_coes,`explicit_binders
                         ,`distributivity,`print,`one_point,`simp_one_point,`revert'
                         ,`my_generalize]
 

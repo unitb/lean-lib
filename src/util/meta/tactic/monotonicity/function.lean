@@ -91,7 +91,7 @@ apply_opt_param
 <|>
 apply_auto_param
 <|>
-solve_by_elim done (some asms)
+solve_by_elim { restr_hyp_set := some asms }
 <|>
 return ()
 
@@ -500,7 +500,7 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
-     iterate_exactly (n-1) (solve1 $ apply_instance <|> solve_by_elim done (some asms)) )
+     iterate_exactly (n-1) (solve1 $ apply_instance <|> solve_by_elim { restr_hyp_set := some asms }) )
 
 meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=

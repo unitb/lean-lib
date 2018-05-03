@@ -91,7 +91,7 @@ apply_opt_param
 <|>
 apply_auto_param
 <|>
-solve_by_elim (pure ()) (some asms)
+solve_by_elim done (some asms)
 <|>
 return ()
 
@@ -452,8 +452,8 @@ do (v,args,t) ← generalize_meta_vars,
      ctx ← local_context,
      tactic.intron args.length,
      x ← intro1,
-     tac ctx,
-     tactic.exact x),
+     focus1 $ tac ctx,
+     tactic.exact x) <|> fail "foo",
    tactic.apply (h.mk_app args),
    tactic.clear h
 
@@ -500,7 +500,7 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
-     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> solve_by_elim (pure ()) (some asms)))
+     iterate_exactly (n-1) (solve1 $ apply_instance <|> solve_by_elim done (some asms)) )
 
 meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=

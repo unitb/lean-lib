@@ -91,7 +91,7 @@ apply_opt_param
 <|>
 apply_auto_param
 <|>
-solve_by_elim (some asms)
+solve_by_elim (pure ()) (some asms)
 <|>
 return ()
 
@@ -485,10 +485,9 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
    when (rules = []) (fail "no applicable rules found"),
    err ← format.join <$> mmap side_conditions rules,
    focus1 $ any_of rules (λ rule, do
-     t₀ ← mk_meta_var `(Prop),
-     v₀ ← mk_meta_var t₀,
-     t₁ ← mk_meta_var `(Prop),
-     v₁ ← mk_meta_var t₁,
+     v₀ ← mk_meta_var `(Prop) >>= mk_meta_var,
+     v₁ ← mk_meta_var `(Prop) >>= mk_meta_var,
+
      tactic.refine $ ``(apply_rel %%(g.rel_def) %%l %%r %%rule %%v₀ %%v₁),
      solve_mvar v₀ (try (any_of id_rs rewrite_target) >>
              ( done <|>
@@ -501,7 +500,7 @@ do (l,r,id_rs,g) ← target >>= instantiate_mvars >>= monotonicity_goal cfg <|> 
                ac_refl <|>
                `[simp only [is_associative.assoc]]) ),
      n ← num_goals,
-     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> solve_by_elim (some asms)))
+     iterate_exactly (n-1) (try $ solve1 $ apply_instance <|> solve_by_elim (pure ()) (some asms)))
 
 meta def monotonicity_n (n : ℕ) (cfg : monotonicity_cfg := { monotonicity_cfg . })
 : tactic unit :=

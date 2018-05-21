@@ -226,35 +226,6 @@ meta def pis' : list expr → expr → tactic expr
   pure $ pi pp info t (abstract_local f' uniq)
 | _ f := pure f
 
-/-- `wlog i j : i ≤ j with h`: without loss of generality, let us assume `i ≤ j` -/
-meta def wlog (x y : parse ident) (p : parse $ tk ":" *> texpr)
-              (h : parse (tk "with" *> ident)?)
-: tactic unit :=
-do x ← get_local x,
-   y ← get_local y,
-   n ← tactic.revert_lst [x,y],
-   x ← intro1, y ← intro1,
-   p ← to_expr p,
-   when (¬ x.occurs p ∨ ¬ x.occurs p) (do
-     p ← pp p,
-     fail format!"{p} should reference {x} and {y}"),
-   let p' := subst_locals [(x,y),(y,x)] p,
-   t ← target,
-   let g := p.imp t,
-   g ← pis' [x,y] g,
-   this ← assert `this (set_binder g [binder_info.default,binder_info.default]),
-   tactic.clear x, tactic.clear y,
-   intron 2,
-   intro $ h.get_or_else `a, intron (n-2), tactic.swap,
-   let h := h.get_or_else `this,
-   h' ← to_expr ``(%%p ∨ %%p') >>= assert h,
-   clear this,
-   assumption <|> `[exact le_total _ _] <|> tactic.swap,
-   (() <$ tactic.cases h' [`h,`h])
-   ; specialize ```(%%this _ _ h)
-   ; intron (n-2) ; try (solve_by_elim <|> tauto <|> (intros >> cc)),
-   return ()
-
 meta def update_name (f : string → string) : name → name
  | (name.mk_string s p) := name.mk_string (f s) p
  | x := x <.> f ""

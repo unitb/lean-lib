@@ -10,7 +10,7 @@ import util.meta.tactic
 universe variables u₀ u₁ u₂
 variables {α : Type u₀} {β β' : Type u₁} {γ : Type u₂}
 
-open nat (hiding foldr)
+open nat
 
 namespace array
 

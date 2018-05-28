@@ -31,7 +31,7 @@ lemma p_impl_to_fun (p₀ p₁ : pred' α) (x : α)
 @[simp, predicate]
 lemma p_equiv_to_fun (p₀ p₁ : pred' α) (x : α)
 : x ⊨ p_equiv p₀ p₁ ↔ (x ⊨ p₀ ↔ x ⊨ p₁) :=
-by { simp [p_equiv,v_eq], split ; intro h ; rw h }
+by { simp with lifted_fn, split ; intro h ; rw h }
 
 lemma p_impl_revert {Γ p q : pred' α}
   (h : Γ ⊢ p_impl p q)
@@ -127,24 +127,30 @@ instance proof_coe (p : Prop) (Γ : pred' α) : has_coe p (Γ ⊢ p) :=
 @[simp, predicate]
 lemma sem_coe (p : Prop) (x : β)
 : x ⊨ (p : pred' β) ↔ p :=
-by { unfold_coes, }
+by refl
 
 @[simp, predicate]
 lemma sem_seq (σ : γ) (f : var γ (α → β)) (x : var γ α)
 : σ ⊨ var_seq f x = (σ ⊨ f) (σ ⊨ x)  :=
 by { cases x, cases f, simp [var_seq], }
 
-instance (α : Type u) : applicative (var α) :=
-{ ..(by apply_instance : functor (var α))
-, ..(by apply_instance : has_seq (var α))
-, ..(by apply_instance : has_pure (var α)) }
+instance var_lawful_functor (α : Type u) : is_lawful_functor (var α) :=
+by { constructor ; intros ; cases x ; refl }
 
-instance (α : Type u) : is_lawful_applicative (var α) :=
-{ id_map := by { intros, cases x, refl }
-, pure_seq_eq_map := by { intros, cases x, refl }
-, map_pure := by { intros, refl }
-, seq_pure := by { intros, cases g, refl }
-, seq_assoc := by { intros, cases x, refl } }
+instance var_lawful_applicative (α : Type u) : is_lawful_applicative (var α) :=
+by { constructor ; intros ; casesm* var _ _ ; refl }
+
+instance (α : Type u) : is_lawful_monad (var α) :=
+{ pure_bind := by { intros, cases h : f x, simp! [h], }
+, bind_assoc := by { intros ; cases x, simp!, funext, cases (f $ x i), refl }
+, map_pure := by { intros ; casesm* var _ _ ; refl }
+, seq_pure := by { intros ; casesm* var _ _ ; refl }
+, seq_assoc := by intros ; casesm* var _ _ ; refl
+, bind_map_eq_seq := by intros ; casesm* var _ _ ; refl
+, bind_pure_comp_eq_map := by intros ; casesm* var _ _ ; refl
+}
+-- , ..predicate.var_lawful_applicative α }
+-- , ..(predicate.var_lawful_applicative α).to_is_lawful_functor  }
 
 @[simp, predicate]
 lemma var_map_coe {α β σ : Type u} (f : α → β) (g : σ → α)
@@ -418,7 +424,8 @@ lemma coe_to_prop_p_not (p : α → Prop)
 @[simp]
 lemma coe_to_prop_p_equiv (p q : α → Prop)
 : (⟨λ s, p s ↔ q s⟩ : pred' α) = ⟨p⟩ ≡ ⟨q⟩ :=
-by { ext1, simp }
+by { ext, simp, split, apply propext,
+     intro h, rw h }
 
 lemma lifting_prop_asm (Γ : pred' α) {p : Prop} {q : pred' α}
   (h : p → Γ ⊢ q)
@@ -1101,7 +1108,7 @@ by lifted_pred using h ; simp [h]
 lemma equiv_of_eq (Γ p q : pred' β)
   (h : p = q)
 : Γ ⊢ p ≡ q :=
-by { cases p, cases q, simp [h], refl }
+by { cases p, cases q, simp [h] }
 
 lemma p_and_entails_p_or (p q : pred' β)
 : p ⋀ q ⟹ p ⋁ q :=
@@ -1282,6 +1289,17 @@ begin
   simp, intro,
   apply entails_to_pointwise (H x) σ,
 end
+
+lemma p_forall_p_imp_p_forall {Γ : pred' β} {t : Sort u'} (p q : t → pred' β)
+: Γ ⊢ (∀∀ x, p x ⟶ q x) → Γ ⊢ (∀∀ x, p x) ⟶ (∀∀ x, q x) :=
+begin
+  intros h,
+  lifted_pred [- exists_imp_distrib] using h,
+  apply forall_imp_forall,
+  intro x,
+  apply h,
+end
+
 
 lemma p_exists_p_imp_p_exists {Γ : pred' β} {t : Sort u'} (p q : t → pred' β)
 : Γ ⊢ (∀∀ x, p x ⟶ q x) → Γ ⊢ (∃∃ x, p x) ⟶ (∃∃ x, q x) :=

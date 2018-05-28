@@ -61,3 +61,15 @@ begin
   rw [← h,option.is_some],
   exact rfl
 end
+
+namespace option
+
+def to_suml {α β} (x : β) : option α → α ⊕ β
+  | none := sum.inr x
+  | (some y) := sum.inl y
+
+def to_sumr {α β} (x : α) : option β → α ⊕ β
+  | none := sum.inl x
+  | (some y) := sum.inr y
+
+end option

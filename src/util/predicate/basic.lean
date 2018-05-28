@@ -5,7 +5,9 @@ import util.category
 import util.meta.tactic.basic
 import util.meta.tactic.monotonicity
 
-run_cmd mk_simp_attr `predicate
+run_cmd do
+mk_simp_attr `predicate,
+mk_simp_attr `lifted_fn
 
 namespace predicate
 
@@ -75,9 +77,11 @@ lifted₂ and p₀ p₁
 def p_impl (p₀ p₁ : pred' α) : pred' α :=
 lifted₂ implies p₀ p₁
 
+@[lifted_fn, reducible]
 def v_eq : var α β → var α β → pred' α :=
 lifted₂ eq
 
+@[lifted_fn, reducible]
 def p_equiv : pred' α → pred' α → pred' α :=
 v_eq
 
@@ -110,24 +114,37 @@ instance : has_neg (pred' α) := has_neg.mk p_not
 def ctx_impl (Γ p q : pred' α) : Prop :=
 Γ ⊢ p ⟶ q
 
-instance {γ : Type _} : functor (var γ) :=
+instance var_functor {γ : Type _} : functor (var γ) :=
 { map := λ α β f x, ⟨ λ y, f $ x.apply y ⟩ }
-instance {γ : Type _} : has_seq (var γ) :=
+instance var_has_seq {γ : Type _} : has_seq (var γ) :=
 { seq := λ α β f x, ⟨ λ s, f.apply s (x.apply s) ⟩ }
-instance {γ : Type _} : has_pure (var γ) :=
+instance var_has_pure {γ : Type _} : has_pure (var γ) :=
 { pure := λ α x, ⟨ λ _, x ⟩ }
+instance var_applicative {α : Type u} : applicative (var α) :=
+{ ..predicate.var_functor
+, ..predicate.var_has_seq
+, ..predicate.var_has_pure }
+instance var_has_bind {γ : Type _} : has_bind (var γ) :=
+{ bind := λ α x ⟨ m ⟩ f, ⟨ λ i, (f $ m i).apply i ⟩ }
+instance var_monad {γ : Type _} : monad (var γ) :=
+{ ..predicate.var_applicative
+, ..predicate.var_has_bind }
 
-def v_lt {β : Type _} [has_lt β] : var α β → var α β → pred' α
- | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, v₀ s < v₁ s⟩
+@[lifted_fn, reducible]
+def v_lt {β : Type _} [has_lt β] : var α β → var α β → pred' α :=
+lifted₂ (<)
 
-def v_wf_r [has_well_founded β] : var α β → var α β → pred' α
- | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, has_well_founded.r (v₀ s) (v₁ s)⟩
+@[lifted_fn, reducible]
+def v_wf_r [has_well_founded β] : var α β → var α β → pred' α :=
+lifted₂ has_well_founded.r
 
-def v_le {β : Type _} [has_le β] : var α β → var α β → pred' α
- | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, v₀ s ≤ v₁ s⟩
+@[lifted_fn, reducible]
+def v_le {β : Type _} [has_le β] : var α β → var α β → pred' α :=
+lifted₂ (≤)
 
-def v_mem {β : Type _} {γ : Type _} [has_mem β γ] : var α β → var α γ → pred' α
- | ⟨v₀⟩ ⟨v₁⟩ := ⟨λ s, v₀ s ∈ v₁ s⟩
+@[lifted_fn, reducible]
+def v_mem {β : Type _} {γ : Type _} [has_mem β γ] : var α β → var α γ → pred' α :=
+lifted₂ (∈)
 
 infix ` ≃ `:75 := v_eq
 infix ` ∊ `:75 := v_mem
@@ -141,6 +158,8 @@ def var_seq : var σ (α → β) → var σ α → var σ β
 
 instance val_to_var_coe : has_coe β (var α β) :=
 { coe := λ x, ⟨ λ _, x ⟩ }
+instance option_val_to_var_coe {β} : has_coe β (var α (option β)) :=
+{ coe := λ x, ↑(some x) }
 instance var_coe_to_fun : has_coe_to_fun (var σ $ α → β) :=
 { F := λ _, var σ α → var σ β
 , coe := var_seq }

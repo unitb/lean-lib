@@ -51,7 +51,7 @@ begin
   { apply Hnil },
   { change P _,
     have h := Hcons y (reverse ys) IH,
-    rw [← reverse_cons y ys] at h,
+    rw [reverse_cons y ys,← concat_eq_append],
     apply h },
 end
 

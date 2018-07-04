@@ -23,13 +23,6 @@ begin
   apply not_le_of_gt h h₁,
 end
 
-theorem mod_mod (m n : ℕ) : (m % n) % n = m % n :=
-begin
-  cases lt_or_eq_of_le (zero_le n) with h h,
-  { apply mod_of_lt, apply mod_lt _ h },
-  { subst n, rw [mod_def,if_neg],
-    intro h', apply lt_irrefl _ h'.left }
-end
 
 theorem mod_plus (n p : ℕ) (h : p > 0) : ∃k q, q < p ∧ n = k * p + q :=
 begin
@@ -91,7 +84,7 @@ end
 theorem mod_add' {m n p : ℕ} : (m + n) % p = (m + n % p) % p :=
 begin
   induction m with m,
-  { symmetry, simp, apply mod_mod },
+  { symmetry, simp },
   { rw [succ_add,succ_mod,m_ih,succ_add,← succ_mod] }
 end
 

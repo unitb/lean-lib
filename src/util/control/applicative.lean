@@ -1,4 +1,5 @@
 
+import category.basic
 import util.data.functor
 
 universe variables u v w u' v' w'
@@ -68,12 +69,7 @@ end
 
 end
 
-@[norm]
-lemma map_seq {β γ σ : Type u} (h : γ → σ) (x : f (β → γ)) (y : f β) :
-  h <$> (x <*> y) = (comp h <$> x) <*> y :=
-by rw [← pure_seq_eq_map,← pure_seq_eq_map
-     ,seq_assoc
-     ,map_pure]
+attribute [norm] map_seq
 
 @[norm]
 lemma seq_map {β γ σ : Type u} (h : σ → β) (x : f (β → γ)) (y : f σ) :

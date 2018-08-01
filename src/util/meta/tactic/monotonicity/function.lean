@@ -1,4 +1,6 @@
 
+import category.traversable category.traversable.derive
+
 import util.algebra.group -- do not delete: imports instances
 
 import util.data.list
@@ -47,6 +49,7 @@ meta def mono_function.to_tactic_format : mono_function → tactic format
 meta instance has_to_tactic_format_mono_function : has_to_tactic_format mono_function :=
 { to_tactic_format := mono_function.to_tactic_format }
 
+@[derive traversable]
 meta structure mono_ctx' (rel : Type) :=
   (to_rel : rel)
   (function : mono_function)
@@ -57,7 +60,7 @@ meta def mono_ctx := mono_ctx' (option (expr → expr → expr))
 @[reducible]
 meta def mono_ctx_ne := mono_ctx' (expr → expr → expr)
 
-meta instance : has_traverse mono_ctx' :=
+meta instance : traversable mono_ctx' :=
 by derive_traverse
 
 meta def mono_ctx.to_tactic_format (ctx : mono_ctx) : tactic format :=
@@ -76,7 +79,8 @@ do gs ← get_goals,
    tac,
    set_goals gs
 
-open list (hiding map) functor dlist monad (mmap₂')
+open list (hiding map) functor dlist
+-- monad (mmap₂')
 
 section config
 
@@ -129,7 +133,7 @@ meta def find_one_difference
       then prod.map (cons x) id <$> find_one_difference xs ys
       else do
         guard (xs.length = ys.length),
-        mmap₂' compare xs ys,
+        mzip_with' compare xs ys,
         return ([],x,y,xs)
  | xs ys := fail format!"find_one_difference: {xs}, {ys}"
 

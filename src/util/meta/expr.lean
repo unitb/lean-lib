@@ -1,5 +1,4 @@
 import meta.expr
-import util.data.traversable
 
 universes u v
 

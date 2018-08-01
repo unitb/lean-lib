@@ -35,7 +35,7 @@ end
 end classical
 
 open tactic interactive interactive.types lean.parser
-open tactic.interactive (tauto solve_by_elim)
+open tactic.interactive (tauto)
 
 meta def apply_some_spec (id : parse $ optional (tk "with" *> ident_)) : tactic unit :=
 do t ← target,

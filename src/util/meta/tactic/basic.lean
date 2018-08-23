@@ -13,13 +13,6 @@ open interactive.types
 local postfix `?`:9001 := optional
 local postfix *:9001 := many
 
-meta def local_def_value (e : expr) : tactic expr := do
-do (v,_) ← solve_aux `(true) (do
-         (expr.elet n t v _) ← (revert e >> target)
-           | fail format!"{e} is not a local definition",
-         return v),
-   return v
-
 meta def get_local_value (e : expr) : tactic (option expr) :=
 try_core $ local_def_value e
 
@@ -195,14 +188,10 @@ meta def one_point_at : option name → tactic unit
      (t',pr) ← one_point_aux t,
      replace_target t' pr
 
-
 meta def one_point (l : parse location) : tactic unit :=
 soft_apply l
 (λ h, one_point_at h.local_pp_name)
 (one_point_at none)
-
-meta def repeat1 (tac : tactic unit) : tactic unit :=
-tac >> repeat tac
 
 /-- simplify `∃ x, ... x = y ...` and delete `x` -/
 meta def simp_one_point

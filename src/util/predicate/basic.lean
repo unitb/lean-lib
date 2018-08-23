@@ -1,6 +1,5 @@
 
 import util.logic
-import util.data.fin
 import util.category
 import util.meta.tactic.basic
 import util.meta.tactic.monotonicity

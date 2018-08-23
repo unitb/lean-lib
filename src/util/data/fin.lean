@@ -19,17 +19,6 @@ end
 instance {n : ℕ} : inhabited (fin (succ n)) :=
 inhabited.mk ⟨n,lt_succ_self _⟩
 
-instance {n : ℕ} : decidable_linear_order (fin (succ n))  :=
-  { le := has_le.le
-  , lt := has_lt.lt
-  , le_refl  := assume x, by simp [fin.le_def]
-  , le_trans := assume x y z, by { simp [fin.le_def], apply le_trans }
-  , le_antisymm := assume x y, by { simp [fin.le_def,fin.veq_def], apply le_antisymm }
-  , le_total := assume x y, by { simp [fin.le_def], apply le_total }
-  , decidable_eq := fin.decidable_eq _
-  , decidable_le := fin.decidable_le
-  , lt_iff_le_not_le := by { introv, simp only [fin.lt_def,fin.le_def,lt_iff_le_not_le], } }
-
 lemma fin.zero_def (n : ℕ)
 : (0 : fin (succ n)).val = 0 :=
 by refl
@@ -234,7 +223,7 @@ begin
   cases k with k Hk,
   unfold fin.shift fin.nest fin.split,
   { have H : ¬ m + k < m,
-    { apply not_lt_of_ge, apply le_add_right },
+    { apply not_lt_of_ge, apply nat.le_add_right },
     rw [dif_neg H],
     apply congr_arg,
     apply fin.eq_of_veq,

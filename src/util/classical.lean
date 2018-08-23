@@ -1,6 +1,5 @@
 
 import tactic
-import meta.expr
 
 universe variables u v
 

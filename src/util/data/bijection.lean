@@ -531,7 +531,7 @@ begin
   rw [add_succ],
   apply le_succ_of_le,
   apply le_succ_of_le,
-  apply le_add_left,
+  apply nat.le_add_left,
 end
 
 lemma bij.prod.g_prod_succ_eq_prod_succ_g (x : ℕ × ℕ) : bij.prod.g (bij.prod.succ x) = succ (bij.prod.g x) :=
@@ -721,7 +721,7 @@ begin
   have h : (bij.prod.f n)^.snd ≤ prod.sum (bij.prod.f n),
   { cases bij.prod.f n,
     simp [prod.sum],
-    apply le_add_left },
+    apply nat.le_add_left },
   transitivity,
   apply h,
   apply prod_f_sum_le_self

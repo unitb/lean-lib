@@ -2,7 +2,7 @@
 import util.logic
 
 import util.meta.tactic.basic
-import util.meta.tactic.monotonicity.function
+import tactic.monotonicity
 
 variables {a b c p : Prop}
 
@@ -14,6 +14,8 @@ open tactic
 
 local postfix `?`:9001 := optional
 local postfix *:9001 := many
+
+meta def ac_mono1 := ac_mono rep_arity.one none
 
 meta def match_exists : expr → tactic (name × expr × expr)
  | `(@Exists _ %%e) := return (expr.binding_name e
@@ -72,7 +74,7 @@ do g ← target >>= instantiate_mvars,
             intro id)
     | `( (¬ %%e₀) → (¬ %%e₁) ) :=
         (`[apply mt])
-    | _ := monotonicity1
+    | _ := ac_mono1
    end
 
 meta def intros_mono_dep : tactic unit :=
@@ -99,9 +101,9 @@ do g ← target,
     <|> (do match_and e₀,
             match_and e₁,
             return ())
-    <|> monotonicity1 >> intros_mono_dep
+    <|> ac_mono1 >> intros_mono_dep
     <|> return ()
-    | _ :=  monotonicity1 >> intros_mono_dep
+    | _ :=  ac_mono1 >> intros_mono_dep
         <|> return ()
    end
 

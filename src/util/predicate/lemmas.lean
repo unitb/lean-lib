@@ -1,4 +1,5 @@
 
+import util.data.fin
 import util.predicate.basic
 
 namespace predicate

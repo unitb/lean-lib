@@ -1,4 +1,3 @@
-import meta.expr
 
 universes u v
 

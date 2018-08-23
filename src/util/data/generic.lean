@@ -1,8 +1,11 @@
 
-import util.data.bijection
-import util.control.monad
-import util.control.applicative
-import util.meta.tactic
+import data.equiv.basic
+import data.fintype
+import data.equiv.encodable
+import data.equiv.denumerable
+-- import util.control.monad
+-- import util.control.applicative
+-- import util.meta.tactic
 
 universes u
 
@@ -10,9 +13,9 @@ class generic (α : Type u) :=
   (rep : Type u)
   (to_rep : α → rep)
   (of_rep : rep → α)
-  (corresponence : bijection α rep)
+  (correspondence : α ≃ rep)
 
-export generic (rep)
+export generic (rep correspondence)
 
 attribute [reducible] generic.rep
 
@@ -32,7 +35,7 @@ meta def mk_prod_rep' (α : expr) (c : name)
       return (`(unit),to_rep,expr.lam `_ binder_info.default `(unit) c')
  | [x] e es := do c' ← mk_const c,
              t ← infer_type x,
-             let of_rep := c'.mk_app (e :: es).reverse,
+             let of_rep := c'.mk_app (e :: es : list _).reverse,
              return (t,x,expr.lambdas [e] of_rep)
  | (x :: xs) e es :=
     do xs' ← mmap infer_type xs,
@@ -115,34 +118,53 @@ do `(generic %%t) ← target,
    cases_on ← resolve_name (t.const_name <.> "cases_on") >>= to_expr,
    x ← mk_local_def `x t,
    let to_rep' := expr.lambdas [x] $ cases_on.mk_app (x::to_rep),
-   bij_t ← to_expr ``(bijection %%t %%rep),
+   bij_t ← to_expr ``(equiv %%t %%rep),
    bij ← assert `bij bij_t,
    swap,
    d ← to_expr ``( { generic . rep := %%rep
                    , to_rep := %%to_rep'
                    , of_rep := %%of_rep
-                   , corresponence := %%bij } : generic %%t ),
+                   , correspondence := %%bij } : generic %%t ),
    instantiate_mvars d >>= tactic.apply,
-   `[apply @bijection.mk %%t %%rep %%to_rep' %%of_rep],
+   `[apply @equiv.mk %%t %%rep %%to_rep' %%of_rep],
    solve1 `[intro x, induction x ; refl ],
    solve1 (intro `x >> prove_inverse `x)
 
 end tactic.interactive
+-- ↪
+def encoding {α : Type u} [generic α] : rep α ↪ α :=
+equiv.to_embedding $ (correspondence _).symm
 
-instance finite_generic (α : Type u) [generic α] [finite (rep α)] : finite α :=
-⟨ finite.count (rep α) , finite.to_nat _ ∘ generic.corresponence α ⟩
+lemma multiset.map_equiv_to_embedding {α β} (f : α ≃ β) (s : multiset α) (x : β) :
+  x ∈ s.map f ↔ f.symm x ∈ s :=
+by { split; simp; introv h,
+     { intro, subst x, simp * },
+     { split, existsi h, simp } }
 
-instance pos_finite_generic (α : Type u) [generic α] [pos_finite (rep α)] : pos_finite α :=
-⟨ pos_finite.pred_count (rep α) , pos_finite.to_nat _ ∘ generic.corresponence α ⟩
+lemma finset.map_equiv_to_embedding {α β} (f : α ≃ β) (s : finset α) (x : β) :
+  x ∈ s.map (equiv.to_embedding f) ↔ f.symm x ∈ s :=
+by { split; simp; intros,
+     { subst x, simp * },
+     { split, existsi a, simp } }
 
-instance infinite_generic (α : Type u) [generic α] [infinite (rep α)] : infinite α :=
-⟨ infinite.to_nat _ ∘ generic.corresponence α ⟩
+instance finite_generic (α : Type u) [generic α] [fintype (rep α)] : fintype α :=
+{ elems := (fintype.elems (rep α)).map encoding,
+  complete :=
+  by { intros, dsimp [encoding],
+       simp [multiset.map_equiv_to_embedding],
+       apply fintype.complete } }
+
+instance inhabited_generic (α : Type u) [generic α] [inhabited (rep α)] : inhabited α :=
+⟨ (correspondence α).symm (default _) ⟩
+
+instance encodable_generic (α : Type u) [generic α] [encodable (rep α)] : encodable α :=
+encodable.of_equiv _ (correspondence _)
+
+instance denumerable_generic (α : Type u) [generic α] [denumerable (rep α)] : denumerable α :=
+denumerable.of_equiv _ (correspondence _)
 
 instance : generic bool :=
-by mk_generic_instance
-
-instance : finite bool :=
-finite_generic _
+by { mk_generic_instance, }
 
 namespace examples
 

@@ -504,7 +504,6 @@ lemma ctx_impl_refl (Γ p : pred' β)
 : ctx_impl Γ p p :=
 by lifted_pred
 
-@[refl]
 lemma p_impl_refl (Γ p : pred' β)
 : Γ ⊢ p ⟶ p :=
 by lifted_pred

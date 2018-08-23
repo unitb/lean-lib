@@ -147,7 +147,6 @@ protected def le (x y : nonterm α) : Prop :=
 instance : has_le (nonterm α) :=
 ⟨ nonterm.le ⟩
 
-@[refl]
 protected lemma le_refl (x : nonterm α)
 : x ≤ x :=
 begin
@@ -155,7 +154,6 @@ begin
   intros i j H, apply H,
 end
 
-@[trans]
 protected lemma le_trans (x y z : nonterm α)
   (h₀ : x ≤ y)
   (h₁ : y ≤ z)
@@ -580,7 +578,6 @@ local infix ` ≺ `:50 := same_result
 
 variables {x y z : nonterm α}
 
-@[refl]
 lemma res_refl
 : x ≺ x := by { intro, refl }
 
@@ -588,7 +585,6 @@ lemma res_symmetry
   (h : x ≺ y)
 : y ≺ x := by { intro, simp [h i] }
 
-@[trans]
 lemma res_trans
   (h₀ : x ≺ y)
   (h₁ : y ≺ z)

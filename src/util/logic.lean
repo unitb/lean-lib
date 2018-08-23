@@ -462,7 +462,6 @@ end
 
 def rtc {α : Type u} (r : α → α → Prop) (x y : α) := x = y ∨ tc r x y
 
-@[refl]
 def rtc_refl {α : Type u} {r : α → α → Prop} {x : α}
 : rtc r x x :=
 begin
@@ -470,7 +469,6 @@ begin
   left, refl
 end
 
-@[trans]
 def rtc_trans {α : Type u} {r : α → α → Prop} {x : α} (y : α) {z : α}
   (h₀ : rtc r x y)
   (h₁ : rtc r y z)

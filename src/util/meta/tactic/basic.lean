@@ -2,6 +2,7 @@
 import data.stream
 import util.control.applicative
 import util.logic
+import tactic.nursery
 
 namespace tactic
 
@@ -51,12 +52,6 @@ meta def unfold_locals : parse ident * → tactic unit
  | (n::ns) := unfold_local n >> unfold_locals ns
 
 open list
-
-meta def clear_except (xs : parse ident *) : tactic unit :=
-do let ns := name_set.of_list xs,
-   local_context >>= mmap' (λ h : expr,
-     when (¬ ns.contains h.local_pp_name) $
-       try $ tactic.clear h) ∘ list.reverse
 
 open tactic.interactive
 open applicative (lift₂)
@@ -262,7 +257,7 @@ end tactic
 
 open tactic
 run_cmd add_interactive [`unfold_local,`unfold_locals
-                        ,`clear_except,`simp_coes,`explicit_binders
+                        ,`simp_coes,`explicit_binders
                         ,`distributivity,`print,`one_point,`simp_one_point,`revert'
                         ,`my_generalize]
 

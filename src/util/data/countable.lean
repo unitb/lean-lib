@@ -74,7 +74,7 @@ begin
 end
 
 lemma le_zero_of_eq_zero {n : ℕ} (h : n ≤ 0) : n = 0 :=
-le_antisymm h (zero_le _)
+le_antisymm h (nat.zero_le _)
 
 theorem suffix_self_of_le (i j k : ℕ) :
   j ≤ k →

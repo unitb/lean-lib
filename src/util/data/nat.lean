@@ -43,7 +43,7 @@ begin
     apply k_ih,
     { split,
       { apply lt_of_le_of_lt (zero_le _), apply h },
-      { simp [succ_mul], apply zero_le  } } }
+      { simp [succ_mul]  } } }
 end
 
 theorem succ_mod' {n p : ℕ} (h : succ (n % p) < p) : succ n % p = succ (n % p) :=
@@ -189,28 +189,6 @@ protected lemma mul_add_mod_self_left
   (h : k < x)
 : (x * y + k) % x = k :=
 by simp [mod_eq_of_lt h]
-
-lemma div_lt_of_lt_mul (x : ℕ) {m n : ℕ} (h : x < m * n) : x / n < m :=
-begin
-  have hmn : 0 < m * n,
-  { apply lt_of_le_of_lt _ h,
-    apply nat.zero_le },
-  have hn : 0 < n,
-  { apply pos_of_mul_pos_left hmn,
-    apply nat.zero_le, },
-  clear hmn,
-  revert x,
-  induction m with m ; intros x h,
-  { simp at h, cases not_lt_zero _ h },
-  { cases (lt_or_ge x n) with h' h',
-    { rw [div_eq_of_lt h'], apply zero_lt_succ },
-    { rw [div_eq_sub_div hn h',nat.add_one],
-      apply succ_lt_succ,
-      apply m_ih,
-      apply @nat.lt_of_add_lt_add_left n,
-      rw [← nat.add_sub_assoc h',nat.add_sub_cancel_left],
-      simp [succ_mul] at h, simp [h],  } }
-end
 
 protected lemma mul_add_div_self_left (x y k : ℕ) (h : k < x)
 : (x * y + k) / x = y :=

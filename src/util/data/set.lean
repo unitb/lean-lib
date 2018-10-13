@@ -23,7 +23,7 @@ variables (Hinj : injective f)
 lemma mem_fmap_of_mem
   {x : α}
   (h : x ∈ s)
-: f x ∈ f <$> s :=
+: f x ∈ f '' s :=
 begin
   unfold functor.map image,
   rw mem_set_of,
@@ -34,7 +34,7 @@ include Hinj
 
 lemma mem_of_mem_fmap
   {x : α}
-  (h : f x ∈ f <$> s)
+  (h : f x ∈ f '' s)
 : x ∈ s :=
 begin
   unfold functor.map image at h,
@@ -46,13 +46,13 @@ end
 
 lemma mem_fmap_iff_mem_of_inj
   {x : α}
-: f x ∈ f <$> s ↔ x ∈ s :=
+: f x ∈ f '' s ↔ x ∈ s :=
 ⟨ mem_of_mem_fmap Hinj, mem_fmap_of_mem ⟩
 
 lemma mem_fmap_iff_mem_of_bij
   (Hinv : left_inverse f g)
   {x : β}
-: x ∈ f <$> s ↔ g x ∈ s :=
+: x ∈ f '' s ↔ g x ∈ s :=
 begin
   have H : bijective f,
   { unfold bijective, split,
@@ -65,7 +65,7 @@ end
 omit Hinj
 set_option pp.all true
 lemma fmap_eq_empty_iff_eq_empty
-: f <$> s = ∅ ↔ s = ∅ :=
+: f '' s = ∅ ↔ s = ∅ :=
 begin
   split
   ; intro h,

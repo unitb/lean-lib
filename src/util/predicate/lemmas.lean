@@ -523,6 +523,7 @@ lemma v_eq_symm {Γ : pred' β} {v₀ v₁ : var β α}
 : Γ ⊢ v₀ ≃ v₁ :=
 by lifted_pred using h ; rw h
 
+@[monotonic]
 lemma ctx_p_or_p_imp_p_or' {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p p')
   (hq : ctx_impl Γ q q')
@@ -530,6 +531,7 @@ lemma ctx_p_or_p_imp_p_or' {Γ p p' q q' : pred' α}
 by { lifted_pred using hp hq,
      begin [smt] intros, destruct a end, }
 
+@[monotonic]
 lemma p_or_p_imp_p_or' {p p' q q' : pred' α}
   (hp : p ⟹ p')
   (hq : q ⟹ q')
@@ -537,6 +539,7 @@ lemma p_or_p_imp_p_or' {p p' q q' : pred' α}
 by { lifted_pred using hp hq,
      apply or.imp hp hq, }
 
+@[monotonic]
 lemma p_and_p_imp_p_and' {p p' q q' : pred' α}
   (hp : p ⟹ p')
   (hq : q ⟹ q')
@@ -551,11 +554,11 @@ lemma p_or_p_imp_p_or {p p' q q' : pred' α} {τ}
 by apply or.imp hp hq
 
 @[monotonic]
-lemma ctx_p_and_p_imp_p_and_right' {Γ p q q' : pred' α}
+lemma ctx_p_and_p_imp_p_and_right' {Γ p p' q q' : pred' α}
+  (hp : ctx_impl Γ p p')
   (hq : ctx_impl Γ q q')
-: ctx_impl Γ ( p ⋀ q ) ( p ⋀ q' ) :=
-by { lifted_pred using hq, intros,
-     split ; solve_by_elim, }
+: ctx_impl Γ ( p ⋀ q ) ( p' ⋀ q' ) :=
+by { lifted_pred using hp hq, intros, tauto, }
 
 lemma ctx_p_and_p_imp_p_and' {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p p')
@@ -563,24 +566,6 @@ lemma ctx_p_and_p_imp_p_and' {Γ p p' q q' : pred' α}
 : ctx_impl Γ (p ⋀ q) (p' ⋀ q')  :=
 by { lifted_pred using hp hq,
      begin [smt] intros end, }
-
-@[monotonic]
-lemma p_and_p_imp_p_and_right' {p q q' : pred' α}
-  (hq : q ⟹ q')
-: ( p ⋀ q ) ⟹ ( p ⋀ q' ) :=
-assume _, ctx_p_and_p_imp_p_and_right' (hq _)
-
-@[monotonic]
-lemma ctx_p_or_p_imp_p_or_right {Γ p q q' : pred' α}
-  (hq : ctx_impl Γ q q')
-: ctx_impl Γ ( p ⋁ q ) ( p ⋁ q' ) :=
-by { apply ctx_p_or_p_imp_p_or' _ hq, refl }
-
-@[monotonic]
-lemma p_or_p_imp_p_or_right' {p q q' : pred' α}
-  (hq : q ⟹ q')
-: ( p ⋁ q ) ⟹ ( p ⋁ q' ) :=
-by { apply p_or_p_imp_p_or' _ hq, refl }
 
 lemma p_or_p_imp_p_or_right {p q q' : pred' α} {τ}
   (hq : τ ⊨ q ⟶ q')
@@ -632,6 +617,7 @@ begin
   apply h.apply,
 end
 
+@[monotonic]
 lemma p_imp_entails_p_imp {p p' q q' : pred' α}
   (hp : p' ⟹ p)
   (hq : q ⟹ q')
@@ -656,16 +642,11 @@ lemma ctx_imp_entails_p_imp {Γ p p' q q' : pred' α}
 by { lifted_pred using hp hq, intros, apply_assumption, solve_by_elim }
 
 @[monotonic]
-lemma ctx_imp_entails_p_imp_left {Γ p p' q : pred' α}
+lemma ctx_imp_entails_p_imp_left {Γ p p' q q' : pred' α}
   (hp : ctx_impl Γ p' p)
-: ctx_impl Γ ( p ⟶ q ) ( p' ⟶ q ) :=
-by { lifted_pred using hp, intros, solve_by_elim }
-
-@[monotonic]
-lemma p_imp_entails_p_imp_left {p p' q : pred' α}
-  (hp : p' ⟹ p)
-: ( p ⟶ q ) ⟹ ( p' ⟶ q ) :=
-p_imp_entails_p_imp hp (by refl)
+  (hq : ctx_impl Γ q  q')
+: ctx_impl Γ ( p ⟶ q ) ( p' ⟶ q' ) :=
+by { lifted_pred using hp hq, intros, apply_assumption, tauto }
 
 lemma entails_imp_entails_left {p p' q : pred' α}
   (hp : p' ⟹ p)
@@ -676,18 +657,6 @@ begin
   apply (h₁ Γ).apply _ h₂,
   apply (hp Γ).apply _ h₂ h₃,
 end
-
-@[monotonic]
-lemma ctx_p_imp_entails_p_imp_right {Γ p q q' : pred' α}
-  (hq : ctx_impl Γ q q')
-: ctx_impl Γ ( p ⟶ q ) ( p ⟶ q' ) :=
-by { lifted_pred using hq, intros, solve_by_elim }
-
-@[monotonic]
-lemma p_imp_entails_p_imp_right {p q q' : pred' α}
-  (hq : q ⟹ q')
-: ( p ⟶ q ) ⟹ ( p ⟶ q' ) :=
-p_imp_entails_p_imp (by refl) hq
 
 @[simp]
 lemma p_or_self (p : pred' β) :
@@ -1054,34 +1023,6 @@ lemma ctx_comp_imp_comp {Γ : pred' α} {p q : pred' β} (f : var α β)
 by apply comp_entails_comp _ H
 
 @[monotonic]
-lemma ctx_p_and_entails_p_and_left (Γ p q x : pred' α)
-   (h : ctx_impl Γ p q)
-: ctx_impl Γ (p ⋀ x) (q ⋀ x) :=
-by { lifted_pred using h,
-     begin [smt] intros end }
-
-@[monotonic]
-lemma p_and_entails_p_and_left (p q x : pred' β)
-  (h : p ⟹ q)
-: p ⋀ x ⟹ q ⋀ x :=
-by { lifted_pred using h,
-     begin [smt] intros end }
-
-@[monotonic]
-lemma ctx_p_and_entails_p_and_right {Γ p q : pred' β} (x : pred' β)
-  (h : ctx_impl Γ p q)
-: ctx_impl Γ (x ⋀ p) (x ⋀ q) :=
-by { lifted_pred using h,
-     begin [smt] intros end }
-
-@[monotonic]
-lemma p_and_entails_p_and_right {p q : pred' β} (x : pred' β)
-  (h : p ⟹ q)
-: x ⋀ p ⟹ x ⋀ q :=
-by { lifted_pred using h,
-     begin [smt] intros end }
-
-@[monotonic]
 lemma ctx_p_not_entails_p_not_right {Γ p q : pred' β}
   (h : ctx_impl Γ q p)
 : ctx_impl Γ (- p) (- q) :=
@@ -1241,30 +1182,6 @@ by rw [← True_p_and (-p),← shunting,True_p_imp]
 lemma p_imp_iff_p_not_p_or {β : Sort*} (p q : pred' β)
 : p ⟶ q = -p ⋁ q :=
 by rw [← p_not_p_imp,p_not_p_not_iff_self]
-
-lemma p_or_entails_p_or {p p' q q' : pred' β}
-  (H₀ : p  ⟹ q )
-  (H₁ : p' ⟹ q')
-: p ⋁ p' ⟹ q ⋁ q' :=
-by { pointwise H₀ H₁ with i h₀,
-     apply or.imp (H₀ i) (H₁ i) h₀, }
-
-@[monotonic]
-lemma p_or_entails_p_or_left (p q x : pred' β)
-: p ⟹ q → p ⋁ x ⟹ q ⋁ x :=
-begin
-  intros h, pointwise h with i h₀,
-  simp at ⊢ h₀ ,
-  apply or.imp_left (h _) h₀,
-end
-
-@[monotonic]
-lemma ctx_p_or_entails_p_or_left (Γ p q x : pred' β)
-: ctx_impl Γ p q → ctx_impl Γ (p ⋁ x) (q ⋁ x) :=
-begin
-  intros h, lifted_pred using h, -- with i h₀,
-  begin [smt] intros, destruct a end
-end
 
 lemma p_or_not_and {β : Sort*} (p q : pred' β)
 : p ⋁ (- p ⋀ q) = p ⋁ q :=

@@ -214,11 +214,6 @@ meta def update_name (f : string → string) : name → name
  | (name.mk_string s p) := name.mk_string (f s) p
  | x := x <.> f ""
 
-meta def strip_prefix : name → name
- | (name.mk_string s p) := name.mk_string s name.anonymous
- | (name.mk_numeral s p) := name.mk_numeral s name.anonymous
- | name.anonymous := name.anonymous
-
 protected meta def mk_unique_name' (n : name) : ℕ → tactic name | i :=
 do let n' := update_name (λ x, x ++ "_" ++ to_string i) n,
    (resolve_name n' >> mk_unique_name' (i+1)) <|> pure n'

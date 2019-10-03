@@ -30,7 +30,7 @@ begin
   apply Hpq,
   apply epsilon_spec Hex,
 end
-#check @epsilon_spec'
+
 end classical
 
 open tactic interactive interactive.types lean.parser
@@ -48,7 +48,7 @@ do t ← target,
    `[simp only],
    interactive.intro id,
    `[intros h, apply h] <|>
-      tauto <|>
+      tauto (some ()) <|>
       smt_tactic.execute smt_tactic.eblast <|>
       return ()
 
@@ -67,7 +67,7 @@ do t ← target,
    interactive.intro id,
    try `[intros h, apply h],
    all_goals (solve_by_elim <|> ↑ex >>= tactic.refine <|>
-              tauto <|>
+              tauto (some ()) <|>
               smt_tactic.execute (smt_tactic.intros >> smt_tactic.eblast) <|>
               return ())
 

@@ -251,10 +251,6 @@ end mono1
 
 variable {γ : Type u'}
 
-@[inline]
-def uncurry' (f : α → β → γ) : α × β → γ :=
-λ (x : α × β), f x.1 x.2
-
 variable f : (α → γ → m β) → α → γ → m β
 
 def monotonic2 :=

@@ -1,9 +1,7 @@
 
 import data.list.perm
 
-namespace tactic.interactive
-
-open tactic
+namespace tactic
 
 private meta def is_cons : expr → option (expr × expr)
  | `(list.cons %%x %%xs) := some (x,xs)
@@ -56,6 +54,8 @@ else do
      -- make a proof of y :: ys₀ ++ ys₁ ~ ys₀ ++ y :: ys₁
   to_expr ``(list.perm.trans %%left %%right)
 
+namespace interactive
+
 /-- prove a goal of the form `perm [a,b,c] [c,a,b]` -/
 meta def prove_perm : tactic unit := do
   `(list.perm %%xs %%ys) ← target
@@ -64,4 +64,5 @@ meta def prove_perm : tactic unit := do
   ys' ← parse_list ys,
   () <$ (mk_perm_proof xs' ys' >>= tactic.apply)
 
-end tactic.interactive
+end interactive
+end tactic

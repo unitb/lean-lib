@@ -200,7 +200,7 @@ begin
   { simp [div_eq_of_lt h] },
   { rw [mul_succ,div_eq_sub_div h₀],
     { simp [nat.add_sub_cancel_left,add_one,y_ih] },
-    { simp, apply le_add_right } }
+    { simp } }
 end
 
 protected lemma add_mul_div_self_right {a : ℕ} (b : ℕ) {n : ℕ} (h : a < n)

@@ -473,7 +473,7 @@ sorry
 @[simp]
 lemma subtree_nil_get (x : cofix β)
 : (subtree x []).get (by simp) = x :=
-by { simp, refl }
+by { simp }
 
 @[simp]
 lemma subtree_cons' (x : cofix β) {y i p}
@@ -522,9 +522,7 @@ begin
       funext i, cases x_a_1 i, cases y_a_1 i, refl },
     clear hx hy,
     specialize hrec [] trivial trivial rfl,
-    simp [select'] at hrec, injection hrec,
-    replace h_2 := congr_fun (eq_of_heq h_2) trivial,
-    exact h_2,  },
+    simp [select'] at hrec, exact hrec },
   { cases x, cases y, cases z,
     have : y_a = z_a,
     { simp [agree] at hx hy, cc, },

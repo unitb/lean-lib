@@ -76,7 +76,7 @@ def fin.max {n} : fin (succ n) := ⟨n,lt_succ_self _⟩
 lemma fin.max_def {n}
 : (@fin.max n).val = n := rfl
 
-lemma fin.pred_succ {n} (x : fin n)
+lemma fin.pred_succ' {n} (x : fin n)
   (h : succ x.val < n)
 : x.succ'.pred' = x :=
 begin
@@ -85,7 +85,7 @@ begin
   apply h,
 end
 
-lemma fin.succ_pred {n} (x : fin (succ n))
+lemma fin.succ_pred' {n} (x : fin (succ n))
   (h : 0 < x)
 : x.pred'.succ' = x :=
 begin

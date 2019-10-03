@@ -97,25 +97,6 @@ end
 
 section
 
-variable {f : β → α → β}
-variable x₀ : β
-
-lemma foldl_eq_foldr'
-: foldl f x₀ xs = foldr (flip f) x₀ (reverse xs) :=
-begin
-  revert x₀,
-  induction xs
-  ; intros x₀,
-  case nil
-  { refl },
-  case cons : x xs
-  { simp [flip,xs_ih], }
-end
-
-end
-
-section
-
 variable {f : α → α → α}
 variable [is_associative α f]
 variable [is_commutative α f]

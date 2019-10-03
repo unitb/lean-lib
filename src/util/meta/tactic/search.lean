@@ -1,3 +1,5 @@
+import meta.expr
+
 open tactic environment
 
 meta def search_some (s : expr → tactic bool) (hide_prefixed : bool := tt) : tactic unit :=
@@ -6,7 +8,7 @@ do env ← get_env,
    do acc,
       try $ do
       declaration.thm n _ ty _ ← pure d | skip,
-      when (¬ hide_prefixed ∨ n.last_string.front ≠ '_') $ do
+      when (¬ hide_prefixed ∨ n.last.front ≠ '_') $ do
         occ ← s ty,
         when occ $ do
           ty ← pp ty,

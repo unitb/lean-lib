@@ -164,13 +164,21 @@ begin
   ext1, cases i, refl,
 end
 
+attribute [extensionality] d_array.ext'
+
+lemma push_pop_back {n : ℕ} (ar : array n.succ α) :
+  push_back (pop_back ar) (ar.read fin.max) = ar :=
+by { ext ⟨i,h⟩, cases ar, simp! only [d_array.read,array.read,push_back,pop_back],
+     split_ifs; [subst i, skip]; refl }
+
 open list
+
 lemma fin.sum_succ' {n : ℕ}
   [add_comm_monoid α]
   (f : fin (succ n) → α)
 : fin.sum (succ n) f = fin.sum n (f ∘ widen) + f fin.max :=
 begin
   unfold fin.sum fin.foldl,
-  rw [← to_list_foldl,← to_list_foldl],
-  simp [foldl_eq_foldr',rev_list_eq_append,flip,array.read,d_array.read],
+  rw [← to_list_foldl,← to_list_foldl, ← push_pop_back ⟨f⟩, push_back_to_list, ← array_widen_eq_pop_back],
+  simp [array.read,d_array.read],
 end

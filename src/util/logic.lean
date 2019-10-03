@@ -47,18 +47,6 @@ begin
   existsi f a P,
   apply h _ P,
 end
- --  `∀ [i0 : cl a] [i1 : cl b], a = b -> i0 == i1`
-lemma exists_imp_exists'
-   {p : α → Prop}
-   {q : β → Prop}
-   (f : α → β)
-   (h : ∀ a, p a → q (f a))
-   (P : ∃ a, p a) : ∃ a, q a :=
-begin
-  cases P with a P,
-  existsi f a,
-  apply h _ P,
-end
 
 lemma exists_imp_exists_simpl
    {p : β → Prop}
